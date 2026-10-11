@@ -18,12 +18,12 @@ return function(): string
 	Lighting.ShadowSoftness = 0.35
 	Lighting.GlobalShadows = true
 	local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere", Lighting)
-	atmosphere.Density = 0.24
+	atmosphere.Density = 0.17
 	atmosphere.Offset = 0.1
 	atmosphere.Color = Color3.fromRGB(226, 236, 255)
 	atmosphere.Decay = Color3.fromRGB(255, 214, 170)
 	atmosphere.Glare = 0.25
-	atmosphere.Haze = 0.6
+	atmosphere.Haze = 0.25
 	local bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect", Lighting)
 	bloom.Enabled, bloom.Intensity, bloom.Size, bloom.Threshold = true, 0.35, 22, 1.4
 	local rays = Lighting:FindFirstChildOfClass("SunRaysEffect")

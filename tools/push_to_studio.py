@@ -49,7 +49,7 @@ def main(paths):
     for content in CONTENT:
         folder = os.path.join(content, "sab_sync")
         os.makedirs(folder, exist_ok=True)
-        for old in glob.glob(os.path.join(folder, "*.rbxmx")):
+        for old in glob.glob(os.path.join(folder, "push_*.rbxmx")):
             os.remove(old)
         with open(os.path.join(folder, name), "w", encoding="utf-8") as f:
             f.write('<roblox version="4">\n' + "\n".join(items) + "\n</roblox>\n")

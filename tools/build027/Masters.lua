@@ -120,4 +120,71 @@ function M.build()
 	return ("masters: %d"):format(#K.masters():GetChildren())
 end
 
+-- After the owner imports assets/export/027/*.fbx (Home > Import 3D), the eight imported models sit in
+-- Workspace under their file names. This turns each into its master (replacing the part-built
+-- stand-in), keeps the import in ServerStorage.CityKit_027_Imports, and reports what it found.
+local COLOURS = {
+	Trunk = { C.Trunk }, Canopy = { C.Canopy }, Counter = { C.Paving }, Posts = { C.Trim }, AwningA = { C.Curb },
+	AwningB = { C.Carpet }, Base = { C.Stone }, Drum = { C.Paving }, Dome = { C.Trim }, Ribs = { C.TrimDark },
+	Lantern = { C.Glow, Enum.Material.Neon }, Rock = { C.Rock, Enum.Material.Slate }, Post = { C.Navy }, Head = { C.Trim },
+	Glass = { C.Glow, Enum.Material.Neon },
+}
+local IMPORTS = { "Tree_A", "Tree_B", "Tree_C", "Stall", "Vault", "Rock_A", "Rock_B", "Lamp" }
+
+function M.fromImports(): string
+	local store = K.folder(game:GetService("ServerStorage"), "CityKit_027_Imports")
+	local lines = {}
+	for _, name in IMPORTS do
+		local import = workspace:FindFirstChild(name)
+		if not import then
+			table.insert(lines, name .. ": not imported (stand-in kept)")
+			continue
+		end
+		local meshes = {}
+		for _, d in import:GetDescendants() do
+			if d:IsA("MeshPart") then
+				table.insert(meshes, d)
+			end
+		end
+		if #meshes == 0 then
+			table.insert(lines, name .. ": no MeshParts inside")
+			continue
+		end
+		-- world-space box from part corners (the importer's pivot is rotated, so don't trust it)
+		local lo, hi = Vector3.new(math.huge, math.huge, math.huge), Vector3.new(-math.huge, -math.huge, -math.huge)
+		for _, p in meshes do
+			local h = p.Size / 2
+			for _, sx in { -1, 1 } do for _, sy in { -1, 1 } do for _, sz in { -1, 1 } do
+				local w = p.CFrame * Vector3.new(h.X * sx, h.Y * sy, h.Z * sz)
+				lo, hi = lo:Min(w), hi:Max(w)
+			end end end
+		end
+		local rockLike = name:match("^Rock") ~= nil -- rocks hang below the island: pivot on their flat top
+		local pivot = Vector3.new((lo.X + hi.X) / 2, if rockLike then hi.Y else lo.Y, (lo.Z + hi.Z) / 2)
+		local m = model("M_" .. name)
+		for _, p in meshes do
+			local c = p:Clone()
+			c:ClearAllChildren()
+			c.Anchored = true
+			local look = COLOURS[c.Name]
+			if look then
+				c.Color = look[1]
+				c.Material = look[2] or Enum.Material.SmoothPlastic
+			end
+			c.TextureID = ""
+			local solid = c.Name == "Trunk" or c.Name == "Post" or c.Name == "Posts" or c.Name == "Counter" or c.Name == "Base" or c.Name == "Drum"
+			c.CanCollide, c.CanQuery, c.CanTouch = solid, solid, false
+			c.CollisionFidelity = Enum.CollisionFidelity.Box
+			c.CastShadow = c.Name ~= "Glass" and c.Name ~= "Lantern"
+			c.Parent = m
+		end
+		m.WorldPivot = CFrame.new(pivot)
+		m.Parent = K.masters()
+		local size = hi - lo
+		table.insert(lines, ("%s: %d meshes, %.1f x %.1f x %.1f"):format(name, #meshes, size.X, size.Y, size.Z))
+		import.Parent = store
+	end
+	return table.concat(lines, "\n")
+end
+
 return M

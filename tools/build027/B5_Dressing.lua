@@ -43,6 +43,12 @@ return function(): string
 			local r = if k == 1 then 0 else rng:NextNumber(3.5, 5.5)
 			local px, pz = x + math.cos(a) * r, z + math.sin(a) * r * (squeeze or 1)
 			local t = K.place(kind, CFrame.new(px, K.groundY(px, pz, { trees }), pz) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0), trees, rng:NextNumber(0.95, 1.35))
+			local shade = ({ C.Canopy, C.CanopyLight, C.CanopyDark })[rng:NextInteger(1, 3)]
+			for _, p in t:GetChildren() do
+				if p:IsA("MeshPart") and p.Name == "Canopy" then
+					p.Color = shade -- one mesh canopy per tree: vary the green between trees
+				end
+			end
 			if leafy < 4 and k == 1 and math.abs(x) < 120 then
 				local canopy = t:FindFirstChild("Canopy")
 				if canopy then

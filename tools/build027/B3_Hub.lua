@@ -95,20 +95,20 @@ return function(): string
 	-- Top Billionaires gantry over the lane at the avenue entrance, readable from the spawn.
 	do
 		local g = K.folder(root, "TopBoardGantry")
-		local x = L.avenueX[1] + 1.5
+		local x = -124 -- 33 studs from the spawn, between the first lamps; the board sits above the eye line
 		for _, z in { L.laneZ - 11, L.laneZ + 11 } do
-			K.part({ name = "Post", parent = g, size = Vector3.new(1.4, 19, 1.4), pos = Vector3.new(x, top + 9.5, z), color = C.Trim })
+			K.part({ name = "Post", parent = g, size = Vector3.new(1.4, 26, 1.4), pos = Vector3.new(x, top + 13, z), color = C.Trim })
 			K.part({ name = "PostBase", parent = g, size = Vector3.new(2.4, 1, 2.4), pos = Vector3.new(x, top + 0.5, z), color = C.Navy })
 		end
-		K.part({ name = "Beam", parent = g, size = Vector3.new(1.2, 1.2, 23.4), pos = Vector3.new(x, top + 18.6, L.laneZ), color = C.Trim })
+		K.part({ name = "Beam", parent = g, size = Vector3.new(1.2, 1.2, 23.4), pos = Vector3.new(x, top + 25.6, L.laneZ), color = C.Trim })
 		local lb = K.folder(venues, "Leaderboards")
-		local board = lb:FindFirstChild("TopBillionaires") or K.part({ name = "TopBillionaires", parent = lb, size = Vector3.new(15, 7, 0.5), pos = Vector3.new(x, top + 14.2, L.laneZ) })
-		board.CFrame = CFrame.lookAt(Vector3.new(x, top + 14.2, L.laneZ), Vector3.new(x - 10, top + 14.2, L.laneZ))
-		board.Size = Vector3.new(15, 7, 0.5)
+		local board = lb:FindFirstChild("TopBillionaires") or K.part({ name = "TopBillionaires", parent = lb, size = Vector3.new(15, 7, 0.5), pos = Vector3.new(x, top + 19.9, L.laneZ) })
+		board.CFrame = CFrame.lookAt(Vector3.new(x, top + 19.9, L.laneZ), Vector3.new(x - 10, top + 17.9, L.laneZ)) -- tilted a little toward the spawn
+		board.Size = Vector3.new(15, 6, 0.5)
 		board.Color, board.Material = C.Navy, Enum.Material.SmoothPlastic
 		board.CanCollide, board.CanQuery, board.CanTouch = false, false, false
 		board:ClearAllChildren()
-		K.part({ name = "BoardTrim", parent = g, size = Vector3.new(15.8, 7.8, 0.4), cf = board.CFrame * CFrame.new(0, 0, 0.3), color = C.Trim, deco = true })
+		K.part({ name = "BoardTrim", parent = g, size = Vector3.new(15.8, 6.8, 0.4), cf = board.CFrame * CFrame.new(0, 0, 0.3), color = C.Trim, deco = true })
 		local gui = Instance.new("SurfaceGui")
 		gui.Name = "Board"
 		gui.Face = Enum.NormalId.Front
@@ -158,7 +158,10 @@ return function(): string
 
 	-- Golden Vault at the plaza centre, door facing the lane.
 	do
-		local v = K.folder(root, "Vault")
+		local v = Instance.new("Model")
+		v.Name = "Vault"
+		v.ModelStreamingMode = Enum.ModelStreamingMode.Persistent -- the landmark at the end of the lane, 330 studs from the spawn
+		v.Parent = root
 		local p = L.plaza
 		local base = 0.28 -- plaza floor top
 		local function ring(name, r, t, color, mat)

@@ -44,7 +44,7 @@ for _, svc in {"ReplicatedStorage", "ServerScriptService", "ServerStorage", "Sta
 	for _, d in game:GetService(svc):GetDescendants() do
 		if d:IsA("LuaSourceContainer") then
 			local p = full(d)
-			if not p:find("_Backups") and not p:find("_WorkerLineup") and d.Name ~= "Animate" then
+			if not p:find("_Backups") and not p:find("_WorkerLineup") and not p:find("Build027") and d.Name ~= "Animate" then
 				seen[p] = true
 				local s, x = d.Source, 0
 				for i = 1, #s do x = (x * 31 + string.byte(s, i)) % 4294967296 end
