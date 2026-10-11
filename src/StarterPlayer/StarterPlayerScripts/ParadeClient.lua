@@ -231,11 +231,25 @@ local function setTransform(joint: Instance, cf: CFrame)
 	(joint :: any).Transform = cf
 end
 
+-- Parts and joints can replicate a moment after the model itself, so both are (re)scanned.
+local function scan(w: Walker)
+	for _, d in w.model:GetDescendants() do
+		if (d:IsA("AnimationConstraint") or d:IsA("Motor6D")) and table.find(JOINTS, d.Name) then
+			w.joints[d.Name] = d
+		elseif d:IsA("BasePart") and d:GetAttribute("Wrap") and not w.wraps[d] then
+			w.wraps[d] = d.Color
+		end
+	end
+end
+
 local function setGolden(w: Walker, golden: boolean)
 	if w.golden == golden then
 		return
 	end
 	w.golden = golden
+	if golden then
+		scan(w)
+	end
 	for part, original in w.wraps do
 		part.Color = if golden then T.Golden else original
 		part.Material = if golden then Enum.Material.Foil else Enum.Material.SmoothPlastic
@@ -253,17 +267,12 @@ local function track(model: Model)
 		return
 	end
 	local root = model:WaitForChild("HumanoidRootPart", 5)
-	if not (root and root:IsA("BasePart") and model.Parent == walkersFolder) then
+	model:WaitForChild("WorkerLook", 2)
+	if not (root and root:IsA("BasePart") and model.Parent == walkersFolder) or walkers[model] then
 		return
 	end
 	local w: Walker = { model = model, root = root, joints = {}, wraps = {}, golden = false, phase = math.random() * TAU }
-	for _, d in model:GetDescendants() do
-		if (d:IsA("AnimationConstraint") or d:IsA("Motor6D")) and table.find(JOINTS, d.Name) then
-			w.joints[d.Name] = d
-		elseif d:IsA("BasePart") and d:GetAttribute("Wrap") then
-			w.wraps[d] = d.Color
-		end
-	end
+	scan(w)
 	walkers[model] = w
 end
 
@@ -428,7 +437,10 @@ clientEvent.OnClientEvent:Connect(function(kind, info)
 	elseif kind == "Announce" then
 		local rarity = tostring(info.rarity)
 		local color = UITheme.Rarity[rarity] or T.Accent
-		local who = if info.userId == player.UserId then "You" else tostring(info.player)
+		if info.userId == player.UserId then
+			return -- your own catch gets the reveal card and banner instead
+		end
+		local who = tostring(info.player)
 		announce(
 			("%s %s caught %s %s!"):format(UITheme.RarityGlyph[rarity] or "★", who, string.upper(rarity), tostring(info.worker)),
 			color,

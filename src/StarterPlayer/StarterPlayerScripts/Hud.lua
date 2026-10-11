@@ -44,8 +44,24 @@ UIKit.text({ Text = "$", Role = "Title", TextSize = 24, Color = C.PrimaryText, A
 local cashLabel = UIKit.text({ Name = "Cash", Text = "$0", Role = "Display", TextSize = 26, Position = UDim2.fromOffset(60, 7), Size = UDim2.new(1, -68, 0, 30), Parent = cash })
 local incomeLabel = UIKit.text({ Name = "Income", Text = "+$0/s", Role = "Heading", TextSize = 14, Color = C.Cash, Position = UDim2.fromOffset(60, 38), Size = UDim2.new(1, -68, 0, 18), Parent = cash })
 
+-- With the 028 juice on (ReplicatedStorage.JuiceOn) the cash counter rolls up instead of jumping.
+local cashValue = Instance.new("NumberValue")
+local cashTween: Tween? = nil
+cashValue.Changed:Connect(function(value)
+	cashLabel.Text = CashFormat.format(math.floor(value + 0.5))
+end)
 local function updateCash()
-	cashLabel.Text = CashFormat.format(player:GetAttribute("Cash") or 0)
+	local cashNow = player:GetAttribute("Cash") or 0
+	if cashTween then
+		cashTween:Cancel()
+		cashTween = nil
+	end
+	if game:GetService("ReplicatedStorage"):GetAttribute("JuiceOn") == true and cashNow > cashValue.Value then
+		cashTween = UIKit.tween(cashValue, 0.45, { Value = cashNow })
+	else
+		cashValue.Value = cashNow
+		cashLabel.Text = CashFormat.format(cashNow)
+	end
 end
 local function renderIncome(income: number)
 	income = math.floor(income + 0.5)
