@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D11 | Game owned by the **owner's personal account** for now. Upload all custom animations (and audio) from that same account, or they won't play. If the game ever moves to a group, re-upload them under the group. | 2026-10 |
 | D10 | **V1 arena = trophies + cash only** (no worker stakes). Worker stakes come later as an opt-in mode. | 2026-10 |
 | D9 | **Our zones get room to breathe**: Zone 1, hub/lots and Zone 6 medium-sized (about 2x the old Main Street, roughly teammate-island size, never overwhelming). Zones are avenues with 2 sections (Catch a Beast-style depth), landmarks, and empty reserved plots for future content. Better than teammate zones, same palette and style. | 2026-10 |
 | D8 | Use player psychology + juice (VFX, animation, sound) to attract and keep players, kid-safe only — see `RETENTION_AND_JUICE.md`. Use outside tools (Blender, Figma…) when they make things better — see `TOOLS.md`. | 2026-10 |
