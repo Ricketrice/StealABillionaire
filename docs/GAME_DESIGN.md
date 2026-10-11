@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D6 | **Art direction = simple and trendy** (Grow a Garden / Steal a Brainrot style): one compact bright map, lots facing a central strip, simple stalls, no detailed building kit. Attracting players beats detail. | 2026-10 |
 | D5 | Next milestone after 027 = Launch-ready V1 (loop polish + monetization). | 2026-10 |
 | D4 | Keep both PvP modes: open lot stealing (bat, lock, protection) **and** opt-in arena. | 2026-10 |
 | D3 | Zone 6 = **Velocity Royale** (not Billionaire Hills). Still the top zone (Legendary + Secret). | 2026-10 |
@@ -31,7 +32,7 @@ Numbers marked *(tune)* are placeholders.
 | 5 Neon Downtown | Skyscrapers | Epic, Legendary | teammates |
 | 6 Velocity Royale | Racing circuit | Legendary, Secret | us |
 
-Map: floating sky islands — Hub (centre), Lots island, Zone 1 island, Zone 6 island, bridges to Zones 2–5 entrances (Milestone 027).
+Map (027, D6): one compact floating island — central strip (spawn, shops, Vault, arena), 12 lots in two rows facing it, Zone 1 and Zone 6 gates at the ends, paths to Zones 2–5 entrances.
 
 **Zone Bosses** *(not built)*: each zone's Boss guards a vault with its rarest worker; rob it and survive the chase. Zone 6 boss = final heist (theme TBD, see Q-list).
 

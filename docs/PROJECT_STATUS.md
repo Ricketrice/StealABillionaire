@@ -1,7 +1,7 @@
 # Project Status
 _Keep under ~60 lines. Replace sections at each milestone end; don't append history._
 
-**Current milestone:** 027 — Sky City rebuild + bug sweep (prompt: `docs/prompts/027.md`)
+**Current milestone:** 027 — bug sweep + simple trendy map (D6) (prompt: `docs/prompts/027.md`)
 **Last finished:** 026 — hub gameplay. 022 — PvP.
 **Save schema:** 3 (Studio-only DataStore for testing).
 
