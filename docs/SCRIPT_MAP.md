@@ -19,6 +19,10 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - UI: `UIStyle` (tokens) · `UIKit` (components) · `WorkerState` (inventory snapshot) · `WorkerPreview` (ViewportFrame previews) · client `Hud`, `InventoryUI`, `CityLife` (025 tickers / FOR SALE)
 - Zone 6 circuit: `Workspace.World.VelocityRoyale` (frozen)
 - Hub screens: `TopBoard` (server; Top Billionaires rows on `Venues.Leaderboards.TopBillionaires`) · client `SkyCityLife` (YOUR BASE pillar/beam; particles on tags `Fx027Sparkle`/`Fx027Coins`/`Fx027Leaves`, culled at 140 studs) · client `CityLife` (025, now inert)
+- Worker Parade (028): `ParadeServer` → `ParadeService` (walkers in `Workspace.Parade.Walkers`, path = attributes SpawnT/Speed/Offset + lane attributes on the folder; catch via client `ParadeAction` "Catch" → `tryCatch` → `NPCClaim.tryReserve`; Golden window = `Workspace.Parade` attributes GoldenStart/GoldenEnd/NextGolden; book = save `hub.book`, free catch = `hub.paradeFree`) · client `ParadeClient` (draws/animates walkers, odds panel, Golden pill, lane sign under the TopBoard gantry, FREE arrow) · numbers + flags `ReplicatedStorage.ParadeConfig` (Studio attrs StudioParade/StudioJuice/StudioGoalHud/StudioBook; published as ReplicatedStorage ParadeOn/JuiceOn/GoalHudOn/BookOn; Studio `StudioGoldenNow` = start one now)
+- Juice (028): client `JuiceClient` (reveal shake/banner/pillar, carry wriggle + gold trail, place hop + coins, "+$X" pops, SAFE!, idle moves/aura, Low effects toggle = player attribute LowEffects) · `ReplicatedStorage.FxKit` (effect masters in `ReplicatedStorage.FxMasters`, built on each client) · `Hud` cash roll-up when JuiceOn
+- One-goal HUD + collection book (028): client `GoalBookClient` (goals = `ParadeConfig.GOALS`) · all 028 UI styled only through `ReplicatedStorage.UITheme`
+- Prompt gotcha (028): Roblox checks a ProximityPrompt's distance against the SERVER copy of its part. Client-moved parts (parade walkers) need a client-relayed remote instead of the server `Triggered`.
 - Save tests: ServerStorage `StudioMemoryStore` = true puts `PlayerData` on the in-memory store in Studio (use for every Play test)
 
 ## Places in the world
@@ -31,7 +35,7 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - `ServerStorage._Backups` — in-place backups, one folder per change
 
 ## Studio-only test harnesses (inert in live servers)
-`DevTest_PvP022` (tag `@@T022|`), `DevTest_Hub026` (`@@T026|`, arg `hub026`, 2 clients), `DevTest_Workers019`, `DevTest_BrokeBob_018B/018B4` (disabled)
+`DevTest_PvP022` (tag `@@T022|`), `DevTest_Hub026` (`@@T026|`, arg `hub026`, 2 clients), `DevTest_Parade028` (`@@T028|`, arg `parade028`, 2 clients, needs StudioMemoryStore), `DevTest_Workers019`, `DevTest_BrokeBob_018B/018B4` (disabled)
 - `DevTest_Save027` (`@@T027|`, REAL Studio DataStore): solo Play with ServerStorage `StudioTest027`="a", Stop, ="b" (+ StudioUpgrades off) = rejoin; or 2 clients arg `save027:steal`. Solo uses the Studio user's own key: back it up and seed schema 2 first, write it back after. Studio Stop does not release the session lock: the next Play takes it over after ~15 s.
 
 ## Map builder

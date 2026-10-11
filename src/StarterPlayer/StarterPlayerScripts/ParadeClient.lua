@@ -404,6 +404,13 @@ ProximityPromptService.PromptShown:Connect(function(prompt)
 	odds.Adornee = prompt.Parent
 	odds.Enabled = true
 end)
+-- The server checks the catch itself (where the walker really is now, cash, cooldown, who was first).
+ProximityPromptService.PromptTriggered:Connect(function(prompt)
+	local walker = prompt:GetAttribute("Parade") and prompt.Parent and prompt.Parent.Parent
+	if walker and walker.Parent == walkersFolder then
+		actionEvent:FireServer("Catch", walker)
+	end
+end)
 ProximityPromptService.PromptHidden:Connect(function(prompt)
 	if prompt == shownPrompt then
 		shownPrompt = nil

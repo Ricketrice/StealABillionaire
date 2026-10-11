@@ -10,7 +10,7 @@
 -- Workspace.Parade.Walkers), so every client draws it walking (ParadeClient) and the server works out
 -- where it is only when someone tries to catch it. No Humanoid movement, no pathfinding.
 --
--- Catching is race-safe: tryCatch validates (flag, still free, cooldown, data loaded, cash, distance)
+-- Catching: the client relays its Catch prompt (ParadeAction "Catch", walker). Catching is race-safe: tryCatch validates (flag, still free, cooldown, data loaded, cash, distance)
 -- and reserves through NPCClaim.tryReserve without yielding, so of two players pressing at once
 -- exactly one wins; the other is told "Too slow!". The price is taken only after the reservation
 -- succeeded, and refunded if the catch is cancelled before the reveal (death, leaving).
@@ -62,7 +62,7 @@ local function getRemote(name: string): RemoteEvent
 	return remote :: RemoteEvent
 end
 local clientEvent = getRemote("ParadeEvent") -- server -> client: (kind, info)
-local actionEvent = getRemote("ParadeAction") -- client -> server: ("State")
+local actionEvent = getRemote("ParadeAction") -- client -> server: ("State") | ("Catch", walker)
 
 -- World -----------------------------------------------------------------------------------------------
 -- Workspace.Parade is only in the world while the parade runs (flag off = nothing added).
@@ -264,9 +264,9 @@ local function addPrompt(npc: Model)
 	prompt.ClickablePrompt = true
 	prompt:SetAttribute("Parade", true)
 	prompt.Parent = root
-	prompt.Triggered:Connect(function(player)
-		catchHandler(player, npc)
-	end)
+	-- No server Triggered handler: Roblox checks a prompt's distance against the server's copy of the
+	-- part, which never moves. The client relays its trigger (ParadeAction "Catch") and tryCatch does
+	-- the real checks against where the walker is now.
 end
 
 -- Puts a new walker on the lane. `age` seconds of walking already done (to spread them out at start).
@@ -550,11 +550,13 @@ function ParadeService.start()
 		end
 		task.delay(1, ParadeService.pushState, player)
 	end)
-	actionEvent.OnServerEvent:Connect(function(player, action)
+	actionEvent.OnServerEvent:Connect(function(player, action, npc)
 		local t = os.clock()
 		if action == "State" and (not lastState[player] or t - lastState[player] > 0.5) then
 			lastState[player] = t
 			ParadeService.pushState(player)
+		elseif action == "Catch" and typeof(npc) == "Instance" and npc:IsA("Model") and npc:GetAttribute("ParadeId") ~= nil then
+			catchHandler(player, npc) -- (a walker someone else just caught gets "Too slow!")
 		end
 	end)
 	if RunService:IsStudio() then -- Studio test hook: ServerStorage StudioGoldenNow = true starts one now

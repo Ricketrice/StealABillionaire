@@ -44,13 +44,13 @@ Map (027, D6): one compact floating island — central strip (spawn, shops, Vaul
 
 **Zone Bosses** *(not built)*: each zone's Boss guards a vault with its rarest worker; rob it and survive the chase. Zone 6 boss = final heist (theme TBD, see Q-list).
 
-## Worker Parade (D7, not built — milestone 028)
+## Worker Parade (D7, built in 028 behind `ParadeConfig` flags; numbers PROPOSED)
 - A lane (red carpet) runs down the central strip past the bases. Mystery workers spawn at one end and walk slowly to the other.
 - Walk up, press to catch (cash price, cheap at start), rarity reveal, carry to your base. Others can grab the same worker first: race + fun.
 - Parade pool = starter tier (Zone 1 rarities, cheaper). Zones 1–6 still hold their own sets and better odds: the reason to unlock zones.
 - **Golden Parade** every ~15 min with a countdown: better odds for everyone (shown).
 - Server message for Legendary/Secret catches.
-- Open: does the parade use existing worker IDs only (no new IDs) — recommended yes.
+- Uses existing worker IDs only (Main Street pool and odds). Built: $25 per catch, first worker free, 8 on the lane, Golden Parade 60 s every 15 min (odds 45/30/17/6.5/1.5%) — all PROPOSED in `ParadeConfig`.
 
 ## Workers
 Stats (shown as icons): **Money** ($/sec), **Attack**, **Speed** (who hits first, how often), **Defence**. HP fixed at 100 *(or tied to Defence — open)*.

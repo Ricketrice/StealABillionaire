@@ -361,6 +361,15 @@ bookButton.Activated:Connect(function()
 	end
 end)
 closeButton.Activated:Connect(closeBook)
+if game:GetService("RunService"):IsStudio() then -- test hook (DevTest_Parade028): opens the book as a tap would
+	gui:GetAttributeChangedSignal("TestOpen"):Connect(function()
+		if gui:GetAttribute("TestOpen") then
+			openBook()
+		else
+			closeBook()
+		end
+	end)
+end
 
 local function refreshBook()
 	bookButton.Visible = bookOn()
