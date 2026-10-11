@@ -1,0 +1,21 @@
+# Roadmap — step by step
+One milestone = one prompt = one branch `milestone-0NN`. Each ends with a commit, a local `.rbxl` backup, and an updated `PROJECT_STATUS.md`. Keep each milestone small enough to finish in one session.
+
+## Phase A — Make it look and play like a real game
+**027 Sky City rebuild + bug sweep** — floating islands, hero buildings, kit, Phase 1 bugs. *(prompt exists)*
+**028 Core loop audit** — finish worker stats + types for all 16 workers (icons on cards), worker levels 1–10 (cash cost, +stats, visible change at 5/10), base slots 7–12 for cash. Tutorial covers catch → carry → place → collect → upgrade in under 2 minutes.
+
+## Phase B — Launch-ready V1 (make money)
+**029 Monetization** — gamepasses 2x Cash, Extra Slots, VIP; 3–4 cash-pack dev products; receipt handling that never loses a purchase (`ProcessReceipt` + save); in-game store UI; owner sets prices by hand.
+**030 Retention** — daily login reward (7-day streak), offline earnings popup ("You earned $X while away"), group join reward, friend-in-server bonus, favourite-worker protection, steal cooldown/cap.
+**031 Launch polish** — game icon + 3 thumbnails, loading screen, settings (music/SFX, low graphics), sound pass, mobile UI check at phone size, AnalyticsService funnel (join → tutorial done → first catch → first upgrade → first purchase), error/report logging.
+**→ Soft launch.** Watch D1 retention, session length, tutorial drop-off, payer conversion for 1–2 weeks before adding content.
+
+## Phase C — Content updates (one per 1–2 weeks after launch)
+**032 Merge** — Golden/Diamond, merge machine, Lucky Merge pass later.
+**033 Shop gear tiers** — worker weapons/shields, player weapons/armour, effects; tiers per zone.
+**034 Zone bosses** — Zone 1 boss vault + chase; Zone 6 final heist.
+**035 Rebirth** — reset for a permanent multiplier; base slots 13–18 by rank.
+**036+** — remaining passes (Auto Collect, Speed Runner, Strong Arms, Lucky, Discount, Billionaire), events, limited workers.
+
+Teammate zones 2–5 plug in whenever they're ready — we only provide gate + bridge + unlock price.
