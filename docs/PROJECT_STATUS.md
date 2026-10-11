@@ -16,7 +16,7 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
 - Feature flags (game must behave as before with all OFF).
 
 ## Not built
-Worker levels, merge, gamepasses / cash packs, shop gear tiers, zone bosses, rebirth, base visual growth.
+Worker Parade (028), worker levels, merge, gamepasses / cash packs, shop gear tiers, zone bosses, rebirth, base visual growth.
 
 ## Known issues (fixed in 027 Phase 1 unless noted)
 Margaret 7 studs tall · prop grips · previews without WorldModel · station 7–8 spacing · static NPCs · stray Hello-world script in Zone 6 boss reserve · lighting style.

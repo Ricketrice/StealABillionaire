@@ -7,6 +7,8 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D8 | Use player psychology + juice (VFX, animation, sound) to attract and keep players, kid-safe only — see `RETENTION_AND_JUICE.md`. Use outside tools (Blender, Figma…) when they make things better — see `TOOLS.md`. | 2026-10 |
+| D7 | **Worker Parade** (Steal a Brainrot-style): mystery workers walk down a lane on the central strip; first catches happen right at spawn. Zones 1–6 = where rarer workers come from. | 2026-10 |
 | D6 | **Art direction = simple and trendy** (Grow a Garden / Steal a Brainrot style): one compact bright map, lots facing a central strip, simple stalls, no detailed building kit. Attracting players beats detail. | 2026-10 |
 | D5 | Next milestone after 027 = Launch-ready V1 (loop polish + monetization). | 2026-10 |
 | D4 | Keep both PvP modes: open lot stealing (bat, lock, protection) **and** opt-in arena. | 2026-10 |
@@ -35,6 +37,14 @@ Numbers marked *(tune)* are placeholders.
 Map (027, D6): one compact floating island — central strip (spawn, shops, Vault, arena), 12 lots in two rows facing it, Zone 1 and Zone 6 gates at the ends, paths to Zones 2–5 entrances.
 
 **Zone Bosses** *(not built)*: each zone's Boss guards a vault with its rarest worker; rob it and survive the chase. Zone 6 boss = final heist (theme TBD, see Q-list).
+
+## Worker Parade (D7, not built — milestone 028)
+- A lane (red carpet) runs down the central strip past the bases. Mystery workers spawn at one end and walk slowly to the other.
+- Walk up, press to catch (cash price, cheap at start), rarity reveal, carry to your base. Others can grab the same worker first: race + fun.
+- Parade pool = starter tier (Zone 1 rarities, cheaper). Zones 1–6 still hold their own sets and better odds: the reason to unlock zones.
+- **Golden Parade** every ~15 min with a countdown: better odds for everyone (shown).
+- Server message for Legendary/Secret catches.
+- Open: does the parade use existing worker IDs only (no new IDs) — recommended yes.
 
 ## Workers
 Stats (shown as icons): **Money** ($/sec), **Attack**, **Speed** (who hits first, how often), **Defence**. HP fixed at 100 *(or tied to Defence — open)*.
