@@ -3,7 +3,7 @@ One milestone = one prompt = one branch `milestone-0NN`. Each ends with a commit
 
 ## Phase A — Make it look and play like a real game
 **027 Bug sweep + simple trendy map** — Phase 1 bugs, one compact bright island, lots facing a central strip. *(prompt exists)*
-**028 Worker Parade + juice** — central lane with walking mystery workers (D7), Golden Parade timer, rarity-scaled reveal/cash/steal VFX + sounds + AI/code-driven animations (`RETENTION_AND_JUICE.md`, D12), one-goal HUD, first worker within 10 s.
+**028 Worker Parade + juice** *(prompt: `docs/prompts/028.md`)* — central lane with walking mystery workers (D7), Golden Parade timer, rarity-scaled reveal/cash/steal VFX + sounds + AI/code-driven animations (`RETENTION_AND_JUICE.md`, D12), one-goal HUD, first worker within 10 s.
 **029 Core loop audit** — finish worker stats + types for all 16 workers (icons on cards), worker levels 1–10 (cash cost, +stats, visible change at 5/10), base slots 7–12 for cash. Tutorial covers catch → carry → place → collect → upgrade in under 2 minutes.
 
 ## Growth rule (applies to every milestone)
