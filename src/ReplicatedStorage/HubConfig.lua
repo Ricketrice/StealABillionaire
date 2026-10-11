@@ -42,8 +42,9 @@ HubConfig.Arena = {
 -- kind "skin": a bat look from the 022 locker.  "trail": the colour of the bat's swing trail.
 -- "decor": a decoration for one of the lot's decor spots.  "upgrade": see the Upgrade Office.
 HubConfig.DECOR_SPOTS = { { -15, -14 }, { 15, -14 }, { -15, 15 }, { 15, 15 }, { 0, 15.5 } } -- lot-local x, z (front = -z)
--- Where the pads of stations bought at the Upgrade Office stand (the lot's own six are at x = -8 and 8).
-HubConfig.EXTRA_STATION_SPOTS = { { 0, 3 }, { 0, -6 } } -- lot-local x, z; one per level of "upgrade:stations"
+-- Where the pads of stations bought at the Upgrade Office stand (the lot's own six are at x = -8 and 8,
+-- z = 12, 3, -6). Down the middle, between the rows: 9.2 studs from every pad (the six are 9 apart).
+HubConfig.EXTRA_STATION_SPOTS = { { 0, 7.5 }, { 0, -1.5 } } -- lot-local x, z; one per level of "upgrade:stations"
 HubConfig.Shops = {
 	BatBoutique = { title = "BAT BOUTIQUE", keeper = "Slugger Sal", items = {
 		{ id = "skin:Neon", name = "Neon Bat", note = "A glowing bat look", kind = "skin", value = "Neon", price = 15000 }, -- PROPOSED

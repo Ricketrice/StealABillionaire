@@ -86,7 +86,7 @@ CustomWorkerLooks.WORKERS = {
 	} },
 	mystery_millionaire = { height = 0.95, width = 0.85, skin = "F0D2BC", props = { "Acc_LeftHand_PoodleBag" }, items = {
 		{ "Head", 11829189575 }, -- Old School Smile - Head
-		{ "Hair", 7548992599 }, -- Grey - Hair
+		{ "Hair", 17981858 }, -- Ye Olde Powdered Whig (white curls; 027: replaces the tall "Grey - Hair" 7548992599)
 		{ "Face", 30390853 }, -- Monocle
 		{ "Neck", 14205066264 }, -- Pearl Necklace
 		{ "Jacket", 8648397446 }, -- Parka - Brown

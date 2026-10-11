@@ -180,6 +180,13 @@ local function refreshNPCs()
 				local body = template:Clone()
 				body.Name = "Body"
 				HubBase.stand(body, anchor.CFrame, anchor.Position.Y - anchor.Size.Y / 2)
+				-- Only the root stays anchored, so the joints can move: each client plays the idle,
+				-- look-at and wave itself (StarterPlayerScripts.HubNPCLife).
+				for _, part in body:GetDescendants() do
+					if part:IsA("BasePart") then
+						part.Anchored = part.Name == "HumanoidRootPart"
+					end
+				end
 				body.Parent = holder
 			end
 			local info = HubConfig.NPCs[id]

@@ -164,6 +164,121 @@ local function addProp(model: Model, import: Model, propName: string, wearsTop: 
 	return prop
 end
 
+-- Prop fit rules (Milestone 027): a hand prop's nearest surface is at most GRIP_MAX studs from the
+-- hand's centre, every prop stands upright and none of it is inside the body. The glow accent on the
+-- same body part moves with its prop.
+local GRIP_MAX, GRIP_AIM = 0.3, 0.12
+local BODY = { "Head", "UpperTorso", "LowerTorso", "LeftUpperLeg", "RightUpperLeg", "LeftLowerLeg", "RightLowerLeg", "LeftFoot", "RightFoot" }
+
+local function grid(cf: CFrame, size: Vector3, shrink: number): { Vector3 }
+	local points, half = {}, size / 2 - Vector3.one * shrink
+	for _, x in { -1, 0, 1 } do for _, y in { -1, 0, 1 } do for _, z in { -1, 0, 1 } do
+		table.insert(points, cf * Vector3.new(half.X * x, half.Y * y, half.Z * z))
+	end end end
+	return points
+end
+
+local function inBox(point: Vector3, cf: CFrame, size: Vector3): boolean
+	local l, h = cf:PointToObjectSpace(point), size / 2
+	return math.abs(l.X) < h.X and math.abs(l.Y) < h.Y and math.abs(l.Z) < h.Z
+end
+
+-- How far the hand's centre is from the prop's nearest surface (0 = inside the prop).
+function B.gripDistance(prop: BasePart, cf: CFrame?, hand: BasePart): number
+	local l, h = (cf or prop.CFrame):PointToObjectSpace(hand.Position), prop.Size / 2
+	local c = Vector3.new(math.clamp(l.X, -h.X, h.X), math.clamp(l.Y, -h.Y, h.Y), math.clamp(l.Z, -h.Z, h.Z))
+	return (l - c).Magnitude
+end
+
+-- Sample points of the prop inside the body, plus body sample points inside the prop.
+function B.bodyOverlap(model: Model, prop: BasePart, cf: CFrame?): number
+	local at, n = cf or prop.CFrame, 0
+	local mine = grid(at, prop.Size, 0.03)
+	for _, name in BODY do
+		local part = model:FindFirstChild(name)
+		if part and part:IsA("BasePart") then
+			for _, p in mine do
+				if inBox(p, part.CFrame, part.Size) then n += 1 end
+			end
+			for _, p in grid(part.CFrame, part.Size, 0.03) do
+				if inBox(p, at, prop.Size) then n += 1 end
+			end
+		end
+	end
+	return n
+end
+
+local function upright(cf: CFrame): CFrame
+	local look = cf.LookVector * Vector3.new(1, 0, 1)
+	if look.Magnitude < 0.2 then
+		look = -cf.UpVector * Vector3.new(1, 0, 1) -- lying flat: keep its heading
+	end
+	return CFrame.lookAt(cf.Position, cf.Position + look.Unit)
+end
+
+-- Moves each body part's main prop (and its glow) to obey the rules. Returns the props it couldn't fit.
+local function fitProps(model: Model, root: BasePart, props: Folder): { string }
+	local problems, byHost = {}, {}
+	for _, prop in props:GetChildren() do
+		local weld = prop:FindFirstChild("PropWeld") :: Weld
+		local host = weld and weld.Part0
+		if host then
+			byHost[host] = byHost[host] or { glow = {} }
+			if prop.Name:match("_Glow$") then
+				table.insert(byHost[host].glow, prop)
+			else
+				byHost[host].main = prop
+			end
+		end
+	end
+	for host, group in byHost do
+		local prop: BasePart = group.main
+		if not prop then
+			continue
+		end
+		local isHand = host.Name:match("Hand$") ~= nil
+		local start = upright(prop.CFrame)
+		if isHand then
+			-- Slide toward the hand until the hand's centre is just at the prop's surface.
+			local d = B.gripDistance(prop, start, host)
+			if d > GRIP_AIM then
+				local l = start:PointToObjectSpace(host.Position)
+				local h = prop.Size / 2
+				local c = Vector3.new(math.clamp(l.X, -h.X, h.X), math.clamp(l.Y, -h.Y, h.Y), math.clamp(l.Z, -h.Z, h.Z))
+				local towardHand = start:VectorToWorldSpace(l - c).Unit
+				start += towardHand * (d - GRIP_AIM)
+			end
+		end
+		-- Then the smallest shift (outward, forward or back) that clears the body and keeps the grip.
+		local outward = root.CFrame.RightVector * (if host.Name:match("^Left") then -1 else 1)
+		local forward = root.CFrame.LookVector
+		local best, bestCost = nil, math.huge
+		for o = 0, 10 do
+			for f = -10, 12 do
+				local shift = outward * (o * 0.08) + forward * (f * 0.08)
+				local cost = shift.Magnitude
+				if cost < bestCost and (isHand or o == 0) then
+					local cf = start + shift
+					if B.bodyOverlap(model, prop, cf) == 0 and (not isHand or B.gripDistance(prop, cf, host) <= GRIP_MAX) then
+						best, bestCost = cf, cost
+					end
+				end
+			end
+		end
+		if not best then
+			table.insert(problems, prop.Name .. " (no spot clear of the body)")
+			best = start
+		end
+		local move = best * prop.CFrame:Inverse()
+		for _, part in { prop, table.unpack(group.glow) } do
+			part.CFrame = move * part.CFrame
+			local weld = part:FindFirstChild("PropWeld") :: Weld
+			weld.C0 = host.CFrame:ToObjectSpace(part.CFrame)
+		end
+	end
+	return problems
+end
+
 local function spanY(model: Model): (number, number, number)
 	local low, high, feet = math.huge, -math.huge, math.huge
 	for _, p in model:GetDescendants() do
@@ -280,6 +395,9 @@ function B.build(id: string): (Model?, { string })
 		end
 	end
 	props.Parent = model
+	for _, problem in fitProps(model, root, props) do
+		table.insert(failed, "prop fit: " .. problem)
+	end
 
 	local _, high, feet = spanY(model)
 	humanoid.HipHeight = (root.Position.Y - root.Size.Y / 2) - feet
