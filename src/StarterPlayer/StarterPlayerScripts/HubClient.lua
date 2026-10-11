@@ -347,7 +347,7 @@ showStep = function(index: number)
 	tutorialStep = index
 	stepStart.stations, stepStart.cash = onStations(), player:GetAttribute("Cash") or 0
 	stepTitle.Text = ("TUTORIAL %d/%d  ·  %s"):format(index, #HubConfig.Tutorial, string.upper(step.title))
-	stepText.Text = step.text
+	stepText.Text = if step.paradeText and ReplicatedStorage:GetAttribute("ParadeOn") == true then step.paradeText else step.text
 	nextControl.setText(if index >= #HubConfig.Tutorial then "FINISH" elseif step.wait then "NEXT (or just do it)" else "NEXT")
 	tracker.Visible = true
 	gui:SetAttribute("Tutorial", index)

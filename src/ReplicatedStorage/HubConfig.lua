@@ -136,7 +136,12 @@ HubConfig.Tips = {
 -- Tutorial steps. `wait` = what the player has to do before the step ticks off by itself
 -- ("carry", "place", "cash") or nil for a step that only needs reading.
 HubConfig.Tutorial = {
-	{ title = "Steal", text = "Turn round and walk through the MAIN STREET arch, then hold E on a worker to steal it.", wait = "carry" },
+	{
+		title = "Steal",
+		text = "Turn round and walk through the MAIN STREET arch, then hold E on a worker to steal it.",
+		paradeText = "Mystery workers are walking down the red lane! Walk up to one and press E to catch it. Your first one is FREE!", -- shown while the Worker Parade (028) is on
+		wait = "carry",
+	},
 	{ title = "Reveal", text = "The card shows who you caught and how rare they are.", wait = nil },
 	{ title = "Carry", text = "Carry your worker to your own lot: follow the gold YOUR BASE beam.", wait = nil },
 	{ title = "Place", text = "Stand by a round pad on your lot and press E to put the worker to work.", wait = "place" },

@@ -30,7 +30,8 @@ end
 local pending: { [Model]: WorkerService.Identity } = setmetatable({}, { __mode = "k" }) :: any
 
 -- NPCClaim reserve handler. Must not yield.
-function WorkerReveal.roll(_player: Player, npc: Model, zone: { folder: Instance })
+-- A zone table may carry `odds` (rarity -> per mille) to roll with other odds (the Golden Parade).
+function WorkerReveal.roll(_player: Player, npc: Model, zone: { folder: Instance, odds: { [string]: number }? })
 	if pending[npc] or npc:GetAttribute("WorkerUid") ~= nil then
 		return -- already decided; never reroll
 	end
@@ -39,7 +40,7 @@ function WorkerReveal.roll(_player: Player, npc: Model, zone: { folder: Instance
 		warn("[WorkerReveal] zone", zoneId, "has no worker roster; this steal can't produce a worker")
 		return
 	end
-	pending[npc] = WorkerService.newIdentity(WorkerService.rollWorkerId(zoneId), zoneId)
+	pending[npc] = WorkerService.newIdentity(WorkerService.rollWorkerId(zoneId, zone.odds), zoneId)
 end
 
 -- Applies the rolled identity and look. Returns false if this NPC was never rolled.
@@ -54,11 +55,24 @@ function WorkerReveal.reveal(npc: Model): boolean
 	return true
 end
 
+-- Runs after every reveal card is sent (Milestone 028: collection book, server-wide message).
+-- Callbacks get (player, identity, npc) and must not yield.
+local announced: { (Player, WorkerService.Identity, Model) -> () } = {}
+function WorkerReveal.onAnnounce(callback: (Player, WorkerService.Identity, Model) -> ())
+	table.insert(announced, callback)
+end
+
 -- Shows `player` the reveal card for a revealed worker.
 function WorkerReveal.announce(player: Player, npc: Model)
 	local identity = WorkerService.getIdentity(npc)
 	if identity and player.Parent then
 		revealEvent:FireClient(player, identity.workerId, identity.uid)
+		for _, callback in announced do
+			local ok, err = pcall(callback, player, identity, npc)
+			if not ok then
+				warn("[WorkerReveal] announce callback failed:", err)
+			end
+		end
 	end
 end
 

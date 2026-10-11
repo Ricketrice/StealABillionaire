@@ -53,9 +53,10 @@ local function getTestOverride(zoneId: string): string?
 	return nil
 end
 
--- Rolls which worker a steal in this zone catches.
-function WorkerService.rollWorkerId(zoneId: string): string
-	return getTestOverride(zoneId) or WorkerCatalogue.rollWorker(zoneId, rng)
+-- Rolls which worker a steal in this zone catches. `perMille` (optional) = other rarity odds for this
+-- roll (the Golden Parade's); nil = the catalogue's normal odds.
+function WorkerService.rollWorkerId(zoneId: string, perMille: { [string]: number }?): string
+	return getTestOverride(zoneId) or WorkerCatalogue.rollWorker(zoneId, rng, perMille)
 end
 
 -- A brand-new caught worker: Level 1, Normal tier, with its own unique id.

@@ -197,11 +197,14 @@ function WorkerCatalogue.getStats(workerId: string, level: number, tier: string)
 	return worker.income, worker.attack, worker.speed, worker.defence
 end
 
-function WorkerCatalogue.rollRarity(rng: Random): string
+-- `perMille` (optional) replaces the normal odds for one roll, e.g. the Golden Parade's (Milestone 028).
+-- It must cover 1000 per mille; nil = the normal RARITY_PER_MILLE.
+function WorkerCatalogue.rollRarity(rng: Random, perMille: { [string]: number }?): string
+	local odds = perMille or WorkerCatalogue.RARITY_PER_MILLE
 	local roll = rng:NextInteger(1, 1000)
 	local cumulative = 0
 	for _, rarity in WorkerCatalogue.RARITIES do
-		cumulative += WorkerCatalogue.RARITY_PER_MILLE[rarity]
+		cumulative += odds[rarity] or 0
 		if roll <= cumulative then
 			return rarity
 		end
@@ -210,10 +213,10 @@ function WorkerCatalogue.rollRarity(rng: Random): string
 end
 
 -- Rolls a rarity, then picks uniformly among the zone's workers of that rarity.
-function WorkerCatalogue.rollWorker(zoneId: string, rng: Random): string
+function WorkerCatalogue.rollWorker(zoneId: string, rng: Random, perMille: { [string]: number }?): string
 	local zone = byZoneAndRarity[zoneId]
 	assert(zone, "no worker roster for zone " .. tostring(zoneId))
-	local candidates = zone[WorkerCatalogue.rollRarity(rng)]
+	local candidates = zone[WorkerCatalogue.rollRarity(rng, perMille)]
 	return candidates[rng:NextInteger(1, #candidates)]
 end
 
