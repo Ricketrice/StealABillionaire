@@ -272,15 +272,21 @@ scenario("first catch within 10 s of spawning", function()
 			spawnedAt = os.clock()
 		end)
 		p:LoadCharacter()
-		conn:Disconnect()
 		waitUntil(5, function()
 			return spawnedAt ~= nil and p.Character and p.Character:FindFirstChild("HumanoidRootPart")
 		end)
+		conn:Disconnect() -- (only now: with deferred events CharacterAdded can fire after LoadCharacter returns)
 		local cash = CashService.get(p)
-		local reply = ask(p, "chase", 12, 16)
-		local carriedAt = waitUntil(2, function()
-			return p:GetAttribute("CarryingNPC") == true and os.clock()
+		local carryStart: number? = nil
+		local carryConn = p:GetAttributeChangedSignal("CarryingNPC"):Connect(function()
+			if p:GetAttribute("CarryingNPC") == true and not carryStart then
+				carryStart = os.clock()
+			end
 		end)
+		local reply = ask(p, "chase", 12, 16)
+		task.wait(0.3)
+		local carriedAt = carryStart
+		carryConn:Disconnect()
 		local took = if carriedAt and spawnedAt then carriedAt - spawnedAt else nil
 		expect(
 			p.Name .. " catches a parade worker within 10 s of spawning",
