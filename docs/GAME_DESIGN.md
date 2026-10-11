@@ -7,6 +7,8 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D13 | Strong Arms pass (carry 2) comes after V1. V1 passes: 2x Cash, Extra Slots, VIP. | 2026-10 |
+| D12 | **Animations are AI-made.** V1: code-driven animation by Claude (bounce, wiggle, spin, squash, tweens), so no uploads are needed. Legendary/Secret signature moves: Claude builds keyframe animations in Studio, owner publishes them in one batched checkpoint; optional: Roblox Animation Capture from a video. Uniqueness scales with rarity (`RETENTION_AND_JUICE.md`). | 2026-10 |
 | D11 | Game owned by the **owner's personal account** for now. Upload all custom animations (and audio) from that same account, or they won't play. If the game ever moves to a group, re-upload them under the group. | 2026-10 |
 | D10 | **V1 arena = trophies + cash only** (no worker stakes). Worker stakes come later as an opt-in mode. | 2026-10 |
 | D9 | **Our zones get room to breathe**: Zone 1, hub/lots and Zone 6 medium-sized (about 2x the old Main Street, roughly teammate-island size, never overwhelming). Zones are avenues with 2 sections (Catch a Beast-style depth), landmarks, and empty reserved plots for future content. Better than teammate zones, same palette and style. | 2026-10 |

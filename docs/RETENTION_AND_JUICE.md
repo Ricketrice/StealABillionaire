@@ -25,5 +25,15 @@ Fake or hidden odds · fake countdowns on purchases · "buy now" prompts right a
 - **Arena win:** confetti + victory effect.
 - **UI:** big rounded buttons, bounce on open, icons over text (kids skim), readable at phone size.
 
+## Character uniqueness by rarity (D12)
+| Rarity | Unique touches |
+|---|---|
+| Common | own colours, outfit, prop; bouncy idle |
+| Rare | + one personality move (code-driven) |
+| Epic | + soft aura at base (near camera only), bigger reveal |
+| Legendary | + unique walk/idle, gold trail when carried, short reveal moment |
+| Secret | + signature effect, server announcement, unique sound |
+Every worker: wriggle when carried, celebrate when placed, shocked when stolen. Parade workers stay mystery figures until caught; the reveal is the payoff.
+
 ## Rules for effects
 Built in Studio: ParticleEmitter, Beam, Trail, TweenService, Highlight, Animation Editor. One master per effect in `ReplicatedStorage`, cloned on client, auto-cleanup. Client-side only for visuals. Total particles on screen kept low for phones; a "Low effects" setting.
