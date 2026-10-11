@@ -15,6 +15,7 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
 - `DevTest_Parade028` (2 clients): 70/70 (2 simulated). First catch after spawning 0.93 / 4.12 / 1.25 / 1.84 s; 3 same-frame races + 1 remote race = exactly one winner, no duplicates; refund on mid-spin death; Golden starts/ends, odds 40k-roll check; saves contain parade workers + book; flags off hides everything.
 - `DevTest_Hub026` regression: 118/118 (PvP Studio switches off; with them on, 1 check is environment-dependent).
 - Phone (Galaxy A06) + tablet (iPad 10th): no overlaps / off-screen / clipped text after fixes. Perf (Studio PC, phone emulator): 16.7 ms avg both flags on/off; +177 parts, +~2,000 instances with 8 walkers.
+- `DevTest_PvP022` main (3 clients): 291/330 with 028 flags on AND identical 291/330 with them off → not caused by 028. First 144 (steal, lock, hand-over) pass; from "charged swing: bat out" on, A is still carrying after the hand-over scenario, so bat/steal checks cascade. Pre-existing on the 027 map; to fix in 029.
 - Real-DataStore rejoin with parade workers: **not run** (in-memory save + leave/save JSON + sanitize reload only).
 
 ## Not built
@@ -25,6 +26,7 @@ Worker levels, merge, gamepasses / cash packs, gear tiers, zone bosses, rebirth,
 - Studio can't trigger the parade prompt on the server (prompt distance is checked on the unmoved server copy), so the client relays Catch; the server does its own checks.
 - Walkers are full R15 rigs (~245 instances each); could be slimmed if phones struggle.
 - Carry from the Zone 1 exit to the farthest lot ≈ 20.2 s (limit ~20 s).
+- 022 PvP harness: later scenarios fail from "charged swing" on (see Tests).
 
 ## Open questions (ask the owner; move answers to GAME_DESIGN → Decisions)
 - Q1 Is Zone 2 in our launch, and are teammates ready? · Q2 Zone 6 boss theme? · Q3 HP fixed 100 or tied to Defence?
