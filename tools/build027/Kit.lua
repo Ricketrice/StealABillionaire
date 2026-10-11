@@ -62,8 +62,29 @@ K.L = {
 	squareZ = { -60.5, 52.5 },
 	spawn = Vector3.new(-157, 0, -4),
 	zone1GateX = -177,
-	mainStreet = Vector3.new(-212, 0, -4), -- ZoneBoundary centre (64 x 66)
-	island = { x0 = -266, x1 = 140, z0 = -70, z1 = 62 },
+	laneWidth = 16, -- red carpet; the gold band adds 1 each side
+	-- Zone 1 Main Street (D9): an avenue running west from the arch, ~2x the old Main Street.
+	ms = {
+		x0 = -179, -- east end (just past the arch)
+		streetEnd = -318, -- the NPC street ends here; the reserved boss-vault plot follows
+		pavingEnd = -358, -- the paving runs on under the boss plot and the last pair of shops
+		streetZ = { -30, 22 }, -- paving between the shop fronts
+		npcZ = { -22, 14 }, -- the NPC area (ZoneBoundary), 36 wide
+		section1 = -220,
+		section2 = -279,
+		shopXs = { -190.5, -249.5, -308.5, -338 }, -- pairs of shops (north + south)
+		bossPlot = Vector3.new(-338, 0, -4),
+	},
+	-- Island: rectangles (x0, x1, z0, z1) unioned; the plaza disc closes the east end.
+	islandParts = {
+		{ -176, 140, -70, 62 }, -- hub: spawn square, lots, avenue
+		{ -180, -134, 62, 108 }, -- north bump-out: reserved plot
+		{ -180, -134, -116, -70 }, -- south bump-out: reserved plot
+		{ -364, -176, -56, 50 }, -- Main Street
+	},
+	reservedHub = { Vector3.new(-157, 0, 86), Vector3.new(-157, 0, -94) },
+	island = { x0 = -364, x1 = 140, z0 = -116, z1 = 108 },
+	hubZ = { -70, 62 }, -- the hub rectangle's north/south edges (behind the lots)
 	-- surface tops
 	grassTop = 0.0,
 	curbTop = 0.2,
@@ -200,6 +221,16 @@ function K.place(name: string, cf: CFrame, parent: Instance, scale: number?): Mo
 	m:PivotTo(cf)
 	m.Parent = parent
 	return m
+end
+
+-- Whether (x, z) is on the island (any rectangle, or the plaza island's disc).
+function K.onIsland(x: number, z: number): boolean
+	for _, r in K.L.islandParts do
+		if x >= r[1] and x <= r[2] and z >= r[3] and z <= r[4] then
+			return true
+		end
+	end
+	return (Vector2.new(x, z) - Vector2.new(K.L.plaza.X, K.L.plaza.Z)).Magnitude <= 72
 end
 
 -- Ground height under a point (top of the highest surface), for standing props on the ground.

@@ -58,8 +58,8 @@ return function(): string
 			end
 		end
 	end
-	local backN = (L.rowNorthZ + L.lotTrim / 2 + L.island.z1 - 1.4) / 2
-	local backS = (L.rowSouthZ - L.lotTrim / 2 + L.island.z0 + 1.4) / 2
+	local backN = (L.rowNorthZ + L.lotTrim / 2 + L.hubZ[2] - 1.4) / 2
+	local backS = (L.rowSouthZ - L.lotTrim / 2 + L.hubZ[1] + 1.4) / 2
 	for idx, x in L.lotXs do
 		cluster(x - L.lotPitch / 2, backN, 2 + idx % 2, 0.3) -- squeeze: stay in the strip behind the lots
 		cluster(x - L.lotPitch / 2 + 6, backS, 2 + (idx + 1) % 2, 0.3)
@@ -68,10 +68,17 @@ return function(): string
 	cluster(L.lotXs[6] + L.lotPitch / 2 + 2, backS, 2, 0.3)
 	cluster(114, 38, 3) -- plaza junction corners
 	cluster(114, -46, 3)
-	cluster(-180, 50, 2) -- around the Zone 1 arch
-	cluster(-180, -58, 3)
-	cluster(-259, 50, 3) -- Main Street's far corners
-	cluster(-259, -58, 2)
+	cluster(-170, 57, 2, 0.4) -- spawn square corners (grass behind the stalls)
+	cluster(-145, 58, 2, 0.4)
+	cluster(-170, -65, 3, 0.4)
+	cluster(-145, -66, 2, 0.4)
+	local ms = L.ms -- Main Street: behind the shops and round the boss plot
+	for _, x in { -197, -253, -313 } do
+		cluster(x, ms.streetZ[2] + 21, 2, 0.5)
+		cluster(x + 6, ms.streetZ[1] - 20, 2, 0.5)
+	end
+	cluster(-360, 40, 2, 0.5)
+	cluster(-360, -48, 3, 0.5)
 
 	-- Bushes and flowers: lot front corners (the grass gaps between lots) and building bases.
 	local beds = K.folder(root, "Beds")
@@ -83,7 +90,7 @@ return function(): string
 		bed(gx, L.stripZ[2] + 1.2, idx % 2 == 0)
 		bed(gx, L.stripZ[1] - 1.2, idx % 2 == 1)
 	end
-	for _, p in { { -171.5, 41.5 }, { -141.5, 41.5 }, { -171.5, -49.5 }, { -141.5, -49.5 } } do -- stall corners
+	for _, p in { { -173.4, 41.5 }, { -139.6, 41.5 }, { -173.4, -49.5 }, { -139.6, -49.5 } } do -- stall corners
 		bed(p[1], p[2], true)
 	end
 	for _, a in { 45, 135, 225, 315 } do -- round the Vault plinth

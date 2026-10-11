@@ -47,9 +47,9 @@ return function(): string
 	local shops = venues:WaitForChild("Shops")
 	local stalls = K.folder(root, "Stalls")
 	local defs = {
-		{ "BatBoutique", -165, true, C.Carpet, "BAT BOUTIQUE" },
-		{ "LotAndDecor", -148, true, C.Mint, "LOT & DECOR" },
-		{ "UpgradeOffice", -165, false, C.Sky, "UPGRADE OFFICE" },
+		{ "BatBoutique", -167, true, C.Carpet, "BAT BOUTIQUE" },
+		{ "LotAndDecor", -146, true, C.Mint, "LOT & DECOR" },
+		{ "UpgradeOffice", -167, false, C.Sky, "UPGRADE OFFICE" },
 	}
 	for _, d in defs do
 		local id, x, north, accent, title = d[1], d[2], d[3], d[4], d[5]
@@ -77,7 +77,7 @@ return function(): string
 	-- Quest board (south side of the square) and the Guide (beside the spawn, turned to face it).
 	local npcs = venues:WaitForChild("NPCs")
 	do
-		local cf = CFrame.new(-148, top, -54) * CFrame.Angles(0, math.pi, 0)
+		local cf = CFrame.new(-146, top, -54) * CFrame.Angles(0, math.pi, 0)
 		local qb = Instance.new("Model")
 		qb.Name = "QuestBoardStand"
 		for _, sx in { -4.2, 4.2 } do

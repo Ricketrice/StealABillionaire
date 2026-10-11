@@ -104,11 +104,21 @@ function M.build()
 		finish(f)
 	end
 
+	do -- bench: seat faces -Z
+		local m = model("M_Bench")
+		K.part({ name = "Seat", parent = m, size = Vector3.new(4, 0.4, 1.6), pos = Vector3.new(0, 1.5, 0), color = C.Trunk })
+		K.part({ name = "Back", parent = m, size = Vector3.new(4, 1.3, 0.3), pos = Vector3.new(0, 2.4, 0.7), color = C.Trunk, deco = true })
+		for _, x in { -1.6, 1.6 } do
+			K.part({ name = "Leg", parent = m, size = Vector3.new(0.4, 1.3, 1.4), pos = Vector3.new(x, 0.65, 0), color = C.Navy, deco = true })
+		end
+		finish(m)
+	end
+
 	-- decoration never collides except where a player would walk into it (trunks, posts, counters)
 	for _, m in K.masters():GetChildren() do
 		for _, p in m:GetDescendants() do
 			if p:IsA("BasePart") then
-				local solid = p.Name == "Trunk" or p.Name == "Post" or p.Name == "Posts" or p.Name == "Counter" or p.Name == "Base" or p.Name == "Drum"
+				local solid = p.Name == "Trunk" or p.Name == "Post" or p.Name == "Posts" or p.Name == "Counter" or p.Name == "Base" or p.Name == "Drum" or p.Name == "Seat"
 				p.CanCollide = solid
 				p.CanQuery, p.CanTouch = solid, false
 				if p:IsA("MeshPart") then
