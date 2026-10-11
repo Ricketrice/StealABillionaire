@@ -1,36 +1,36 @@
 # Project Status
 _Keep under ~60 lines. Replace sections at each milestone end; don't append history._
 
-**Current milestone:** 028 — Worker Parade + juice (not started). **Last finished:** 027 — bug sweep + sky-island map (D6/D9, layout A).
-**Save schema:** 3 (Studio-only DataStore for testing). **Map:** `Workspace.World.SkyCity`, built by `tools/build027` (see SCRIPT_MAP).
+**Current milestone:** 028 — Worker Parade + juice (built, awaiting owner review + number approval). **Last finished:** 027 — bug sweep + sky-island map.
+**Save schema:** 3 (028 adds optional `hub.book` and `hub.paradeFree` inside the existing hub field). **Map:** `Workspace.World.SkyCity`, built by `tools/build027`.
 
 ## Built
-- Mystery catch + rarity reveal (ViewportFrame + WorldModel previews).
-- 16 workers as Roblox avatars (`CustomWorkerLooks`, `AvatarBuilder019R.buildAll()`); props fitted by rule.
-- Worker stats + types — **partial** (audit in 028).
-- Sky island (layout A): spawn square → 16-stud red parade lane → 12 lots in two rows → Billionaire Plaza with the Golden Vault and Battle Arena; gates to Zones 2–6 on the plaza ring. Spawn at the hub, YOUR BASE marker, Top Billionaires board.
-- Zone 1 Main Street: 2-section avenue (Coin Fountain, Clock Tower, 6 catch spots, 8 shops), reserved boss-vault plot; 2 reserved hub plots.
-- 12 lots, pads 1–8 (7–8 bought at the Upgrade Office), owner sign, lock barrier. Lot stealing PvP, arena, shops, Guide tutorial, daily quests, shopkeepers with idle/look-at/wave.
-- Feature flags (all OFF = old behaviour).
+- Mystery catch + rarity reveal (ViewportFrame + WorldModel previews); 16 workers as Roblox avatars.
+- **Worker Parade (028, flag `PARADE_ENABLED`)**: 8 mystery gift-box figures walk the red lane spawn → plaza (client-drawn, server path by time), Catch prompt with odds panel, first worker free, race-safe catch → reveal → carry, "Too slow!" puff, Golden Parade (60 s / 15 min, better odds, pill + lane sign countdown), server-wide Legendary/Secret message.
+- **Juice (028, `JUICE_ENABLED`)**: rarity-scaled reveal (burst, shake Epic+, pillar Legendary+, name banner), carry wriggle + gold trail (Legendary+) + shocked "!!" when stolen, place hop + coins, "+$X" pops, cash roll-up, SAFE! burst, idle bounce/look + Rare+ personality moves + Epic+ aura near camera, Low-effects toggle. Code-driven only.
+- **One-goal HUD (`GOAL_HUD_ENABLED`) + collection book (`BOOK_ENABLED`)**: shared top bar (Golden pill · goal · book · FX), book pages per zone with silhouettes. All 028 UI via `UITheme` (029 restyles there).
+- Sky island (layout A), Zone 1 Main Street avenue, 12 lots with pads 1–8, lot PvP, arena, shops, Guide tutorial, quests, Top Billionaires board. All feature flags OFF = old behaviour.
+
+## Tests (2026-10-12)
+- `DevTest_Parade028` (2 clients): 70/70 (2 simulated). First catch after spawning 0.93 / 4.12 / 1.25 / 1.84 s; 3 same-frame races + 1 remote race = exactly one winner, no duplicates; refund on mid-spin death; Golden starts/ends, odds 40k-roll check; saves contain parade workers + book; flags off hides everything.
+- `DevTest_Hub026` regression: 118/118 (PvP Studio switches off; with them on, 1 check is environment-dependent).
+- Phone (Galaxy A06) + tablet (iPad 10th): no overlaps / off-screen / clipped text after fixes. Perf (Studio PC, phone emulator): 16.7 ms avg both flags on/off; +177 parts, +~2,000 instances with 8 walkers.
+- Real-DataStore rejoin with parade workers: **not run** (in-memory save + leave/save JSON + sanitize reload only).
 
 ## Not built
-Worker Parade (028), worker levels, merge, gamepasses / cash packs, shop gear tiers, zone bosses, rebirth, base visual growth.
+Worker levels, merge, gamepasses / cash packs, gear tiers, zone bosses, rebirth, base visual growth, Legendary/Secret signature keyframe animations (D12, later).
 
 ## Known issues
-- Zones 2–5 sit in the old sea (kept for the teammates); our island floats over clouds. Teammates: islands may want rock undersides.
-- Only Toy Town's gate is enforced (`ZoneConfig` gate flags); Food Court / Beach / Neon / Zone 6 can be walked into (pre-027).
-- 022 main PvP run (3 clients) stopped by the memory watchdog after 174/174 checks; later scenarios unverified on the new map.
-- Phone layout not screenshotted; `CityLife` client script is inert (025 tickers removed).
+- Zones 2–5 sit in the old sea (teammates'); only Toy Town's gate is enforced.
+- Studio can't trigger the parade prompt on the server (prompt distance is checked on the unmoved server copy), so the client relays Catch; the server does its own checks.
+- Walkers are full R15 rigs (~245 instances each); could be slimmed if phones struggle.
 - Carry from the Zone 1 exit to the farthest lot ≈ 20.2 s (limit ~20 s).
 
 ## Open questions (ask the owner; move answers to GAME_DESIGN → Decisions)
-- Q1 V1 doc scope says Zones 1 + 2, but Zone 2 is teammates'. Is Zone 2 in our launch, and are teammates ready?
-- Q2 Zone 6 boss / final heist: what is it in a racing theme? (e.g. rich racer's trophy vault)
-- Q3 HP: fixed 100, or tied to Defence?
-- Q4 Arena "winner takes a worker" + open lot stealing: is losing workers two ways too harsh for kids? Consider protected favourite + daily steal cap.
-- Q5 Max players per server, and does base slot count fit the 12 lots?
-- Q6 Should Zones 2–5 float over clouds like our island (needs teammates' OK)?
+- Q1 Is Zone 2 in our launch, and are teammates ready? · Q2 Zone 6 boss theme? · Q3 HP fixed 100 or tied to Defence?
+- Q4 Arena worker stakes + lot stealing: too harsh for kids? · Q5 Max players per server vs 12 lots? · Q6 Zones 2–5 over clouds?
+- Q7 (028) Approve ParadeConfig numbers: $25 catch, first free, 4 studs/s, 9 s spawn, 8 max, Golden 60 s every 15 min (first after 5 min), golden odds 45/30/17/6.5/1.5 %, golden price $25.
 
 ## By-hand list for owner
-- Publish the place when happy (File → Publish to Roblox). Blender meshes are already imported (027).
-- Optional: run the 3-client 022 PvP test with more free memory (close the browser first).
+- Publish when happy; turn the four `ParadeConfig` flags on (they ship OFF).
+- Optional: real-DataStore rejoin test of parade workers (DevTest_Save027 method).
