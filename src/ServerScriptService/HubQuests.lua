@@ -124,7 +124,10 @@ local function view(player: Player): any
 	for _, id in (quests and quests.ids or {}) do
 		local quest = pool[id]
 		if quest then
-			table.insert(list, { id = id, text = quest.text, goal = quest.goal, reward = quest.reward, progress = tonumber(quests.progress[id]) or 0, claimed = quests.claimed[id] == true })
+			table.insert(
+				list,
+				{ id = id, text = quest.text, goal = quest.goal, reward = quest.reward, progress = tonumber(quests.progress[id]) or 0, claimed = quests.claimed[id] == true }
+			)
 		end
 	end
 	return list

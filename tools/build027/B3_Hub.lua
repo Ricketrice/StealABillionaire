@@ -35,7 +35,16 @@ return function(): string
 	end
 	local med = K.folder(root, "SpawnMedallion")
 	local function disc(name, r, t, color, mat)
-		return K.part({ name = name, parent = med, shape = "Cylinder", size = Vector3.new(0.2, r * 2, r * 2), cf = CFrame.new(L.spawn.X, t - 0.1, L.spawn.Z) * CFrame.Angles(0, 0, math.rad(90)), color = color, mat = mat, deco = true })
+		return K.part({
+			name = name,
+			parent = med,
+			shape = "Cylinder",
+			size = Vector3.new(0.2, r * 2, r * 2),
+			cf = CFrame.new(L.spawn.X, t - 0.1, L.spawn.Z) * CFrame.Angles(0, 0, math.rad(90)),
+			color = color,
+			mat = mat,
+			deco = true,
+		})
 	end
 	-- the spawn sits on the parade lane, so the medallion lies on the carpet
 	disc("Ring", 7, L.laneTop + 0.06, C.Trim)
@@ -102,7 +111,8 @@ return function(): string
 		end
 		K.part({ name = "Beam", parent = g, size = Vector3.new(1.2, 1.2, 23.4), pos = Vector3.new(x, top + 25.6, L.laneZ), color = C.Trim })
 		local lb = K.folder(venues, "Leaderboards")
-		local board = lb:FindFirstChild("TopBillionaires") or K.part({ name = "TopBillionaires", parent = lb, size = Vector3.new(15, 7, 0.5), pos = Vector3.new(x, top + 19.9, L.laneZ) })
+		local board = lb:FindFirstChild("TopBillionaires")
+			or K.part({ name = "TopBillionaires", parent = lb, size = Vector3.new(15, 7, 0.5), pos = Vector3.new(x, top + 19.9, L.laneZ) })
 		board.CFrame = CFrame.lookAt(Vector3.new(x, top + 19.9, L.laneZ), Vector3.new(x - 10, top + 17.9, L.laneZ)) -- tilted a little toward the spawn
 		board.Size = Vector3.new(15, 6, 0.5)
 		board.Color, board.Material = C.Navy, Enum.Material.SmoothPlastic
@@ -165,7 +175,15 @@ return function(): string
 		local p = L.plaza
 		local base = 0.28 -- plaza floor top
 		local function ring(name, r, t, color, mat)
-			return K.part({ name = name, parent = v, shape = "Cylinder", size = Vector3.new(t - base + 0.2, r * 2, r * 2), cf = CFrame.new(p.X, (t + base - 0.2) / 2, p.Z) * CFrame.Angles(0, 0, math.rad(90)), color = color, mat = mat })
+			return K.part({
+				name = name,
+				parent = v,
+				shape = "Cylinder",
+				size = Vector3.new(t - base + 0.2, r * 2, r * 2),
+				cf = CFrame.new(p.X, (t + base - 0.2) / 2, p.Z) * CFrame.Angles(0, 0, math.rad(90)),
+				color = color,
+				mat = mat,
+			})
 		end
 		ring("PlinthTrim", 22, base + 0.8, C.Trim)
 		ring("Plinth", 21, base + 1.2, C.Curb)
@@ -174,8 +192,17 @@ return function(): string
 		vault.Name = "GoldenVault"
 		local doorCf = cf * CFrame.new(0, 6.6, -18.4)
 		K.part({ name = "DoorFrame", parent = v, size = Vector3.new(9.4, 11.4, 1.2), cf = doorCf, color = C.Trim })
-		local door = K.part({ name = "Door", parent = v, size = Vector3.new(7.4, 9.6, 1.0), cf = doorCf * CFrame.new(0, -0.5, -0.2), color = C.Navy })
-		local emblem = K.part({ name = "Emblem", parent = v, shape = "Cylinder", size = Vector3.new(0.4, 4.4, 4.4), cf = doorCf * CFrame.new(0, 0.2, -0.8) * CFrame.Angles(0, math.rad(90), 0), color = C.Trim, mat = Enum.Material.Neon, deco = true })
+		K.part({ name = "Door", parent = v, size = Vector3.new(7.4, 9.6, 1.0), cf = doorCf * CFrame.new(0, -0.5, -0.2), color = C.Navy })
+		local emblem = K.part({
+			name = "Emblem",
+			parent = v,
+			shape = "Cylinder",
+			size = Vector3.new(0.4, 4.4, 4.4),
+			cf = doorCf * CFrame.new(0, 0.2, -0.8) * CFrame.Angles(0, math.rad(90), 0),
+			color = C.Trim,
+			mat = Enum.Material.Neon,
+			deco = true,
+		})
 		K.tag(emblem, "Fx027Sparkle")
 		-- one step in front of the trim ring (floor 0.28 -> step 0.68 -> trim 1.08 -> plinth 1.48)
 		K.part({ name = "Step", parent = v, size = Vector3.new(12, 0.4, 2), cf = cf * CFrame.new(0, -1.0, -23), color = C.Curb })
@@ -191,7 +218,8 @@ return function(): string
 			light.Range, light.Brightness, light.Color, light.Shadows = 40, 2, C.Glow, false
 			light.Parent = lantern
 		end
-		local sign = K.part({ name = "VaultSign", parent = v, size = Vector3.new(14, 2.6, 0.5), cf = cf * CFrame.new(0, 14.2, -18.9) * CFrame.Angles(math.rad(-8), 0, 0), color = C.Navy })
+		local sign =
+			K.part({ name = "VaultSign", parent = v, size = Vector3.new(14, 2.6, 0.5), cf = cf * CFrame.new(0, 14.2, -18.9) * CFrame.Angles(math.rad(-8), 0, 0), color = C.Navy })
 		K.text(sign, Enum.NormalId.Front, "GOLDEN VAULT", C.Trim)
 	end
 
@@ -200,19 +228,34 @@ return function(): string
 		local ar = K.folder(root, "Arena")
 		local arena = venues:WaitForChild("Arena")
 		local c = Vector3.new(146, 0.28, 26)
-		local function disc(name, r, t, color, mat)
-			return K.part({ name = name, parent = ar, shape = "Cylinder", size = Vector3.new(t - c.Y, r * 2, r * 2), cf = CFrame.new(c.X, (t + c.Y) / 2, c.Z) * CFrame.Angles(0, 0, math.rad(90)), color = color, mat = mat })
+		local function ringDisc(name, r, t, color, mat)
+			return K.part({
+				name = name,
+				parent = ar,
+				shape = "Cylinder",
+				size = Vector3.new(t - c.Y, r * 2, r * 2),
+				cf = CFrame.new(c.X, (t + c.Y) / 2, c.Z) * CFrame.Angles(0, 0, math.rad(90)),
+				color = color,
+				mat = mat,
+			})
 		end
-		disc("RingTrim", 12.5, 0.8, C.Trim)
-		disc("Ring", 11.5, 1.0, C.Curb)
-		disc("RingInner", 8, 1.05, C.Sky)
+		ringDisc("RingTrim", 12.5, 0.8, C.Trim)
+		ringDisc("Ring", 11.5, 1.0, C.Curb)
+		ringDisc("RingInner", 8, 1.05, C.Sky)
 		for i = 0, 7 do -- short gold posts round the ring
 			local a = i * math.pi / 4 + math.pi / 8
 			K.part({ name = "RopePost", parent = ar, size = Vector3.new(0.8, 3.2, 0.8), pos = Vector3.new(c.X + math.cos(a) * 11.6, 2.6, c.Z + math.sin(a) * 11.6), color = C.Trim })
 		end
 		for _, side in { { "PlatformA", -5.5, C.Coral }, { "PlatformB", 5.5, C.Sky } } do
 			local px = c.X + side[2]
-			K.part({ name = side[1] .. "Pedestal", parent = ar, shape = "Cylinder", size = Vector3.new(0.8, 6, 6), cf = CFrame.new(px, 1.45, c.Z) * CFrame.Angles(0, 0, math.rad(90)), color = side[3] })
+			K.part({
+				name = side[1] .. "Pedestal",
+				parent = ar,
+				shape = "Cylinder",
+				size = Vector3.new(0.8, 6, 6),
+				cf = CFrame.new(px, 1.45, c.Z) * CFrame.Angles(0, 0, math.rad(90)),
+				color = side[3],
+			})
 			anchor(arena, side[1], CFrame.new(px, 2.3, c.Z), Vector3.new(6, 1, 6))
 		end
 		local pads = arena:WaitForChild("QueuePads")
@@ -242,8 +285,10 @@ return function(): string
 		local lines = K.folder(root, "GateLines")
 		local fz = workspace.World.FutureZones
 		local ZONES = {
-			{ "Zone2_FoodCourt", Color3.fromRGB(255, 150, 60), 1 }, { "Zone4_ToyTown", Color3.fromRGB(255, 120, 190), 1 },
-			{ "Zone5_NeonDowntown", Color3.fromRGB(150, 110, 240), -1 }, { "Zone6_BillionaireHills", C.Trim, -1 },
+			{ "Zone2_FoodCourt", Color3.fromRGB(255, 150, 60), 1 },
+			{ "Zone4_ToyTown", Color3.fromRGB(255, 120, 190), 1 },
+			{ "Zone5_NeonDowntown", Color3.fromRGB(150, 110, 240), -1 },
+			{ "Zone6_BillionaireHills", C.Trim, -1 },
 		}
 		local slot = { [1] = 0, [-1] = 0 }
 		for _, zdef in ZONES do

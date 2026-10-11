@@ -19,7 +19,6 @@ local SPARKLES = "rbxasset://textures/particles/sparkles_main.dds"
 -- YOUR BASE marker ---------------------------------------------------------------------------------
 local marker: Model? = nil
 local beam: Beam? = nil
-local from: Attachment? = nil
 local spawnedAt = os.clock()
 
 local function plotModel(): Model?
@@ -86,13 +85,22 @@ local function attachBeam(character: Model)
 	if not (root and marker) then
 		return
 	end
-	from = Instance.new("Attachment")
-	from.Name = "YourBaseFrom"
-	from.Position = Vector3.new(0, -1.5, 0)
-	from.Parent = root
+	local pillar = (marker :: Model):FindFirstChild("Pillar")
+	local target = pillar and pillar:FindFirstChild("BeamTarget")
+	if not (target and target:IsA("Attachment")) then
+		return
+	end
+	local old = root:FindFirstChild("YourBaseFrom")
+	if old then
+		old:Destroy() -- called again for the same character (e.g. the plot was assigned late)
+	end
+	local start = Instance.new("Attachment")
+	start.Name = "YourBaseFrom"
+	start.Position = Vector3.new(0, -1.5, 0)
+	start.Parent = root
 	local b = Instance.new("Beam")
-	b.Attachment0 = from
-	b.Attachment1 = (marker :: Model).Pillar.BeamTarget
+	b.Attachment0 = start
+	b.Attachment1 = target
 	b.FaceCamera = true
 	b.Width0, b.Width1 = 0.5, 1.2
 	b.Color = ColorSequence.new(GOLD)

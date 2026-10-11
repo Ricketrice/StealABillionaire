@@ -25,14 +25,32 @@ local function finish(m: Model)
 end
 
 local function cyl(m, name, r, h, y, color, mat, deco)
-	return K.part({ name = name, parent = m, shape = "Cylinder", size = Vector3.new(h, r * 2, r * 2), cf = CFrame.new(0, y, 0) * CFrame.Angles(0, 0, math.rad(90)), color = color, mat = mat, deco = deco })
+	return K.part({
+		name = name,
+		parent = m,
+		shape = "Cylinder",
+		size = Vector3.new(h, r * 2, r * 2),
+		cf = CFrame.new(0, y, 0) * CFrame.Angles(0, 0, math.rad(90)),
+		color = color,
+		mat = mat,
+		deco = deco,
+	})
 end
 
 local function tree(name, trunkH, trunkR, blobs)
 	local m = model(name)
 	cyl(m, "Trunk", trunkR, trunkH, trunkH / 2, C.Trunk)
 	for i, b in blobs do
-		K.part({ name = "Canopy", parent = m, shape = "Ball", size = Vector3.one * b[2] * 2, pos = b[1], color = ({ C.Canopy, C.CanopyLight, C.CanopyDark })[(i - 1) % 3 + 1], deco = true, shadow = true })
+		K.part({
+			name = "Canopy",
+			parent = m,
+			shape = "Ball",
+			size = Vector3.one * b[2] * 2,
+			pos = b[1],
+			color = ({ C.Canopy, C.CanopyLight, C.CanopyDark })[(i - 1) % 3 + 1],
+			deco = true,
+			shadow = true,
+		})
 	end
 	finish(m)
 end
@@ -54,8 +72,13 @@ function M.build()
 			end
 		end
 		for i = 0, 7 do -- striped awning, sloping to the front
-			K.part({ name = if i % 2 == 0 then "AwningA" else "AwningB", parent = m, size = Vector3.new(13.2 / 8, 0.25, 8.6),
-				cf = CFrame.new(-6.6 + 13.2 / 16 + i * 13.2 / 8, 7.4, -0.35) * CFrame.Angles(math.rad(-10.5), 0, 0), color = if i % 2 == 0 then C.Curb else C.Carpet })
+			K.part({
+				name = if i % 2 == 0 then "AwningA" else "AwningB",
+				parent = m,
+				size = Vector3.new(13.2 / 8, 0.25, 8.6),
+				cf = CFrame.new(-6.6 + 13.2 / 16 + i * 13.2 / 8, 7.4, -0.35) * CFrame.Angles(math.rad(-10.5), 0, 0),
+				color = if i % 2 == 0 then C.Curb else C.Carpet,
+			})
 		end
 		finish(m)
 	end
@@ -85,7 +108,15 @@ function M.build()
 		cyl(m, "Post", 0.3, 10, 5.5, C.Navy)
 		cyl(m, "Head", 0.95, 0.3, 11, C.Trim)
 		K.part({ name = "Head", parent = m, shape = "Wedge", size = Vector3.new(2.2, 0.9, 1.1), cf = CFrame.new(0, 13.4, -0.55), color = C.Trim, deco = true })
-		K.part({ name = "Head", parent = m, shape = "Wedge", size = Vector3.new(2.2, 0.9, 1.1), cf = CFrame.new(0, 13.4, 0.55) * CFrame.Angles(0, math.pi, 0), color = C.Trim, deco = true })
+		K.part({
+			name = "Head",
+			parent = m,
+			shape = "Wedge",
+			size = Vector3.new(2.2, 0.9, 1.1),
+			cf = CFrame.new(0, 13.4, 0.55) * CFrame.Angles(0, math.pi, 0),
+			color = C.Trim,
+			deco = true,
+		})
 		K.part({ name = "Glass", parent = m, size = Vector3.new(1.5, 1.9, 1.5), pos = Vector3.new(0, 12.1, 0), color = C.Glow, mat = Enum.Material.Neon, deco = true })
 		finish(m)
 	end
@@ -134,9 +165,20 @@ end
 -- Workspace under their file names. This turns each into its master (replacing the part-built
 -- stand-in), keeps the import in ServerStorage.CityKit_027_Imports, and reports what it found.
 local COLOURS = {
-	Trunk = { C.Trunk }, Canopy = { C.Canopy }, Counter = { C.Paving }, Posts = { C.Trim }, AwningA = { C.Curb },
-	AwningB = { C.Carpet }, Base = { C.Stone }, Drum = { C.Paving }, Dome = { C.Trim }, Ribs = { C.TrimDark },
-	Lantern = { C.Glow, Enum.Material.Neon }, Rock = { C.Rock, Enum.Material.Slate }, Post = { C.Navy }, Head = { C.Trim },
+	Trunk = { C.Trunk },
+	Canopy = { C.Canopy },
+	Counter = { C.Paving },
+	Posts = { C.Trim },
+	AwningA = { C.Curb },
+	AwningB = { C.Carpet },
+	Base = { C.Stone },
+	Drum = { C.Paving },
+	Dome = { C.Trim },
+	Ribs = { C.TrimDark },
+	Lantern = { C.Glow, Enum.Material.Neon },
+	Rock = { C.Rock, Enum.Material.Slate },
+	Post = { C.Navy },
+	Head = { C.Trim },
 	Glass = { C.Glow, Enum.Material.Neon },
 }
 local IMPORTS = { "Tree_A", "Tree_B", "Tree_C", "Stall", "Vault", "Rock_A", "Rock_B", "Lamp" }
@@ -164,10 +206,14 @@ function M.fromImports(): string
 		local lo, hi = Vector3.new(math.huge, math.huge, math.huge), Vector3.new(-math.huge, -math.huge, -math.huge)
 		for _, p in meshes do
 			local h = p.Size / 2
-			for _, sx in { -1, 1 } do for _, sy in { -1, 1 } do for _, sz in { -1, 1 } do
-				local w = p.CFrame * Vector3.new(h.X * sx, h.Y * sy, h.Z * sz)
-				lo, hi = lo:Min(w), hi:Max(w)
-			end end end
+			for _, sx in { -1, 1 } do
+				for _, sy in { -1, 1 } do
+					for _, sz in { -1, 1 } do
+						local w = p.CFrame * Vector3.new(h.X * sx, h.Y * sy, h.Z * sz)
+						lo, hi = lo:Min(w), hi:Max(w)
+					end
+				end
+			end
 		end
 		local rockLike = name:match("^Rock") ~= nil -- rocks hang below the island: pivot on their flat top
 		local pivot = Vector3.new((lo.X + hi.X) / 2, if rockLike then hi.Y else lo.Y, (lo.Z + hi.Z) / 2)

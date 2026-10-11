@@ -83,7 +83,12 @@ return function(): string
 	-- Bushes and flowers: lot front corners (the grass gaps between lots) and building bases.
 	local beds = K.folder(root, "Beds")
 	local function bed(x, z, flowers)
-		K.place(if flowers then "M_Flowers" else "M_Bush", CFrame.new(x, K.groundY(x, z, { beds, trees }), z) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0), beds, rng:NextNumber(0.9, 1.2))
+		K.place(
+			if flowers then "M_Flowers" else "M_Bush",
+			CFrame.new(x, K.groundY(x, z, { beds, trees }), z) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0),
+			beds,
+			rng:NextNumber(0.9, 1.2)
+		)
 	end
 	for idx = 0, #L.lotXs do
 		local gx = L.lotXs[1] - L.lotPitch / 2 + idx * L.lotPitch

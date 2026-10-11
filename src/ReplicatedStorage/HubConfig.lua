@@ -46,27 +46,55 @@ HubConfig.DECOR_SPOTS = { { -15, -14 }, { 15, -14 }, { -15, 15 }, { 15, 15 }, { 
 -- z = 12, 3, -6). Down the middle, between the rows: 9.2 studs from every pad (the six are 9 apart).
 HubConfig.EXTRA_STATION_SPOTS = { { 0, 7.5 }, { 0, -1.5 } } -- lot-local x, z; one per level of "upgrade:stations"
 HubConfig.Shops = {
-	BatBoutique = { title = "BAT BOUTIQUE", keeper = "Slugger Sal", items = {
-		{ id = "skin:Neon", name = "Neon Bat", note = "A glowing bat look", kind = "skin", value = "Neon", price = 15000 }, -- PROPOSED
-		{ id = "skin:Golden", name = "Golden Bat", note = "A solid gold bat look", kind = "skin", value = "Golden", price = 75000 }, -- PROPOSED
-		{ id = "trail:Sunset", name = "Sunset Trail", note = "Orange swing trail", kind = "trail", color = { 255, 140, 60 }, price = 5000 }, -- PROPOSED
-		{ id = "trail:Mint", name = "Mint Trail", note = "Green swing trail", kind = "trail", color = { 110, 230, 160 }, price = 5000 }, -- PROPOSED
-		{ id = "trail:Royal", name = "Royal Trail", note = "Purple swing trail", kind = "trail", color = { 170, 110, 240 }, price = 12000 }, -- PROPOSED
-	} },
-	LotAndDecor = { title = "LOT & DECOR", keeper = "Daisy Decor", items = {
-		{ id = "decor:planter", name = "Flower Planter", note = "A stone bowl of flowers", kind = "decor", price = 2000 }, -- PROPOSED
-		{ id = "decor:topiary", name = "Topiary", note = "A clipped ball tree", kind = "decor", price = 4000 }, -- PROPOSED
-		{ id = "decor:lamp", name = "Street Lamp", note = "A warm lamp for your lot", kind = "decor", price = 6000 }, -- PROPOSED
-		{ id = "decor:sign", name = "Neon Sign", note = "A glowing OPEN sign", kind = "decor", price = 12000 }, -- PROPOSED
-		{ id = "decor:fountain", name = "Mini Fountain", note = "A small marble fountain", kind = "decor", price = 25000 }, -- PROPOSED
-		{ id = "decor:statue", name = "Gold Statue", note = "A golden coin statue", kind = "decor", price = 40000 }, -- PROPOSED
-	} },
-	UpgradeOffice = { title = "UPGRADE OFFICE", keeper = "Mr. Ledger", flag = "UPGRADES_ENABLED", items = {
-		-- levels = price of each level in turn. PROPOSED, and behind UPGRADES_ENABLED.
-		{ id = "upgrade:storage", name = "Storage Crate", note = "+5 worker storage slots per level", kind = "upgrade", key = "storage", levels = { 25000, 100000, 400000 }, slots = 5 },
-		{ id = "upgrade:training", name = "Arena Training", note = "+10% battle stats for one worker per level", kind = "upgrade", levels = { 10000, 40000, 150000 }, perWorker = true },
-		{ id = "upgrade:stations", name = "Extra Station", note = "+1 worker station on your lot per level", kind = "upgrade", key = "stations", levels = { 150000, 750000 } },
-	} },
+	BatBoutique = {
+		title = "BAT BOUTIQUE",
+		keeper = "Slugger Sal",
+		items = {
+			{ id = "skin:Neon", name = "Neon Bat", note = "A glowing bat look", kind = "skin", value = "Neon", price = 15000 }, -- PROPOSED
+			{ id = "skin:Golden", name = "Golden Bat", note = "A solid gold bat look", kind = "skin", value = "Golden", price = 75000 }, -- PROPOSED
+			{ id = "trail:Sunset", name = "Sunset Trail", note = "Orange swing trail", kind = "trail", color = { 255, 140, 60 }, price = 5000 }, -- PROPOSED
+			{ id = "trail:Mint", name = "Mint Trail", note = "Green swing trail", kind = "trail", color = { 110, 230, 160 }, price = 5000 }, -- PROPOSED
+			{ id = "trail:Royal", name = "Royal Trail", note = "Purple swing trail", kind = "trail", color = { 170, 110, 240 }, price = 12000 }, -- PROPOSED
+		},
+	},
+	LotAndDecor = {
+		title = "LOT & DECOR",
+		keeper = "Daisy Decor",
+		items = {
+			{ id = "decor:planter", name = "Flower Planter", note = "A stone bowl of flowers", kind = "decor", price = 2000 }, -- PROPOSED
+			{ id = "decor:topiary", name = "Topiary", note = "A clipped ball tree", kind = "decor", price = 4000 }, -- PROPOSED
+			{ id = "decor:lamp", name = "Street Lamp", note = "A warm lamp for your lot", kind = "decor", price = 6000 }, -- PROPOSED
+			{ id = "decor:sign", name = "Neon Sign", note = "A glowing OPEN sign", kind = "decor", price = 12000 }, -- PROPOSED
+			{ id = "decor:fountain", name = "Mini Fountain", note = "A small marble fountain", kind = "decor", price = 25000 }, -- PROPOSED
+			{ id = "decor:statue", name = "Gold Statue", note = "A golden coin statue", kind = "decor", price = 40000 }, -- PROPOSED
+		},
+	},
+	UpgradeOffice = {
+		title = "UPGRADE OFFICE",
+		keeper = "Mr. Ledger",
+		flag = "UPGRADES_ENABLED",
+		items = {
+			-- levels = price of each level in turn. PROPOSED, and behind UPGRADES_ENABLED.
+			{
+				id = "upgrade:storage",
+				name = "Storage Crate",
+				note = "+5 worker storage slots per level",
+				kind = "upgrade",
+				key = "storage",
+				levels = { 25000, 100000, 400000 },
+				slots = 5,
+			},
+			{
+				id = "upgrade:training",
+				name = "Arena Training",
+				note = "+10% battle stats for one worker per level",
+				kind = "upgrade",
+				levels = { 10000, 40000, 150000 },
+				perWorker = true,
+			},
+			{ id = "upgrade:stations", name = "Extra Station", note = "+1 worker station on your lot per level", kind = "upgrade", key = "stations", levels = { 150000, 750000 } },
+		},
+	},
 }
 HubConfig.SHOP_REACH = 40 -- studs from a shop's counter within which its shop can be used
 

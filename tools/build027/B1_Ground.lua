@@ -44,9 +44,13 @@ return function(): string
 	K.part({ name = "Floor", parent = hub, ghost = true, size = Vector3.new(8, 1, 8), pos = Vector3.new(-26, 0, L.laneZ) })
 
 	-- The spawn square is the safe hub (PvP safe zone volume, invisible).
-	local safe = K.part({ name = "SafeHubVolume", parent = root, ghost = true,
+	local safe = K.part({
+		name = "SafeHubVolume",
+		parent = root,
+		ghost = true,
 		size = Vector3.new(L.squareX[2] - L.squareX[1], 24, L.squareZ[2] - L.squareZ[1]),
-		pos = Vector3.new((L.squareX[1] + L.squareX[2]) / 2, 10, (L.squareZ[1] + L.squareZ[2]) / 2) })
+		pos = Vector3.new((L.squareX[1] + L.squareX[2]) / 2, 10, (L.squareZ[1] + L.squareZ[2]) / 2),
+	})
 	K.tag(safe, "PvPSafeZone")
 
 	-- Parade lane: 16-stud red carpet on an 18-stud gold band, from the Zone 1 arch to the Vault.
@@ -63,8 +67,10 @@ return function(): string
 	-- Plaza restyled (ours): same palette, same trim; grass discs match the island so overlaps vanish.
 	local fz = workspace.World.FutureZones.BillionairePlaza
 	local recolour = {
-		{ fz:FindFirstChild("ArenaFloor"), C.PavingWarm }, { fz:FindFirstChild("ArenaEdge"), C.Trim },
-		{ fz:FindFirstChild("BypassRing"), C.Paving }, { fz:FindFirstChild("CentreSeal"), C.Trim },
+		{ fz:FindFirstChild("ArenaFloor"), C.PavingWarm },
+		{ fz:FindFirstChild("ArenaEdge"), C.Trim },
+		{ fz:FindFirstChild("BypassRing"), C.Paving },
+		{ fz:FindFirstChild("CentreSeal"), C.Trim },
 	}
 	local pi = workspace.World.Islands:FindFirstChild("PlazaIsland")
 	for _, c in (pi and pi:GetChildren() or {}) do
@@ -92,7 +98,16 @@ return function(): string
 		local seg = K.bar(edge, "Hedge", a + inward * 1.3, b + inward * 1.3, 2.4, 2.6, 2.6, C.Hedge, Enum.Material.Plastic)
 		seg.CanQuery = false
 		for _, e in { -1, 1 } do
-			K.part({ name = "HedgeCap", parent = edge, shape = "Cylinder", size = Vector3.new(2.6, 2.6, 2.6), cf = seg.CFrame * CFrame.new(0, 0, e * seg.Size.Z / 2) * CFrame.Angles(0, 0, math.rad(90)), color = C.Hedge, mat = Enum.Material.Plastic, deco = true })
+			K.part({
+				name = "HedgeCap",
+				parent = edge,
+				shape = "Cylinder",
+				size = Vector3.new(2.6, 2.6, 2.6),
+				cf = seg.CFrame * CFrame.new(0, 0, e * seg.Size.Z / 2) * CFrame.Angles(0, 0, math.rad(90)),
+				color = C.Hedge,
+				mat = Enum.Material.Plastic,
+				deco = true,
+			})
 		end
 		local dir = (b - a).Unit
 		for k = 18, (b - a).Magnitude, 36 do -- rocks under this stretch, half sticking out
@@ -140,8 +155,15 @@ return function(): string
 	local rng = Random.new(27)
 	for _ = 1, 30 do
 		local s = rng:NextNumber(70, 150)
-		local cloud = K.part({ name = "Cloud", parent = clouds, deco = true, color = C.Cloud, transparency = 0.12,
-			size = Vector3.new(s, s * 0.32, s * 0.8), cf = CFrame.new(rng:NextNumber(-520, 160), rng:NextNumber(-170, -140), rng:NextNumber(-260, 250)) })
+		local cloud = K.part({
+			name = "Cloud",
+			parent = clouds,
+			deco = true,
+			color = C.Cloud,
+			transparency = 0.12,
+			size = Vector3.new(s, s * 0.32, s * 0.8),
+			cf = CFrame.new(rng:NextNumber(-520, 160), rng:NextNumber(-170, -140), rng:NextNumber(-260, 250)),
+		})
 		local mesh = Instance.new("SpecialMesh")
 		mesh.MeshType = Enum.MeshType.Sphere
 		mesh.Parent = cloud
@@ -160,7 +182,15 @@ return function(): string
 	if sea then
 		local top = sea.Position.Y + sea.Size.Y / 2
 		local skirtX = sea.Position.X - sea.Size.X / 2 - 2
-		K.part({ name = "SeaSkirt", parent = root, size = Vector3.new(4, 70, sea.Size.Z), pos = Vector3.new(skirtX, top - 35, sea.Position.Z), color = C.Rock, mat = Enum.Material.Slate, deco = true })
+		K.part({
+			name = "SeaSkirt",
+			parent = root,
+			size = Vector3.new(4, 70, sea.Size.Z),
+			pos = Vector3.new(skirtX, top - 35, sea.Position.Z),
+			color = C.Rock,
+			mat = Enum.Material.Slate,
+			deco = true,
+		})
 	end
 	return ("ground: %d parts (hedge runs %d, rocks %d, clouds %d)"):format(K.count(root), hedges, rockCount, #clouds:GetChildren())
 end

@@ -2,3 +2,4 @@ backups/
 *.rbxl
 *.rbxlx
 __pycache__/
+tools/types/

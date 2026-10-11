@@ -15,7 +15,15 @@ local function reserved(parent: Instance, name: string, centre: Vector3, facing:
 	K.part({ name = "Base", parent = m, size = Vector3.new(L.lotBase, 0.8, L.lotBase), cf = cf * CFrame.new(0, L.lotBaseTop - 0.4, 0), color = C.Navy })
 	K.part({ name = "Floor", parent = m, size = Vector3.new(36, 0.2, 36), cf = cf * CFrame.new(0, L.lotFloorTop - 0.1, 0), color = C.PavingWarm })
 	for k, r in { 7, 6 } do
-		K.part({ name = "Medallion", parent = m, shape = "Cylinder", size = Vector3.new(0.1, r * 2, r * 2), cf = cf * CFrame.new(0, L.lotFloorTop + 0.02 * k, 0) * CFrame.Angles(0, 0, math.rad(90)), color = if k == 1 then C.Trim else C.PavingWarm, deco = true })
+		K.part({
+			name = "Medallion",
+			parent = m,
+			shape = "Cylinder",
+			size = Vector3.new(0.1, r * 2, r * 2),
+			cf = cf * CFrame.new(0, L.lotFloorTop + 0.02 * k, 0) * CFrame.Angles(0, 0, math.rad(90)),
+			color = if k == 1 then C.Trim else C.PavingWarm,
+			deco = true,
+		})
 	end
 	local fy = L.lotFloorTop + 1.15
 	local function fence(n, size, at)

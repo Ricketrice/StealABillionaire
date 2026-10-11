@@ -31,7 +31,6 @@ end
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local lines, passed, failed, simulated = {}, 0, 0, 0
@@ -142,10 +141,18 @@ if phase == "a" then
 	local U = Players:GetPlayers()[1]
 	scenario("migration 2 -> 3", function()
 		local before = raw(U.UserId)
-		expect("the store holds the seeded schema-2 test record", before and before.schema == 2 and before.workers[1] and before.workers[1].uid == "t027-a1", before and before.schema)
+		expect(
+			"the store holds the seeded schema-2 test record",
+			before and before.schema == 2 and before.workers[1] and before.workers[1].uid == "t027-a1",
+			before and before.schema
+		)
 		local data = PlayerData.get(U) :: any
 		-- (the hub systems have filled in their defaults and today's quests by now)
-		expect("loaded as schema 3 with a fresh hub field", data.schema == 3 and type(data.hub) == "table" and (data.hub.trophies or 0) == 0 and next(data.hub.owned or {}) == nil, HttpService:JSONEncode(data.hub))
+		expect(
+			"loaded as schema 3 with a fresh hub field",
+			data.schema == 3 and type(data.hub) == "table" and (data.hub.trophies or 0) == 0 and next(data.hub.owned or {}) == nil,
+			HttpService:JSONEncode(data.hub)
+		)
 		expect("the seeded workers came through", record(U, "t027-a1") and record(U, "t027-a2") and record(U, "t027-a3"))
 		expect("a save writes schema 3", PlayerData.save(U) and raw(U.UserId).schema == 3, raw(U.UserId).schema)
 	end)
@@ -188,7 +195,11 @@ if phase == "a" then
 	scenario("save", function()
 		expect("saved", PlayerData.save(U))
 		local stored = raw(U.UserId)
-		expect("the store has stations 7/8, purchases, trophy and tutorial", stored.hub.trophies == 1 and stored.hub.tutorial == true and stored.hub.upgrades.stations == 2 and stored.hub.owned["skin:Neon"] == true, HttpService:JSONEncode(stored.hub))
+		expect(
+			"the store has stations 7/8, purchases, trophy and tutorial",
+			stored.hub.trophies == 1 and stored.hub.tutorial == true and stored.hub.upgrades.stations == 2 and stored.hub.owned["skin:Neon"] == true,
+			HttpService:JSONEncode(stored.hub)
+		)
 		testStore:SetAsync("expect", { cash = stored.cash, userId = U.UserId })
 	end)
 	finish("COMPLETE")
@@ -233,20 +244,26 @@ scenario("steal, save, load", function()
 	local model = placed(B, "t027-b2")
 	expect("B's worker stands on B's lot", model ~= nil)
 	local root = (model :: Model):FindFirstChild("HumanoidRootPart") :: BasePart
-	;(A.Character :: Model):PivotTo(CFrame.new(root.Position + Vector3.new(0, 1, 4)))
+	(A.Character :: Model):PivotTo(CFrame.new(root.Position + Vector3.new(0, 1, 4)))
 	task.wait(0.3)
 	local ok, message = PvPSteal.tryBegin(A, model :: Model)
 	expect("steal begins", ok, message)
-	PvPSteal._test.setTeleportCheck(false)
-	;(A.Character :: Model):PivotTo(PlotService.getPlot(A).PrimaryPart.CFrame * CFrame.new(0, 3.5, 0))
+	PvPSteal._test.setTeleportCheck(false);
+	(A.Character :: Model):PivotTo(PlotService.getPlot(A).PrimaryPart.CFrame * CFrame.new(0, 3.5, 0))
 	PvPSteal._test.check()
 	PvPSteal._test.setTeleportCheck(true)
-	expect("delivered: A owns it, B doesn't", waitUntil(10, function()
-		return record(A, "t027-b2") ~= nil and record(B, "t027-b2") == nil
-	end))
-	expect("the transfer journal settles", waitUntil(30, function()
-		return PvPTransfer.isClear(PlayerData.store(), -1) == true and PvPTransfer.isClear(PlayerData.store(), -2) == true
-	end))
+	expect(
+		"delivered: A owns it, B doesn't",
+		waitUntil(10, function()
+			return record(A, "t027-b2") ~= nil and record(B, "t027-b2") == nil
+		end)
+	)
+	expect(
+		"the transfer journal settles",
+		waitUntil(30, function()
+			return PvPTransfer.isClear(PlayerData.store(), -1) == true and PvPTransfer.isClear(PlayerData.store(), -2) == true
+		end)
+	)
 	-- Rejoin: A's real final save, then a real load from the store (same server).
 	PlayerData._test.leave(A)
 	PlayerData._test.leave(B)
@@ -261,9 +278,12 @@ scenario("steal, save, load", function()
 	end
 	expect("in the store: A has it, B doesn't", has(storedA, "t027-b2") and not has(storedB, "t027-b2"))
 	task.spawn(PlayerData._test.load, A)
-	expect("A loads again from the store", waitUntil(30, function()
-		return PlayerData.isLoaded(A) and PlayerData.get(A) ~= nil
-	end))
+	expect(
+		"A loads again from the store",
+		waitUntil(30, function()
+			return PlayerData.isLoaded(A) and PlayerData.get(A) ~= nil
+		end)
+	)
 	expect("after the rejoin A still owns the stolen worker", record(A, "t027-b2") ~= nil)
 	PlayerData._test.leave(A)
 end)

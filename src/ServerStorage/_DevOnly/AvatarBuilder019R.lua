@@ -16,21 +16,40 @@ local B = {}
 local RIGS_FOLDER, PREVIEWS_FOLDER = "WorkerRigs019R", "WorkerPreviews019R"
 -- Each Velocity Royale worker's one emissive accent (export/019/manifest.json glow_color).
 local GLOW = {
-	butler_barnaby = "FFB02E", caddie_gus = "FFE45A", polo_pro_penny = "FFF3C4", chef_pierre = "28D6CC",
-	bodyguard_boris = "28D6CC", hedge_fund_hank = "FF8A2A", oil_baron_oswald = "FFC24A", the_trillionaire = "FF6A1E",
+	butler_barnaby = "FFB02E",
+	caddie_gus = "FFE45A",
+	polo_pro_penny = "FFF3C4",
+	chef_pierre = "28D6CC",
+	bodyguard_boris = "28D6CC",
+	hedge_fund_hank = "FF8A2A",
+	oil_baron_oswald = "FFC24A",
+	the_trillionaire = "FF6A1E",
 }
 
 local A = Enum.AccessoryType
 -- slot -> { accessory type, layering order (none = rigid accessory) }
 local ACCESSORY = {
-	Hair = { A.Hair }, Hat = { A.Hat }, Face = { A.Face }, Neck = { A.Neck }, Shoulder = { A.Shoulder },
-	Front = { A.Front }, Back = { A.Back }, Waist = { A.Waist },
-	Pants = { A.Pants, 1 }, Shorts = { A.Shorts, 1 }, Skirt = { A.DressSkirt, 2 },
-	LeftShoe = { A.LeftShoe, 3 }, RightShoe = { A.RightShoe, 3 },
-	TShirt = { A.TShirt, 4 }, Shirt = { A.Shirt, 5 }, Sweater = { A.Sweater, 6 }, Jacket = { A.Jacket, 7 },
+	Hair = { A.Hair },
+	Hat = { A.Hat },
+	Face = { A.Face },
+	Neck = { A.Neck },
+	Shoulder = { A.Shoulder },
+	Front = { A.Front },
+	Back = { A.Back },
+	Waist = { A.Waist },
+	Pants = { A.Pants, 1 },
+	Shorts = { A.Shorts, 1 },
+	Skirt = { A.DressSkirt, 2 },
+	LeftShoe = { A.LeftShoe, 3 },
+	RightShoe = { A.RightShoe, 3 },
+	TShirt = { A.TShirt, 4 },
+	Shirt = { A.Shirt, 5 },
+	Sweater = { A.Sweater, 6 },
+	Jacket = { A.Jacket, 7 },
 }
 local TOPS = { TShirt = true, Shirt = true, Sweater = true, Jacket = true }
-local HUMANOID_SETTINGS = { "DisplayDistanceType", "HealthDisplayType", "NameDisplayDistance", "HealthDisplayDistance", "NameOcclusion", "RequiresNeck", "BreakJointsOnDeath", "WalkSpeed" }
+local HUMANOID_SETTINGS =
+	{ "DisplayDistanceType", "HealthDisplayType", "NameDisplayDistance", "HealthDisplayDistance", "NameOcclusion", "RequiresNeck", "BreakJointsOnDeath", "WalkSpeed" }
 
 local function describe(look, items): (HumanoidDescription, number)
 	local d = Instance.new("HumanoidDescription")
@@ -104,9 +123,10 @@ local function createAvatar(look): (Model?, { string })
 		end
 	end
 	for _, item in look.items do
-		if (item[1] == "ClassicShirt" and not model:FindFirstChildOfClass("Shirt")) or (item[1] == "ClassicPants" and not model:FindFirstChildOfClass("Pants")) then
-			table.insert(failed, ("%s %d"):format(item[1], item[2]))
-		elseif item[1] == "Head" and not (model:FindFirstChild("Head") and model.Head:FindFirstChildOfClass("FaceControls")) then
+		local missingShirt = item[1] == "ClassicShirt" and not model:FindFirstChildOfClass("Shirt")
+		local missingPants = item[1] == "ClassicPants" and not model:FindFirstChildOfClass("Pants")
+		local missingFace = item[1] == "Head" and not (model:FindFirstChild("Head") and model.Head:FindFirstChildOfClass("FaceControls"))
+		if missingShirt or missingPants or missingFace then
 			table.insert(failed, ("%s %d"):format(item[1], item[2]))
 		end
 	end
@@ -172,9 +192,13 @@ local BODY = { "Head", "UpperTorso", "LowerTorso", "LeftUpperLeg", "RightUpperLe
 
 local function grid(cf: CFrame, size: Vector3, shrink: number): { Vector3 }
 	local points, half = {}, size / 2 - Vector3.one * shrink
-	for _, x in { -1, 0, 1 } do for _, y in { -1, 0, 1 } do for _, z in { -1, 0, 1 } do
-		table.insert(points, cf * Vector3.new(half.X * x, half.Y * y, half.Z * z))
-	end end end
+	for _, x in { -1, 0, 1 } do
+		for _, y in { -1, 0, 1 } do
+			for _, z in { -1, 0, 1 } do
+				table.insert(points, cf * Vector3.new(half.X * x, half.Y * y, half.Z * z))
+			end
+		end
+	end
 	return points
 end
 
@@ -198,10 +222,14 @@ function B.bodyOverlap(model: Model, prop: BasePart, cf: CFrame?): number
 		local part = model:FindFirstChild(name)
 		if part and part:IsA("BasePart") then
 			for _, p in mine do
-				if inBox(p, part.CFrame, part.Size) then n += 1 end
+				if inBox(p, part.CFrame, part.Size) then
+					n += 1
+				end
 			end
 			for _, p in grid(part.CFrame, part.Size, 0.03) do
-				if inBox(p, at, prop.Size) then n += 1 end
+				if inBox(p, at, prop.Size) then
+					n += 1
+				end
 			end
 		end
 	end
@@ -284,13 +312,17 @@ local function spanY(model: Model): (number, number, number)
 	for _, p in model:GetDescendants() do
 		if p:IsA("MeshPart") then
 			local half = p.Size / 2
-			for _, sx in { -1, 1 } do for _, sy in { -1, 1 } do for _, sz in { -1, 1 } do
-				local y = (p.CFrame * Vector3.new(half.X * sx, half.Y * sy, half.Z * sz)).Y
-				low, high = math.min(low, y), math.max(high, y)
-				if p.Name == "LeftFoot" or p.Name == "RightFoot" then
-					feet = math.min(feet, y)
+			for _, sx in { -1, 1 } do
+				for _, sy in { -1, 1 } do
+					for _, sz in { -1, 1 } do
+						local y = (p.CFrame * Vector3.new(half.X * sx, half.Y * sy, half.Z * sz)).Y
+						low, high = math.min(low, y), math.max(high, y)
+						if p.Name == "LeftFoot" or p.Name == "RightFoot" then
+							feet = math.min(feet, y)
+						end
+					end
 				end
-			end end end
+			end
 		end
 	end
 	return low, high, feet

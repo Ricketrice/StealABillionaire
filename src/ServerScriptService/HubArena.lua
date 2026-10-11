@@ -204,7 +204,12 @@ local function finish(f: any, winner: Entry, loser: Entry, reason: string)
 			HubArena.stats.paid += 1
 		end
 		HubBase.changed(winner.player)
-		HubBase.notify(winner.player, true, if paid then ("%s won! +$%d and a trophy point."):format(winner.name, cash) else ("%s won! (No reward: you beat this player a moment ago.)"):format(winner.name), TITLE)
+		HubBase.notify(
+			winner.player,
+			true,
+			if paid then ("%s won! +$%d and a trophy point."):format(winner.name, cash) else ("%s won! (No reward: you beat this player a moment ago.)"):format(winner.name),
+			TITLE
+		)
 		won:Fire(winner.player, loser.player)
 	end
 	if loser.player.Parent then

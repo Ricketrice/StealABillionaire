@@ -41,9 +41,18 @@ K.C = {
 }
 -- The twelve lot colours (same shape, different colour), in PlotId order.
 K.LOT_COLOURS = {
-	rgb(255, 110, 96), rgb(86, 176, 238), rgb(255, 176, 60), rgb(122, 206, 92),
-	rgb(176, 120, 236), rgb(60, 196, 186), rgb(255, 128, 180), rgb(250, 214, 64),
-	rgb(108, 140, 240), rgb(255, 150, 80), rgb(150, 210, 70), rgb(230, 100, 140),
+	rgb(255, 110, 96),
+	rgb(86, 176, 238),
+	rgb(255, 176, 60),
+	rgb(122, 206, 92),
+	rgb(176, 120, 236),
+	rgb(60, 196, 186),
+	rgb(255, 128, 180),
+	rgb(250, 214, 64),
+	rgb(108, 140, 240),
+	rgb(255, 150, 80),
+	rgb(150, 210, 70),
+	rgb(230, 100, 140),
 }
 
 -- Layout (studs). +X runs from the spawn square down the avenue into the plaza.
@@ -153,7 +162,10 @@ end
 function K.slab(parent, name, x0, x1, z0, z1, top, thick, color, mat)
 	thick = thick or 0.6
 	return K.part({
-		name = name, parent = parent, color = color, mat = mat,
+		name = name,
+		parent = parent,
+		color = color,
+		mat = mat,
 		size = Vector3.new(math.abs(x1 - x0), thick, math.abs(z1 - z0)),
 		pos = Vector3.new((x0 + x1) / 2, top - thick / 2, (z0 + z1) / 2),
 	})
@@ -165,7 +177,11 @@ function K.bar(parent, name, a: Vector3, b: Vector3, width, top, thick, color, m
 	local length = (flatB - flatA).Magnitude
 	local mid = (flatA + flatB) / 2
 	return K.part({
-		name = name, parent = parent, color = color, mat = mat, deco = deco,
+		name = name,
+		parent = parent,
+		color = color,
+		mat = mat,
+		deco = deco,
 		size = Vector3.new(width, thick, length),
 		cf = CFrame.lookAt(Vector3.new(mid.X, top - thick / 2, mid.Z), Vector3.new(flatB.X, top - thick / 2, flatB.Z)),
 	})

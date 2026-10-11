@@ -1,0 +1,2 @@
+# Selene (Luau linter): run `selene <files>` before pushing scripts to Studio.
+std = "roblox"

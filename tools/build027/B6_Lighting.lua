@@ -17,14 +17,22 @@ return function(): string
 	Lighting.ExposureCompensation = 0.1
 	Lighting.ShadowSoftness = 0.35
 	Lighting.GlobalShadows = true
-	local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere", Lighting)
+	local function effect(class: string): any
+		local e = Lighting:FindFirstChildOfClass(class)
+		if not e then
+			e = Instance.new(class)
+			e.Parent = Lighting
+		end
+		return e
+	end
+	local atmosphere = effect("Atmosphere")
 	atmosphere.Density = 0.17
 	atmosphere.Offset = 0.1
 	atmosphere.Color = Color3.fromRGB(226, 236, 255)
 	atmosphere.Decay = Color3.fromRGB(255, 214, 170)
 	atmosphere.Glare = 0.25
 	atmosphere.Haze = 0.25
-	local bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect", Lighting)
+	local bloom = effect("BloomEffect")
 	bloom.Enabled, bloom.Intensity, bloom.Size, bloom.Threshold = true, 0.35, 22, 1.4
 	local rays = Lighting:FindFirstChildOfClass("SunRaysEffect")
 	if rays then
@@ -34,7 +42,7 @@ return function(): string
 	if dof then
 		dof.Enabled = false -- blurs the Vault at the end of the lane
 	end
-	local cc = Lighting:FindFirstChild("SAB_ColorCorrection") or Instance.new("ColorCorrectionEffect", Lighting)
+	local cc = Lighting:FindFirstChild("SAB_ColorCorrection") or effect("ColorCorrectionEffect")
 	cc.Brightness, cc.Contrast, cc.Saturation = 0.02, 0.06, 0.16
 	cc.TintColor = Color3.fromRGB(255, 250, 244)
 	return "lighting set"

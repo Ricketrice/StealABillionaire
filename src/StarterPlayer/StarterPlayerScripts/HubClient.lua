@@ -38,14 +38,22 @@ local gui = UIKit.screen("Hub", UIStyle.DisplayOrder.Inventory + 2)
 local root = UIKit.root(gui)
 
 -- One list panel in the middle of the screen (shops, quests, worker pickers) ---------------------------
-local panel = UIKit.panel({ Name = "Panel", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.46), Size = UDim2.fromOffset(460, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = root })
+local panel = UIKit.panel({
+	Name = "Panel",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.46),
+	Size = UDim2.fromOffset(460, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Parent = root,
+})
 panel.Visible = false
 UIKit.padding(panel, UIStyle.Space.L, UIStyle.Space.M)
 UIKit.list(panel, Enum.FillDirection.Vertical, UIStyle.Space.S, Enum.HorizontalAlignment.Center)
 UIKit.scaled(panel, 0.58, 1.1, root)
 local header = UIKit.make("Frame", { Name = "Header", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, UIStyle.TouchTarget), LayoutOrder = 1, Parent = panel })
 local titleLabel = UIKit.text({ Text = "", Role = "Title", Size = UDim2.new(1, -52, 1, 0), Parent = header })
-local body = UIKit.make("Frame", { Name = "Body", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = panel }) :: Frame
+local body =
+	UIKit.make("Frame", { Name = "Body", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = panel }) :: Frame
 UIKit.list(body, Enum.FillDirection.Vertical, 6)
 local footer = UIKit.text({ Text = "", Role = "Small", Color = C.TextDim, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 3, Parent = panel })
 local rebuild: (() -> ())? = nil -- redraws the open panel when the server sends new state
@@ -55,7 +63,16 @@ local function closePanel()
 	rebuild = nil
 	gui:SetAttribute("Open", nil)
 end
-UIKit.button({ Name = "Close", Kind = "Ghost", Text = "X", AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget), Parent = header, OnActivated = closePanel })
+UIKit.button({
+	Name = "Close",
+	Kind = "Ghost",
+	Text = "X",
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.fromScale(1, 0),
+	Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget),
+	Parent = header,
+	OnActivated = closePanel,
+})
 local function openPanel(key: string, title: string, note: string, draw: () -> ())
 	titleLabel.Text = title
 	footer.Text = note
@@ -80,7 +97,16 @@ local function row(name: string, note: string, buttonText: string?, enabled: boo
 	UIKit.text({ Text = name, Role = "Heading", Position = UDim2.fromOffset(12, 6), Size = UDim2.new(1, -170, 0, 22), Parent = frame })
 	UIKit.text({ Text = note, Role = "Small", Color = C.TextMuted, Position = UDim2.fromOffset(12, 28), Size = UDim2.new(1, -170, 0, 20), Parent = frame })
 	if buttonText then
-		local _, control = UIKit.button({ Name = "Action", Kind = if enabled then "Primary" else "Secondary", Text = buttonText, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -8, 0.5, 0), Size = UDim2.fromOffset(144, 44), Parent = frame, OnActivated = onClick })
+		local _, control = UIKit.button({
+			Name = "Action",
+			Kind = if enabled then "Primary" else "Secondary",
+			Text = buttonText,
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -8, 0.5, 0),
+			Size = UDim2.fromOffset(144, 44),
+			Parent = frame,
+			OnActivated = onClick,
+		})
 		if not enabled then
 			control.setEnabled(false, buttonText)
 		end
@@ -88,14 +114,34 @@ local function row(name: string, note: string, buttonText: string?, enabled: boo
 end
 
 -- Speech bubble with choices --------------------------------------------------------------------------
-local bubble = UIKit.panel({ Name = "Dialogue", AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -110), Size = UDim2.fromOffset(440, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = root })
+local bubble = UIKit.panel({
+	Name = "Dialogue",
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -110),
+	Size = UDim2.fromOffset(440, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Parent = root,
+})
 bubble.Visible = false
 UIKit.padding(bubble, UIStyle.Space.L, UIStyle.Space.M)
 UIKit.list(bubble, Enum.FillDirection.Vertical, UIStyle.Space.S, Enum.HorizontalAlignment.Center)
 UIKit.scaled(bubble, 0.6, 1.1, root)
 local speakerLabel = UIKit.text({ Name = "Speaker", Text = "", Role = "Heading", Color = C.Gold, LayoutOrder = 1, Parent = bubble })
-local lineLabel = UIKit.text({ Name = "Line", Text = "", Role = "Body", Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = bubble })
-local choicesFrame = UIKit.make("Frame", { Name = "Choices", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 3, Parent = bubble }) :: Frame
+local lineLabel = UIKit.text({
+	Name = "Line",
+	Text = "",
+	Role = "Body",
+	Wrap = true,
+	Truncate = false,
+	Size = UDim2.new(1, 0, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	LayoutOrder = 2,
+	Parent = bubble,
+})
+local choicesFrame = UIKit.make(
+	"Frame",
+	{ Name = "Choices", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 3, Parent = bubble }
+) :: Frame
 UIKit.list(choicesFrame, Enum.FillDirection.Vertical, 6)
 local function closeBubble()
 	bubble.Visible = false
@@ -109,12 +155,20 @@ local function say(speaker: string, line: string, choices: { { any } })
 		end
 	end
 	for index, choice in choices do
-		UIKit.button({ Name = "Choice" .. index, Kind = if index == 1 then "Primary" else "Secondary", Text = choice[1], Size = UDim2.new(1, 0, 0, UIStyle.TouchTarget), LayoutOrder = index, Parent = choicesFrame, OnActivated = function()
-			closeBubble()
-			if choice[2] then
-				choice[2]()
-			end
-		end })
+		UIKit.button({
+			Name = "Choice" .. index,
+			Kind = if index == 1 then "Primary" else "Secondary",
+			Text = choice[1],
+			Size = UDim2.new(1, 0, 0, UIStyle.TouchTarget),
+			LayoutOrder = index,
+			Parent = choicesFrame,
+			OnActivated = function()
+				closeBubble()
+				if choice[2] then
+					choice[2]()
+				end
+			end,
+		})
 	end
 	bubble.Visible = true
 	gui:SetAttribute("Speaker", speaker)
@@ -135,9 +189,15 @@ local function pickSpot(item: any)
 		for index = 1, #HubConfig.DECOR_SPOTS do
 			local there = decor[tostring(index)]
 			local label = if index <= 2 then "front" elseif index <= 4 then "back" else "back, middle"
-			row(("Spot %d (%s)"):format(index, label), if there == item.id then "This one is here now" elseif there then "Something else is here (it will be put away)" else "Empty", if there == item.id then "REMOVE" else "PLACE HERE", true, function()
-				send("ShopUse", if there == item.id then "" else item.id, index)
-			end)
+			row(
+				("Spot %d (%s)"):format(index, label),
+				if there == item.id then "This one is here now" elseif there then "Something else is here (it will be put away)" else "Empty",
+				if there == item.id then "REMOVE" else "PLACE HERE",
+				true,
+				function()
+					send("ShopUse", if there == item.id then "" else item.id, index)
+				end
+			)
 		end
 	end)
 end
@@ -204,9 +264,19 @@ local function openQuests()
 	openPanel("Quests", "QUEST BOARD", "Three new quests every day.", function()
 		for _, quest in state.quests or {} do
 			local done = quest.progress >= quest.goal
-			row(quest.text, ("%s / %s   ·   reward %s"):format(if quest.goal > 99 then money(quest.progress) else tostring(quest.progress), if quest.goal > 99 then money(quest.goal) else tostring(quest.goal), money(quest.reward)), if quest.claimed then "COLLECTED" elseif done then "CLAIM" else "IN PROGRESS", done and not quest.claimed, function()
-				send("QuestClaim", quest.id)
-			end)
+			row(
+				quest.text,
+				("%s / %s   ·   reward %s"):format(
+					if quest.goal > 99 then money(quest.progress) else tostring(quest.progress),
+					if quest.goal > 99 then money(quest.goal) else tostring(quest.goal),
+					money(quest.reward)
+				),
+				if quest.claimed then "COLLECTED" elseif done then "CLAIM" else "IN PROGRESS",
+				done and not quest.claimed,
+				function()
+					send("QuestClaim", quest.id)
+				end
+			)
 		end
 		if #(state.quests or {}) == 0 then
 			row("No quests yet", "Come back in a moment.", nil, false, nil)
@@ -215,13 +285,21 @@ local function openQuests()
 end
 
 -- Tutorial ------------------------------------------------------------------------------------------
-local tracker = UIKit.panel({ Name = "Tutorial", AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 8), Size = UDim2.fromOffset(420, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = root })
+local tracker = UIKit.panel({
+	Name = "Tutorial",
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 8),
+	Size = UDim2.fromOffset(420, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Parent = root,
+})
 tracker.Visible = false
 UIKit.padding(tracker, UIStyle.Space.M, UIStyle.Space.S)
 UIKit.list(tracker, Enum.FillDirection.Vertical, 4, Enum.HorizontalAlignment.Center)
 UIKit.scaled(tracker, 0.6, 1.05, root)
 local stepTitle = UIKit.text({ Text = "", Role = "Heading", Color = C.Gold, LayoutOrder = 1, Parent = tracker })
-local stepText = UIKit.text({ Text = "", Role = "Body", Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = tracker })
+local stepText =
+	UIKit.text({ Text = "", Role = "Body", Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = tracker })
 local stepButtons = UIKit.make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, UIStyle.TouchTarget), LayoutOrder = 3, Parent = tracker })
 local tutorialStep = 0
 local stepStart = { stations = 0, cash = 0 }
@@ -232,14 +310,29 @@ local function endTutorial()
 	gui:SetAttribute("Tutorial", nil)
 	send("TutorialDone")
 end
-local _, nextControl = UIKit.button({ Name = "Next", Kind = "Primary", Text = "NEXT", Size = UDim2.new(0.5, -4, 1, 0), Parent = stepButtons, OnActivated = function()
-	if tutorialStep >= #HubConfig.Tutorial then
-		endTutorial()
-	else
-		showStep(tutorialStep + 1)
-	end
-end })
-UIKit.button({ Name = "Skip", Kind = "Secondary", Text = "SKIP TUTORIAL", Position = UDim2.new(0.5, 4, 0, 0), Size = UDim2.new(0.5, -4, 1, 0), Parent = stepButtons, OnActivated = endTutorial })
+local _, nextControl = UIKit.button({
+	Name = "Next",
+	Kind = "Primary",
+	Text = "NEXT",
+	Size = UDim2.new(0.5, -4, 1, 0),
+	Parent = stepButtons,
+	OnActivated = function()
+		if tutorialStep >= #HubConfig.Tutorial then
+			endTutorial()
+		else
+			showStep(tutorialStep + 1)
+		end
+	end,
+})
+UIKit.button({
+	Name = "Skip",
+	Kind = "Secondary",
+	Text = "SKIP TUTORIAL",
+	Position = UDim2.new(0.5, 4, 0, 0),
+	Size = UDim2.new(0.5, -4, 1, 0),
+	Parent = stepButtons,
+	OnActivated = endTutorial,
+})
 local function onStations(): number
 	local count = 0
 	for _, entry in WorkerState.snapshot.workers do
@@ -282,9 +375,11 @@ local function pick(lines: { string }): string
 end
 local function tellStory(index: number)
 	local last = index >= #HubConfig.Story
-	say(HubConfig.NPCs.Guide.name, HubConfig.Story[index], { { if last then "Wow!" else "Go on...", if last then nil else function()
-		tellStory(index + 1)
-	end } })
+	say(HubConfig.NPCs.Guide.name, HubConfig.Story[index], { { if last then "Wow!" else "Go on...", if last
+		then nil
+		else function()
+			tellStory(index + 1)
+		end } })
 end
 local function talk(id: string)
 	local npc = HubConfig.NPCs[id]
@@ -297,18 +392,27 @@ local function talk(id: string)
 	elseif id == "Guide" then
 		say(npc.name, pick(npc.hello), {
 			{ if state.hub and state.hub.tutorial then "Show me the tutorial again" else "Show me the ropes!", startTutorial },
-			{ "Tell me about this city", function()
-				tellStory(1)
-			end },
-			{ "Any tips?", function()
-				say(npc.name, pick(HubConfig.Tips), { { "Thanks!" } })
-			end },
+			{
+				"Tell me about this city",
+				function()
+					tellStory(1)
+				end,
+			},
+			{
+				"Any tips?",
+				function()
+					say(npc.name, pick(HubConfig.Tips), { { "Thanks!" } })
+				end,
+			},
 			{ "Bye!" },
 		})
 	else
-		say(npc.name, pick(npc.hello), { { "Show me the shop", function()
-			openShop(id)
-		end }, { "Bye!" } })
+		say(npc.name, pick(npc.hello), { {
+			"Show me the shop",
+			function()
+				openShop(id)
+			end,
+		}, { "Bye!" } })
 	end
 end
 local function hook(model: Instance)
@@ -422,9 +526,16 @@ stateEvent.OnClientEvent:Connect(function(new)
 	end
 	if not offered and flag("HubNpcQuests") and state.hub and state.hub.tutorial ~= true then
 		offered = true -- once per visit: a new player is offered the tutorial
-		say(HubConfig.NPCs.Guide.name, "New in town? I can show you the ropes. It only takes a minute!", { { "Yes please!", startTutorial }, { "No thanks", function()
-			send("TutorialDone")
-		end } })
+		say(
+			HubConfig.NPCs.Guide.name,
+			"New in town? I can show you the ropes. It only takes a minute!",
+			{ { "Yes please!", startTutorial }, {
+				"No thanks",
+				function()
+					send("TutorialDone")
+				end,
+			} }
+		)
 	end
 end)
 

@@ -45,9 +45,12 @@ local function finish(state: string)
 	print("@@T022|SUMMARY " .. summary:gsub("\n", " ## "))
 	StudioTestService:EndTest(summary)
 end
-if game:GetService("ServerStorage"):GetAttribute("StudioMemoryStore") ~= true and pcall(function()
-	return game:GetService("DataStoreService"):GetDataStore("__sab_probe_022"):GetAsync("probe")
-end) then -- (027: the StudioMemoryStore attribute puts PlayerData on the in-memory store even with API access on)
+if
+	game:GetService("ServerStorage"):GetAttribute("StudioMemoryStore") ~= true
+	and pcall(function()
+		return game:GetService("DataStoreService"):GetDataStore("__sab_probe_022"):GetAsync("probe")
+	end)
+then -- (027: the StudioMemoryStore attribute puts PlayerData on the in-memory store even with API access on)
 	finish("ABORTED: Studio API access is on; this test only runs on the in-memory save")
 	return
 end
@@ -56,7 +59,8 @@ local function mod(name: string)
 	return require(ServerScriptService:WaitForChild(name)) :: any
 end
 local CashService, NPCCarry, NPCPlacement, PassiveIncome = mod("CashService"), mod("NPCCarry"), mod("NPCPlacement"), mod("PassiveIncome")
-local PlayerData, PlotService, PvPBase, PvPCombat, PvPSteal, WorkerInventory = mod("PlayerData"), mod("PlotService"), mod("PvPBase"), mod("PvPCombat"), mod("PvPSteal"), mod("WorkerInventory")
+local PlayerData, PlotService, PvPBase, PvPCombat, PvPSteal, WorkerInventory =
+	mod("PlayerData"), mod("PlotService"), mod("PvPBase"), mod("PvPCombat"), mod("PvPSteal"), mod("WorkerInventory")
 local DataStoreMock, PvPTransfer = mod("DataStoreMock"), mod("PvPTransfer")
 local PvPConfig = require(ReplicatedStorage:WaitForChild("PvPConfig")) :: any
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue")) :: any
@@ -375,7 +379,10 @@ local function leaveBoth(name: string, owner: Player, thief: Player, thiefFirst:
 		task.wait(1)
 		local inOwner, inThief = savedHas(ownerId, uid), savedHas(thiefId, uid)
 		expect("the worker is in exactly one of the two saves", inOwner ~= inThief, ("owner=%s thief=%s"):format(tostring(inOwner), tostring(inThief)))
-		expect("it is the thief's (the hand-over was committed) and the journal is cleared", inThief and PvPTransfer.isClear(PlayerData.store(), ownerId) == true and PvPTransfer.isClear(PlayerData.store(), thiefId) == true)
+		expect(
+			"it is the thief's (the hand-over was committed) and the journal is cleared",
+			inThief and PvPTransfer.isClear(PlayerData.store(), ownerId) == true and PvPTransfer.isClear(PlayerData.store(), thiefId) == true
+		)
 	end)
 end
 local function shutdown(owner: Player, thief: Player)
@@ -392,7 +399,12 @@ local function shutdown(owner: Player, thief: Player)
 		task.wait(1)
 		local inOwner, inThief = savedHas(ownerId, uid), savedHas(thiefId, uid)
 		expect("the worker is in exactly one of the two saves", inOwner ~= inThief, ("owner=%s thief=%s"):format(tostring(inOwner), tostring(inThief)), true)
-		expect("it is the thief's (the hand-over was committed) and the journal is cleared", inThief and PvPTransfer.isClear(PlayerData.store(), ownerId) == true and PvPTransfer.isClear(PlayerData.store(), thiefId) == true, nil, true)
+		expect(
+			"it is the thief's (the hand-over was committed) and the journal is cleared",
+			inThief and PvPTransfer.isClear(PlayerData.store(), ownerId) == true and PvPTransfer.isClear(PlayerData.store(), thiefId) == true,
+			nil,
+			true
+		)
 	end)
 end
 
@@ -492,7 +504,12 @@ local function crashTests(p1: Player, p2: Player)
 				local second = join(sandbox, order[2], true)
 				expect(tag .. ": the second to load is right", not second.failed and has(second, uid) == (order[2] == expected), nil, true)
 				local inOwner, inThief = savedIn(sandbox, ownerId, uid), savedIn(sandbox, thiefId, uid)
-				expect(tag .. ": exactly one save has the worker", inOwner ~= inThief and inThief == (expected == thiefId), ("owner=%s thief=%s"):format(tostring(inOwner), tostring(inThief)), true)
+				expect(
+					tag .. ": exactly one save has the worker",
+					inOwner ~= inThief and inThief == (expected == thiefId),
+					("owner=%s thief=%s"):format(tostring(inOwner), tostring(inThief)),
+					true
+				)
 				local again1, again2 = join(sandbox, ownerId, true), join(sandbox, thiefId, true)
 				expect(tag .. ": another restart changes nothing", has(again1, uid) == (expected == ownerId) and has(again2, uid) == (expected == thiefId), nil, true)
 				expect(tag .. ": the journal is cleared", PvPTransfer.isClear(sandbox, ownerId) == true and PvPTransfer.isClear(sandbox, thiefId) == true, nil, true)
@@ -503,10 +520,21 @@ local function crashTests(p1: Player, p2: Player)
 			join(sandbox, ownerId, false)
 			join(sandbox, thiefId, false)
 			local thiefData, ownerData = join(sandbox, thiefId, true), join(sandbox, ownerId, true)
-			expect(label .. ": still exactly one owner after a second crash during recovery", has(ownerData, uid) == (expected == ownerId) and has(thiefData, uid) == (expected == thiefId), nil, true)
+			expect(
+				label .. ": still exactly one owner after a second crash during recovery",
+				has(ownerData, uid) == (expected == ownerId) and has(thiefData, uid) == (expected == thiefId),
+				nil,
+				true
+			)
 			if snap.step == "prepared" then
 				-- The dead server's commit arriving late, after the owner's data has loaded elsewhere.
-				expect(label .. ": a late commit is refused", PvPTransfer.commit(sandbox, thiefId, snap.id, { uid = uid, from = ownerId, record = { id = "broke_bob" }, at = os.time() }) == "voided" and not has(join(sandbox, thiefId, true), uid), nil, true)
+				expect(
+					label .. ": a late commit is refused",
+					PvPTransfer.commit(sandbox, thiefId, snap.id, { uid = uid, from = ownerId, record = { id = "broke_bob" }, at = os.time() }) == "voided"
+						and not has(join(sandbox, thiefId, true), uid),
+					nil,
+					true
+				)
 			end
 		end
 	end
@@ -524,16 +552,33 @@ local function crashTests(p1: Player, p2: Player)
 		PlayerData.save(p1)
 		PlayerData.save(p2)
 		local id = HttpService:GenerateGUID(false)
-		expect("journal written", PvPTransfer.prepare(store, p1.UserId, p2.UserId, uid, id) and PvPTransfer.commit(store, p2.UserId, id, { uid = uid, from = p1.UserId, record = { uid = uid, id = "broke_bob", zone = "MainStreet", level = 1, tier = "Normal" }, at = os.time() }) == "committed", nil, true)
+		expect(
+			"journal written",
+			PvPTransfer.prepare(store, p1.UserId, p2.UserId, uid, id)
+				and PvPTransfer.commit(
+						store,
+						p2.UserId,
+						id,
+						{ uid = uid, from = p1.UserId, record = { uid = uid, id = "broke_bob", zone = "MainStreet", level = 1, tier = "Normal" }, at = os.time() }
+					)
+					== "committed",
+			nil,
+			true
+		)
 		expect("before the replay the previous owner still has it in memory", record(p1, uid) ~= nil and record(p2, uid) == nil, nil, true)
 		PvPSteal._test.replayNow(p1)
 		expect("previous owner: the worker and its model are gone", record(p1, uid) == nil and placed(p1, uid) == nil, nil, true)
 		PvPSteal._test.replayNow(p2)
 		local received = record(p2, uid)
 		expect("new owner: the worker is in their inventory", received ~= nil and received.loc == "inventory", nil, true)
-		expect("after their saves the journal is cleared", waitUntil(4, function()
-			return PvPSteal._test.journal[uid] == nil and journalClear(p1) and journalClear(p2)
-		end), nil, true)
+		expect(
+			"after their saves the journal is cleared",
+			waitUntil(4, function()
+				return PvPSteal._test.journal[uid] == nil and journalClear(p1) and journalClear(p2)
+			end),
+			nil,
+			true
+		)
 		PlayerData.save(p1)
 		PlayerData.save(p2)
 		task.wait(0.3)
@@ -578,7 +623,10 @@ scenario("flags off", function()
 	expect("steal refused", PvPSteal.tryBegin(A, model) == false)
 	expect("lock refused", PvPBase.tryLock(B) == false)
 	expect("bat refused", PvPCombat.equip(A) == false and PvPCombat.attack(A, "basic") == false)
-	expect("no PvP attributes on players or plots", B:GetAttribute("ProtectedUntil") == nil and plotOf(B):GetAttribute("ProtectedUntil") == nil and A:GetAttribute("PvPSpawnSafeUntil") == nil)
+	expect(
+		"no PvP attributes on players or plots",
+		B:GetAttribute("ProtectedUntil") == nil and plotOf(B):GetAttribute("ProtectedUntil") == nil and A:GetAttribute("PvPSpawnSafeUntil") == nil
+	)
 	setFlag(true, nil)
 	expect("stealing flag alone: prompt appears, bats stay off", root:FindFirstChild("PvPStealPrompt") ~= nil and PvPCombat.equip(A) == false)
 	setFlag(nil, true)
@@ -590,7 +638,10 @@ scenario("flags off", function()
 end)
 
 scenario("new-player protection", function()
-	expect("first session is protected", PvPBase.isProtected(B.UserId) and (B:GetAttribute("ProtectedUntil") or 0) > workspace:GetServerTimeNow() + PvPConfig.Protection.DURATION - 120)
+	expect(
+		"first session is protected",
+		PvPBase.isProtected(B.UserId) and (B:GetAttribute("ProtectedUntil") or 0) > workspace:GetServerTimeNow() + PvPConfig.Protection.DURATION - 120
+	)
 	local ok, message = steal(A, B, b1)
 	expect("cannot steal from a protected player", ok == false and tostring(message):find("protected") ~= nil, message)
 	expect("granted once per UserId (a rejoin is not granted again)", PvPBase._test.seen[B.UserId] == true, nil, true)
@@ -616,14 +667,20 @@ scenario("steal and deliver", function()
 	expect("owner cannot move it mid-theft", record(B, b1) ~= nil and record(B, b1).loc == "station")
 	deliverHome(A)
 	expect("delivered: thief owns it, owner does not", record(A, b1) ~= nil and record(B, b1) == nil)
-	expect("both saves landed and the journal is cleared", waitUntil(4, function()
-		return PvPSteal._test.journal[b1] == nil and record(A, b1) ~= nil and journalClear(A) and journalClear(B)
-	end))
-	expect("victim's station and alarm cleared", station:GetAttribute("Occupied") ~= true and station:GetAttribute("StolenUid") == nil and plotOf(B):GetAttribute("AlarmThief") == nil)
+	expect(
+		"both saves landed and the journal is cleared",
+		waitUntil(4, function()
+			return PvPSteal._test.journal[b1] == nil and record(A, b1) ~= nil and journalClear(A) and journalClear(B)
+		end)
+	)
+	expect(
+		"victim's station and alarm cleared",
+		station:GetAttribute("Occupied") ~= true and station:GetAttribute("StolenUid") == nil and plotOf(B):GetAttribute("AlarmThief") == nil
+	)
 	PlayerData.save(A)
 	task.wait(0.4)
 	expect("saved data: thief has it, owner does not", savedHas(A.UserId, b1) and not savedHas(B.UserId, b1))
-	local free = freeStation(A) :: BasePart;
+	local free = freeStation(A) :: BasePart
 	(A.Character :: Model):PivotTo(CFrame.new(free.Position + Vector3.new(0, 3, 2)))
 	local placedOk, why = NPCPlacement.tryPlace(A, free)
 	expect("thief places it on a station", placedOk, why)
@@ -777,9 +834,12 @@ scenario("spammed remotes", function()
 	local before = { dropped = PvPBase.stats.dropped, handled = PvPBase.stats.handled }
 	spammed[A] = nil
 	bridge:FireClient(A, "spam", 400)
-	expect("the client sent its burst", waitUntil(8, function()
-		return spammed[A]
-	end))
+	expect(
+		"the client sent its burst",
+		waitUntil(8, function()
+			return spammed[A]
+		end)
+	)
 	task.wait(0.5)
 	local dropped, handled = PvPBase.stats.dropped - before.dropped, PvPBase.stats.handled - before.handled
 	expect("rate limit dropped the flood", dropped >= 380 and handled <= 40, ("dropped %d, handled %d"):format(dropped, handled))
@@ -819,7 +879,12 @@ scenario("store failures during the hand-over (simulated)", function()
 	expect("steal starts", ok, message, true)
 	fail(1)
 	deliverHome(A)
-	expect("the journal can't be written: nothing is handed over, the worker is back with its owner", record(B, b3) ~= nil and record(A, b3) == nil and placed(B, b3) ~= nil and not PvPSteal.isStealing(A), nil, true)
+	expect(
+		"the journal can't be written: nothing is handed over, the worker is back with its owner",
+		record(B, b3) ~= nil and record(A, b3) == nil and placed(B, b3) ~= nil and not PvPSteal.isStealing(A),
+		nil,
+		true
+	)
 	expect("nothing is left in the journal", journalClear(A) and journalClear(B), nil, true)
 
 	ok, message = steal(A, B, b3)
@@ -827,7 +892,12 @@ scenario("store failures during the hand-over (simulated)", function()
 	fail(2) -- the commit fails and is not written
 	deliverHome(A)
 	expect("the commit was not written: no hand-over, the worker is back with its owner", record(B, b3) ~= nil and record(A, b3) == nil and placed(B, b3) ~= nil, nil, true)
-	expect("that commit can never land later", last ~= nil and PvPTransfer.commit(store, A.UserId, last.id, { uid = b3, from = B.UserId, record = { id = "broke_bob" }, at = os.time() }) == "voided" and journalClear(A), nil, true)
+	expect(
+		"that commit can never land later",
+		last ~= nil and PvPTransfer.commit(store, A.UserId, last.id, { uid = b3, from = B.UserId, record = { id = "broke_bob" }, at = os.time() }) == "voided" and journalClear(A),
+		nil,
+		true
+	)
 
 	local b5 = seed(B, 1)
 	ok, message = steal(A, B, b5)
@@ -835,9 +905,14 @@ scenario("store failures during the hand-over (simulated)", function()
 	fail(2, true) -- the commit is written but reported as failed
 	deliverHome(A)
 	expect("the commit was written although it reported a failure: the thief owns the worker, once", record(A, b5) ~= nil and record(B, b5) == nil, nil, true)
-	expect("and the journal is cleared after both saves", waitUntil(3, function()
-		return PvPSteal._test.journal[b5] == nil and journalClear(A) and journalClear(B)
-	end), nil, true)
+	expect(
+		"and the journal is cleared after both saves",
+		waitUntil(3, function()
+			return PvPSteal._test.journal[b5] == nil and journalClear(A) and journalClear(B)
+		end),
+		nil,
+		true
+	)
 	storeCarried(A)
 
 	local b6 = seed(B, 2)
@@ -852,9 +927,14 @@ scenario("store failures during the hand-over (simulated)", function()
 	PvPSteal._test.setSaver(nil)
 	PlayerData.save(B)
 	PlayerData.save(A)
-	expect("once both saves land the journal is cleared", waitUntil(3, function()
-		return PvPSteal._test.journal[b6] == nil and journalClear(A) and journalClear(B)
-	end), nil, true)
+	expect(
+		"once both saves land the journal is cleared",
+		waitUntil(3, function()
+			return PvPSteal._test.journal[b6] == nil and journalClear(A) and journalClear(B)
+		end),
+		nil,
+		true
+	)
 	expect("saved data: the thief has it, the owner does not", savedHas(A.UserId, b6) and not savedHas(B.UserId, b6), nil, true)
 	storeCarried(A)
 	PvPSteal._test.setStepHook(nil)
@@ -932,10 +1012,16 @@ scenario("special attacks", function()
 	end
 	onBase(A, 0, 0)
 	task.wait(1.3)
-	expect("bat out, default special is the shockwave", PvPCombat.equip(A) == true and select(2, PvPCombat.getLoadout(A)) == "shockwave" and A:GetAttribute("BatSpecial") == "shockwave")
+	expect(
+		"bat out, default special is the shockwave",
+		PvPCombat.equip(A) == true and select(2, PvPCombat.getLoadout(A)) == "shockwave" and A:GetAttribute("BatSpecial") == "shockwave"
+	)
 	around(6, -6)
 	local hits = stats.hits
-	expect("special starts and its cooldown is published", PvPCombat.special(A) == true and (A:GetAttribute("SpecialReadyAt") or 0) > workspace:GetServerTimeNow() + shock.cooldown - 1)
+	expect(
+		"special starts and its cooldown is published",
+		PvPCombat.special(A) == true and (A:GetAttribute("SpecialReadyAt") or 0) > workspace:GetServerTimeNow() + shock.cooldown - 1
+	)
 	expect("no second special and no swing during the warning", PvPCombat.special(A) == false and PvPCombat.attack(A, "basic") == false)
 	task.wait(shock.telegraph * 0.5)
 	expect("nothing lands during the warning", stats.hits == hits)
@@ -945,7 +1031,10 @@ scenario("special attacks", function()
 	expect("on cooldown", PvPCombat.special(A) == false)
 	expect("choose Burst Push", PvPCombat.setLoadout(A, "special", "burst") == true and A:GetAttribute("BatSpecial") == "burst")
 	expect("switching specials does not reset the cooldown", PvPCombat.special(A) == false)
-	expect("unknown specials are refused", PvPCombat.setLoadout(A, "special", "nuke") == false and PvPCombat.setLoadout(A, "special", 5) == false and A:GetAttribute("BatSpecial") == "burst")
+	expect(
+		"unknown specials are refused",
+		PvPCombat.setLoadout(A, "special", "nuke") == false and PvPCombat.setLoadout(A, "special", 5) == false and A:GetAttribute("BatSpecial") == "burst"
+	)
 	PvPCombat._test.readyAt[A].special = 0
 	task.wait(shock.immunity + 0.1)
 	around(10, -6) -- B in front, C behind
@@ -975,7 +1064,10 @@ scenario("weapon locker", function()
 	expect("choose Golden", PvPCombat.setLoadout(B, "skin", "Golden") == true and B:GetAttribute("BatSkin") == "Golden")
 	bat = (B.Character :: Model):FindFirstChild("PvPBat")
 	expect("the bat in hand changes at once", bat ~= nil and bat:GetAttribute("Skin") == "Golden" and PvPCombat.isEquipped(B))
-	expect("unknown looks are refused", PvPCombat.setLoadout(B, "skin", "Diamond") == false and PvPCombat.setLoadout(B, "skin", { "Golden" }) == false and B:GetAttribute("BatSkin") == "Golden")
+	expect(
+		"unknown looks are refused",
+		PvPCombat.setLoadout(B, "skin", "Diamond") == false and PvPCombat.setLoadout(B, "skin", { "Golden" }) == false and B:GetAttribute("BatSkin") == "Golden"
+	)
 	local pushes, stopWatching = watchPushes(C)
 	face(B, C)
 	PvPCombat.attack(B, "basic")
@@ -989,14 +1081,24 @@ scenario("weapon locker", function()
 	stopWatching()
 	expect("a Golden bat hits exactly as hard as a Starter bat", #pushes == 2 and math.abs(pushes[1] - pushes[2]) < 0.01, table.concat(pushes, " / "))
 	bridge:FireClient(B, "loadout", "skin", "Neon") -- the request the locker sends, through the real remote
-	expect("the locker's request reaches the server", waitUntil(3, function()
-		return B:GetAttribute("BatSkin") == "Neon"
-	end))
+	expect(
+		"the locker's request reaches the server",
+		waitUntil(3, function()
+			return B:GetAttribute("BatSkin") == "Neon"
+		end)
+	)
 	task.wait(0.5)
 	local seen = probe(B)
-	expect("the locker on that player's screen shows the choice", seen.lockerSkin == "Neon" and seen.lockerSpecial == "shockwave" and seen.lockerCards == 5, ("%s / %s / %s cards"):format(tostring(seen.lockerSkin), tostring(seen.lockerSpecial), tostring(seen.lockerCards)))
+	expect(
+		"the locker on that player's screen shows the choice",
+		seen.lockerSkin == "Neon" and seen.lockerSpecial == "shockwave" and seen.lockerCards == 5,
+		("%s / %s / %s cards"):format(tostring(seen.lockerSkin), tostring(seen.lockerSpecial), tostring(seen.lockerCards))
+	)
 	PvPCombat.unequip(B)
-	expect("the look is kept when the bat is put away and taken out again", PvPCombat.equip(B) == true and ((B.Character :: Model):FindFirstChild("PvPBat") :: Instance):GetAttribute("Skin") == "Neon")
+	expect(
+		"the look is kept when the bat is put away and taken out again",
+		PvPCombat.equip(B) == true and ((B.Character :: Model):FindFirstChild("PvPBat") :: Instance):GetAttribute("Skin") == "Neon"
+	)
 	PvPCombat.unequip(B)
 end)
 
@@ -1022,7 +1124,11 @@ scenario("escape rules", function()
 	local speed, jump = humanoid.WalkSpeed, humanoid.JumpHeight
 	humanoid.WalkSpeed, humanoid.JumpHeight = speed + 20, jump + 30
 	PvPSteal._test.check()
-	expect("speed and jump boosts are undone", math.abs(humanoid.WalkSpeed - speed) < 0.05 and math.abs(humanoid.JumpHeight - jump) < 0.05, ("%.1f / %.1f"):format(humanoid.WalkSpeed, humanoid.JumpHeight))
+	expect(
+		"speed and jump boosts are undone",
+		math.abs(humanoid.WalkSpeed - speed) < 0.05 and math.abs(humanoid.JumpHeight - jump) < 0.05,
+		("%.1f / %.1f"):format(humanoid.WalkSpeed, humanoid.JumpHeight)
+	)
 	PvPConfig.Steal.SAFE_ZONE_LIMIT = 0.6
 	local spawn = (workspace:FindFirstChild("SpawnLocation") :: BasePart).Position
 	task.wait(0.4)
@@ -1034,7 +1140,11 @@ scenario("escape rules", function()
 		return not PvPSteal.isStealing(A)
 	end)
 	local theft = PvPSteal._test.thefts[b3]
-	expect("waiting in a safe zone sends the worker home", dropped and placed(B, b3) ~= nil and record(B, b3) ~= nil, ("thief %.0f studs from the spawn, counted %.2f s there"):format(((A.Character :: Model):GetPivot().Position - spawn).Magnitude, if theft then theft.safeTime else -1))
+	expect(
+		"waiting in a safe zone sends the worker home",
+		dropped and placed(B, b3) ~= nil and record(B, b3) ~= nil,
+		("thief %.0f studs from the spawn, counted %.2f s there"):format(((A.Character :: Model):GetPivot().Position - spawn).Magnitude, if theft then theft.safeTime else -1)
+	)
 	PvPSteal._test.setTeleportCheck(true)
 	PvPConfig.Steal.SAFE_ZONE_LIMIT = 6
 	PvPConfig.Steal.MAX_CARRY = 0.8
@@ -1050,9 +1160,12 @@ end)
 scenario("spawn camping", function()
 	PvPCombat.unequip(C);
 	((C.Character :: Model):FindFirstChildOfClass("Humanoid") :: Humanoid).Health = 0
-	expect("a fresh spawn is marked safe", waitUntil(12, function()
-		return living(C) ~= nil and PvPBase.spawnSafe(C)
-	end))
+	expect(
+		"a fresh spawn is marked safe",
+		waitUntil(12, function()
+			return living(C) ~= nil and PvPBase.spawnSafe(C)
+		end)
+	)
 	task.wait(0.5)
 	onBase(C, 10, 10)
 	onBase(B, -14, -14) -- out of reach: only C is in front of the bat
@@ -1088,14 +1201,26 @@ scenario("what the players see", function()
 	local worker = plotOf(B):GetAttribute("AlarmWorker")
 	task.wait(0.9)
 	local a, b, c = probe(A), probe(B), probe(C)
-	expect("the owner's screen shows the alarm with the thief and the worker", type(b.alarm) == "string" and type(worker) == "string" and b.alarm:find(A.DisplayName, 1, true) ~= nil and b.alarm:find(worker, 1, true) ~= nil, b.alarm)
-	expect("everyone sees the alarm on the base", c.plotAlarm[plotName] == true and type(c.sign[plotName]) == "string" and c.sign[plotName]:find("ROBBERY", 1, true) ~= nil, c.sign[plotName])
+	expect(
+		"the owner's screen shows the alarm with the thief and the worker",
+		type(b.alarm) == "string" and type(worker) == "string" and b.alarm:find(A.DisplayName, 1, true) ~= nil and b.alarm:find(worker, 1, true) ~= nil,
+		b.alarm
+	)
+	expect(
+		"everyone sees the alarm on the base",
+		c.plotAlarm[plotName] == true and type(c.sign[plotName]) == "string" and c.sign[plotName]:find("ROBBERY", 1, true) ~= nil,
+		c.sign[plotName]
+	)
 	expect("the thief's screen shows the STOLEN bar", type(a.stolen) == "string" and b.stolen == nil and c.stolen == nil, a.stolen)
 	expect("others see the STOLEN tag on the thief", c.stolenTags == 1 and b.stolenTags == 1, c.stolenTags)
 	expect("the lock button is a request to the server", PvPBase.tryLock(B) == true)
 	task.wait(0.9)
 	c = probe(C)
-	expect("a locked base shows its barrier and countdown to everyone", c.barrier[plotName] == "lock" and type(c.sign[plotName]) == "string" and c.sign[plotName]:find("LOCKED", 1, true) ~= nil, c.sign[plotName])
+	expect(
+		"a locked base shows its barrier and countdown to everyone",
+		c.barrier[plotName] == "lock" and type(c.sign[plotName]) == "string" and c.sign[plotName]:find("LOCKED", 1, true) ~= nil,
+		c.sign[plotName]
+	)
 	expect("the barrier is not solid", NPCCarry.getCarried(A) == model and PvPSteal.isStealing(A))
 	expect("owner's bat out", PvPCombat.equip(B) == true)
 	face(B, A)
@@ -1118,7 +1243,11 @@ scenario("what the players see", function()
 	PvPBase._test.setProtection(B, 120)
 	task.wait(0.9)
 	c = probe(C)
-	expect("a protected base shows its barrier and countdown", c.barrier[plotName] == "shield" and type(c.sign[plotName]) == "string" and c.sign[plotName]:find("PROTECTED", 1, true) ~= nil, c.sign[plotName])
+	expect(
+		"a protected base shows its barrier and countdown",
+		c.barrier[plotName] == "shield" and type(c.sign[plotName]) == "string" and c.sign[plotName]:find("PROTECTED", 1, true) ~= nil,
+		c.sign[plotName]
+	)
 	PvPBase._test.setProtection(B, nil)
 	waitUntil(4, function()
 		return PvPSteal._test.journal[b4] == nil
@@ -1158,14 +1287,20 @@ end)
 
 section = "end"
 setFlag(nil, nil)
-expect("flags back off: prompts removed", (function()
-	for _, d in plots:GetDescendants() do
-		if d.Name == "PvPStealPrompt" then
-			return false
+expect(
+	"flags back off: prompts removed",
+	(function()
+		for _, d in plots:GetDescendants() do
+			if d.Name == "PvPStealPrompt" then
+				return false
+			end
 		end
-	end
-	return true
-end)())
-expect("flags back off: bat choices and timers are no longer published", A:GetAttribute("BatSkin") == nil and A:GetAttribute("BatSpecial") == nil and A:GetAttribute("SpecialReadyAt") == nil and A:GetAttribute("BatCharging") == nil)
+		return true
+	end)()
+)
+expect(
+	"flags back off: bat choices and timers are no longer published",
+	A:GetAttribute("BatSkin") == nil and A:GetAttribute("BatSpecial") == nil and A:GetAttribute("SpecialReadyAt") == nil and A:GetAttribute("BatCharging") == nil
+)
 bridge:Destroy()
 finish("DONE")

@@ -60,7 +60,13 @@ return function(): string
 		local base = Instance.new("Model")
 		base.Name = "Lot" .. id
 		K.part({ name = "Trim", parent = base, size = Vector3.new(L.lotTrim, 0.8, L.lotTrim), pos = Vector3.new(x, L.lotTrimTop - 0.4, z), color = C.Trim })
-		K.part({ name = "Base", parent = base, size = Vector3.new(L.lotBase, 0.8, L.lotBase), pos = Vector3.new(x, L.lotBaseTop - 0.4, z), color = colour:Lerp(Color3.new(0, 0, 0), 0.08) })
+		K.part({
+			name = "Base",
+			parent = base,
+			size = Vector3.new(L.lotBase, 0.8, L.lotBase),
+			pos = Vector3.new(x, L.lotBaseTop - 0.4, z),
+			color = colour:Lerp(Color3.new(0, 0, 0), 0.08),
+		})
 		-- a ramp-free step: the base is only 0.5 above the walkway, so players simply walk on
 		base.Parent = root
 	end

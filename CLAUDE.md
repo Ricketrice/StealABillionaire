@@ -7,6 +7,7 @@ Roblox, phone-first. ~80% kids. Work through Roblox Studio MCP (Studio runs thro
 - Edit the file, then sync it into the open Studio: `python3 tools/push_to_studio.py <files>` prints a Luau snippet to run in Edit mode (back up the old scripts first). Afterwards run the snippet from `python3 tools/verify_sync.py`: it must say "all match" before you commit.
 - `tools/rbxl_scripts.py place.rbxl [--export src]` lists or exports scripts from a saved place. `tools/test_guard.sh` guards multi-client tests (max 3 clients on this 13 GB machine).
 - Local place backups go in `backups/` (git-ignored).
+- Linters (pinned in `rokit.toml`; `rokit install`, binaries in `~/.rokit/bin`): `selene.toml`, `stylua.toml`. Before pushing to Studio, run selene and stylua --check on changed files. Type check: `luau-lsp analyze --platform=roblox --definitions=tools/types/globalTypes.d.luau <files>` (download that file from the luau-lsp repo's `scripts/` folder; without a sourcemap, "Unknown require" and missing-child warnings are expected).
 
 ## Read order (stop as soon as you have enough)
 1. `docs/PROJECT_STATUS.md` — what is built, open questions. Always read.

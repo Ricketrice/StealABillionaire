@@ -110,7 +110,11 @@ local function getSession(): SessionStore.SessionStore
 			ok, err = pcall(store.GetAsync, store, "__api_probe")
 		end
 		if forced or (not ok and tostring(err):find("Studio access to APIs is not allowed", 1, true)) then
-			warn(if forced then "[PlayerData] ServerStorage.StudioMemoryStore is set: using a temporary in-memory store (Studio test)." else "[PlayerData] Studio API access is disabled: using a temporary in-memory store. NOTHING WILL BE SAVED between Studio sessions. Enable it in Game Settings > Security to test real saving.")
+			warn(
+				if forced
+					then "[PlayerData] ServerStorage.StudioMemoryStore is set: using a temporary in-memory store (Studio test)."
+					else "[PlayerData] Studio API access is disabled: using a temporary in-memory store. NOTHING WILL BE SAVED between Studio sessions. Enable it in Game Settings > Security to test real saving."
+			)
 			store = DataStoreMock.new()
 			persistent = false
 			-- TEST HOOKS (Studio + in-memory store only, so never a real DataStore):

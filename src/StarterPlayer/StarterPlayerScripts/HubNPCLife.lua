@@ -31,7 +31,11 @@ local function setUp(holder: Instance)
 	if not (root and root:IsA("BasePart") and humanoid) then
 		return -- not streamed in yet; tried again by the loop below
 	end
-	local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = Instance.new("Animator")
+		animator.Parent = humanoid
+	end
 	local function load(id: string, priority: Enum.AnimationPriority, looped: boolean): AnimationTrack?
 		local animation = Instance.new("Animation")
 		animation.AnimationId = id
