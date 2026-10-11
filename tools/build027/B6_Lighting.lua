@@ -5,7 +5,7 @@
 local Lighting = game:GetService("Lighting")
 
 return function(): string
-	Lighting.ClockTime = 16.4
+	Lighting.ClockTime = 15.2 -- warm afternoon, sun high enough to stay out of the Main Street view
 	Lighting.GeographicLatitude = 30
 	Lighting.Brightness = 3
 	Lighting.Ambient = Color3.fromRGB(122, 112, 104)

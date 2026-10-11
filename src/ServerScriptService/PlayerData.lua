@@ -96,16 +96,21 @@ local function mirrorKey(userId: number): string
 	return "zones_" .. userId
 end
 
--- Picks the store once: the real DataStore, or (Studio without API access only) the in-memory mock.
+-- Picks the store once: the real DataStore, or (Studio only) the in-memory mock when API access is off
+-- or the ServerStorage attribute "StudioMemoryStore" is true (so test harnesses never touch real saves).
 local function getSession(): SessionStore.SessionStore
 	if session then
 		return session
 	end
 	local store: any = DataStoreService:GetDataStore(DATASTORE_NAME)
 	if RunService:IsStudio() then
-		local ok, err = pcall(store.GetAsync, store, "__api_probe")
-		if not ok and tostring(err):find("Studio access to APIs is not allowed", 1, true) then
-			warn("[PlayerData] Studio API access is disabled: using a temporary in-memory store. NOTHING WILL BE SAVED between Studio sessions. Enable it in Game Settings > Security to test real saving.")
+		local forced = ServerStorage:GetAttribute("StudioMemoryStore") == true
+		local ok, err = true, nil
+		if not forced then
+			ok, err = pcall(store.GetAsync, store, "__api_probe")
+		end
+		if forced or (not ok and tostring(err):find("Studio access to APIs is not allowed", 1, true)) then
+			warn(if forced then "[PlayerData] ServerStorage.StudioMemoryStore is set: using a temporary in-memory store (Studio test)." else "[PlayerData] Studio API access is disabled: using a temporary in-memory store. NOTHING WILL BE SAVED between Studio sessions. Enable it in Game Settings > Security to test real saving.")
 			store = DataStoreMock.new()
 			persistent = false
 			-- TEST HOOKS (Studio + in-memory store only, so never a real DataStore):

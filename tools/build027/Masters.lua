@@ -175,6 +175,7 @@ function M.fromImports(): string
 		for _, p in meshes do
 			local c = p:Clone()
 			c:ClearAllChildren()
+			c.Name = c.Name:gsub("%.%d+$", "") -- Blender suffixes repeated names (Canopy.001)
 			c.Anchored = true
 			local look = COLOURS[c.Name]
 			if look then
@@ -192,7 +193,11 @@ function M.fromImports(): string
 		m.Parent = K.masters()
 		local size = hi - lo
 		table.insert(lines, ("%s: %d meshes, %.1f x %.1f x %.1f"):format(name, #meshes, size.X, size.Y, size.Z))
-		import.Parent = store
+		for _, copy in workspace:GetChildren() do -- the import and any second copy of it
+			if copy.Name == name and copy:IsA("Model") then
+				copy.Parent = store
+			end
+		end
 	end
 	return table.concat(lines, "\n")
 end

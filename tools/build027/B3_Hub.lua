@@ -230,7 +230,7 @@ return function(): string
 		sb.Size = Vector3.new(20.6, 6.8, 0.4)
 		sb.Color = C.Navy
 		sb:ClearAllChildren()
-		K.text(sb, Enum.NormalId.Front, "BATTLE ARENA", C.Trim)
+		K.text(sb, Enum.NormalId.Front, "WORKER BATTLES\ncoming soon", C.Trim) -- what HubArena shows while the arena is off
 		K.part({ name = "ScoreTrim", parent = ar, size = Vector3.new(21.4, 7.6, 0.4), cf = sb.CFrame * CFrame.new(0, 0, 0.3), color = C.Trim, deco = true })
 		for _, sx in { -9.6, 9.6 } do
 			K.part({ name = "ScorePost", parent = ar, size = Vector3.new(1, 14, 1), cf = sb.CFrame * CFrame.new(sx, -3.2, 0.6), color = C.Trim })
@@ -257,8 +257,8 @@ return function(): string
 				local finish = Vector3.new(barrier.Position.X, 0, barrier.Position.Z) - out * 7
 				local a = Vector3.new(L.avenueX[2] - 2, 0, L.laneZ + side * (10 + off))
 				local bend = Vector3.new(140, 0, L.laneZ + side * (34 + off))
-				K.bar(lines, zdef[1], a, bend, 0.9, 0.42, 0.2, zdef[2], Enum.Material.Neon, true)
-				K.bar(lines, zdef[1], bend, finish, 0.9, 0.42, 0.2, zdef[2], Enum.Material.Neon, true)
+				K.bar(lines, zdef[1], a, bend, 1.1, 0.42, 0.2, zdef[2], Enum.Material.SmoothPlastic, true) -- solid colour (Neon blooms into a laser)
+				K.bar(lines, zdef[1], bend, finish, 1.1, 0.42, 0.2, zdef[2], Enum.Material.SmoothPlastic, true)
 			end
 		end
 	end

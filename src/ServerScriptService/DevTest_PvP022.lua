@@ -45,9 +45,9 @@ local function finish(state: string)
 	print("@@T022|SUMMARY " .. summary:gsub("\n", " ## "))
 	StudioTestService:EndTest(summary)
 end
-if pcall(function()
+if game:GetService("ServerStorage"):GetAttribute("StudioMemoryStore") ~= true and pcall(function()
 	return game:GetService("DataStoreService"):GetDataStore("__sab_probe_022"):GetAsync("probe")
-end) then
+end) then -- (027: the StudioMemoryStore attribute puts PlayerData on the in-memory store even with API access on)
 	finish("ABORTED: Studio API access is on; this test only runs on the in-memory save")
 	return
 end

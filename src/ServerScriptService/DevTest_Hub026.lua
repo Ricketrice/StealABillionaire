@@ -36,9 +36,9 @@ local function finish(state: string)
 	print("@@T026|SUMMARY " .. summary)
 	StudioTestService:EndTest(summary .. "\n" .. table.concat(lines, "\n"))
 end
-if pcall(function()
+if game:GetService("ServerStorage"):GetAttribute("StudioMemoryStore") ~= true and pcall(function()
 	return game:GetService("DataStoreService"):GetDataStore("__sab_probe_026"):GetAsync("probe")
-end) then
+end) then -- (027: the StudioMemoryStore attribute puts PlayerData on the in-memory store even with API access on)
 	finish("ABORTED: Studio API access is on; this test only runs on the in-memory save")
 	return
 end
@@ -197,7 +197,7 @@ local a1, b1, b2 = seed(A, weakest.id, 1), seed(B, weakest.id, 1), seed(B, stron
 local arena = venues:WaitForChild("Arena")
 local pads = arena:WaitForChild("QueuePads")
 local function scoreText(): string
-	local label = workspace.World.BillionaireCity.TakeoverTower.ScoreboardFace:FindFirstChild("Label", true)
+	local label = venues.Arena.Scoreboard:FindFirstChild("Label", true) -- (027: the Battle Arena board in the plaza)
 	return if label then label.Text else ""
 end
 

@@ -129,8 +129,32 @@ return function(): string
 		end
 	end
 	for _, s in spots do
-		K.part({ name = "SpotRing", parent = catch, shape = "Cylinder", size = Vector3.new(0.1, 7, 7), cf = CFrame.new(s.X, top + 0.03, s.Y) * CFrame.Angles(0, 0, math.rad(90)), color = C.Trim, deco = true })
-		K.part({ name = "SpotInner", parent = catch, shape = "Cylinder", size = Vector3.new(0.1, 5.8, 5.8), cf = CFrame.new(s.X, top + 0.05, s.Y) * CFrame.Angles(0, 0, math.rad(90)), color = C.Stone, deco = true })
+		K.part({ name = "SpotRing", parent = catch, shape = "Cylinder", size = Vector3.new(0.1, 7, 7), cf = CFrame.new(s.X, top + 0.12, s.Y) * CFrame.Angles(0, 0, math.rad(90)), color = C.Trim, deco = true }) -- above the runner
+		K.part({ name = "SpotInner", parent = catch, shape = "Cylinder", size = Vector3.new(0.1, 5.8, 5.8), cf = CFrame.new(s.X, top + 0.14, s.Y) * CFrame.Angles(0, 0, math.rad(90)), color = C.Stone, deco = true })
+	end
+
+	-- The street's centre band: warm terracotta runner with gold edges (flat, walk-through, NPC-safe).
+	local band = K.folder(root, "CentreBand")
+	local mid = (ms.npcZ[1] + ms.npcZ[2]) / 2
+	K.slab(band, "Runner", ms.streetEnd, ms.x0, mid - 6, mid + 6, top + 0.06, 0.1, K.rgb(232, 168, 116)).CanCollide = false
+	for _, side in { -1, 1 } do
+		K.slab(band, "RunnerEdge", ms.streetEnd, ms.x0, mid + side * 6 - 0.4, mid + side * 6 + 0.4, top + 0.08, 0.1, C.Trim).CanCollide = false
+	end
+	for _, p in band:GetChildren() do
+		p.CanQuery, p.CanTouch = false, false
+	end
+
+	-- Bunting across the street at both ends of each section (high above the NPCs and carried workers).
+	local bunting = K.folder(root, "Bunting")
+	local colours = { C.Carpet, C.Trim, C.Sky, C.Mint, C.Coral }
+	for _, sx in { ms.section1 + 15, ms.section1 - 15, ms.section2 + 15, ms.section2 - 15 } do
+		local zA, zB, y = ms.npcZ[2] + 4.5, ms.npcZ[1] - 4.5, 13.2
+		K.bar(bunting, "Rope", Vector3.new(sx, 0, zA), Vector3.new(sx, 0, zB), 0.15, y, 0.15, C.Curb, nil, true)
+		local n = 11
+		for k = 1, n do
+			local z = zA + (zB - zA) * k / (n + 1)
+			K.part({ name = "Pennant", parent = bunting, shape = "Wedge", size = Vector3.new(0.1, 1.4, 1.1), cf = CFrame.new(sx, y - 0.8, z) * CFrame.Angles(math.pi, 0, 0), color = colours[(k - 1) % #colours + 1], deco = true })
+		end
 	end
 
 	-- Shops in pairs facing the street.
