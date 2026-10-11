@@ -67,11 +67,11 @@ gui.DisplayOrder = 3
 gui.Enabled = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- Golden Parade countdown pill (top right, under the Roblox top bar).
-local pill = UITheme.panel({ Name = "GoldenPill", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 8), Size = UDim2.fromOffset(236, 44), Parent = gui })
-UITheme.scaleWith(pill, 0.7, 1.05)
-local pillIcon = UITheme.icon({ Text = "🌟", Size = UDim2.fromOffset(30, 30), Position = UDim2.fromOffset(8, 7), Parent = pill })
-local pillText = UITheme.text({ Name = "Text", Text = "", Role = "Body", Align = "Left", Position = UDim2.fromOffset(44, 0), Size = UDim2.new(1, -52, 1, 0), Parent = pill })
+-- Golden Parade countdown pill (first item of the shared top bar).
+local pill = UITheme.panel({ Name = "GoldenPill", LayoutOrder = 1, Size = UDim2.fromOffset(150, 44), Parent = UITheme.topBar() })
+pill.Visible = false
+local pillIcon = UITheme.icon({ Text = "🌟", Size = UDim2.fromOffset(28, 28), Position = UDim2.fromOffset(8, 8), Parent = pill })
+local pillText = UITheme.text({ Name = "Text", Text = "", Role = "Body", Align = "Left", Position = UDim2.fromOffset(40, 0), Size = UDim2.new(1, -46, 1, 0), Parent = pill })
 pillIcon.Name = "Icon"
 
 -- Announcement banner (top centre, below where the goal bar sits).
@@ -482,6 +482,7 @@ local function stop()
 	end
 	clearSign()
 	gui.Enabled = false
+	pill.Visible = false
 	odds.Enabled, arrow.Enabled = false, false
 	paradeFolder, walkersFolder = nil, nil
 end
@@ -549,12 +550,12 @@ while true do
 		local line
 		if golden then
 			line = ("GOLDEN PARADE!  %s left"):format(clock((e :: number) - t))
-			pillText.Text = line
+			pillText.Text = "GOLDEN! " .. clock((e :: number) - t)
 			pillText.TextColor3 = T.Golden
 			pill.BackgroundColor3 = T.GoldenDeep
 		else
 			line = if nextAt then ("Golden Parade in %s"):format(clock(nextAt - t)) else "Golden Parade soon"
-			pillText.Text = line
+			pillText.Text = if nextAt then "Golden " .. clock(nextAt - t) else "Golden soon"
 			pillText.TextColor3 = T.Text
 			pill.BackgroundColor3 = T.Panel
 		end

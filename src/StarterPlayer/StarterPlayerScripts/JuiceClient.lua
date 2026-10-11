@@ -62,22 +62,11 @@ gui.DisplayOrder = 7 -- above the reveal card, so its banner reads on top
 gui.Enabled = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- (A holder takes the screen-size scale: the button's own UIScale is its press squash.)
-local fxHolder = UITheme.make(
-	"Frame",
-	{
-		Name = "LowEffectsHolder",
-		BackgroundTransparency = 1,
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -10, 0, 58),
-		Size = UDim2.fromOffset(112, UITheme.TouchTarget),
-		Parent = gui,
-	}
-)
-UITheme.scaleWith(fxHolder, 0.7, 1.05)
-local fxButton = UITheme.button({ Name = "LowEffects", Kind = "Ghost", Text = "", TextSize = 14, Size = UDim2.fromScale(1, 1), Parent = fxHolder })
+-- Effects toggle: last item of the shared top bar.
+local fxButton = UITheme.button({ Name = "LowEffects", Kind = "Ghost", Text = "", TextSize = 13, LayoutOrder = 4, Size = UDim2.fromOffset(52, 52), Parent = UITheme.topBar() })
+fxButton.Visible = false
 local function showFxSetting()
-	fxButton.Text = if FxKit.low() then "✨ FX: Low" else "✨ FX: Full"
+	fxButton.Text = if FxKit.low() then "✨\nLow" else "✨\nFull"
 end
 fxButton.Activated:Connect(function()
 	player:SetAttribute("LowEffects", not FxKit.low())
@@ -105,11 +94,16 @@ local function showBanner(name: string, rarity: string, hold: number)
 		stroke.Color = color
 	end
 	banner.Visible = true
-	banner.Position = UDim2.new(0.5, 0, 0, -80)
+	banner.Position = UDim2.new(0.5, 0, 0, -140)
 	UITheme.tween(banner, UITheme.Motion.Slow, { Position = UDim2.new(0.5, 0, 0, 74) }, Enum.EasingStyle.Back)
 	task.delay(hold, function()
 		if token == bannerToken then
-			UITheme.tween(banner, UITheme.Motion.Normal, { Position = UDim2.new(0.5, 0, 0, -80) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			local out = UITheme.tween(banner, UITheme.Motion.Normal, { Position = UDim2.new(0.5, 0, 0, -140) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			out.Completed:Once(function()
+				if token == bannerToken then
+					banner.Visible = false -- (the top inset is up to ~60 px: off the top isn't always off screen)
+				end
+			end)
 		end
 	end)
 end
@@ -164,6 +158,7 @@ end
 
 -- Reveal --------------------------------------------------------------------------------------------------------
 local BUILD = { Common = 0, Rare = 0, Epic = 0.6, Legendary = 1.1, Secret = 1.8 } -- matches WorkerRevealCard's build-up
+local HOLD = { Common = 1.3, Rare = 2, Epic = 2.4, Legendary = 3.2, Secret = 3.6 } -- and how long its card stays
 local function pillar(at: Vector3, color: Color3, seconds: number)
 	if FxKit.low() then
 		return
@@ -220,7 +215,14 @@ local function onRevealed(workerId: any)
 		if shake then
 			FxKit.shake(shake, 0.3 + rank * 0.08)
 		end
-		showBanner(worker.name, rarity, if rank >= 4 then 4 else 2.4)
+	end)
+	-- The name banner follows once the reveal card has gone (on a phone the card fills the middle).
+	task.delay(build + (HOLD[rarity] or 2) + 0.4, function()
+		if player:GetAttribute("CarryingNPC") == true then
+			showBanner(worker.name .. "  ·  take it home!", rarity, if rank >= 4 then 3.5 else 2.4)
+		else
+			showBanner(worker.name, rarity, 2.4)
+		end
 	end)
 end
 ReplicatedStorage:WaitForChild("WorkerRevealed").OnClientEvent:Connect(onRevealed)
@@ -256,6 +258,12 @@ end
 
 local function startCarried(model: Model)
 	if carried[model] or not juiceOn() then
+		return
+	end
+	-- The revealed worker's new body replicates a moment after its ClaimPhase: wait for it.
+	model:WaitForChild("UpperTorso", 3)
+	task.wait(0.2)
+	if carried[model] or model:GetAttribute("ClaimPhase") ~= "Carrying" or not juiceOn() then
 		return
 	end
 	local c: Carried = { model = model, joints = jointsOf(model), phase = math.random() * TAU }
@@ -339,7 +347,7 @@ local function watchClaimed(model: Instance)
 		if phase == "Spinning" then
 			spinUp(model)
 		elseif phase == "Carrying" then
-			task.defer(startCarried, model)
+			task.spawn(startCarried, model)
 		else
 			stopCarried(model)
 		end
@@ -526,6 +534,9 @@ local function stepPlaced(now: number, camPos: Vector3)
 			end
 			continue
 		end
+		if next(p.joints) == nil then
+			p.joints = jointsOf(model)
+		end
 		local j = p.joints
 		local t = now + p.phase
 		local offsets: { [string]: CFrame } = {
@@ -584,6 +595,9 @@ local function stepCarried(now: number, camPos: Vector3)
 		if (model:GetPivot().Position - camPos).Magnitude > 100 then
 			continue
 		end
+		if next(c.joints) == nil or not (c.joints.LeftHip and c.joints.LeftHip.Parent) then
+			c.joints = jointsOf(model) -- (the body was swapped or hadn't arrived yet)
+		end
 		local speed = if c.shock then 16 else 9
 		local s = math.sin(now * speed + c.phase)
 		local k = math.sin(now * speed * 0.5 + c.phase)
@@ -638,6 +652,7 @@ end)
 local function refresh()
 	local on = juiceOn()
 	gui.Enabled = on
+	fxButton.Visible = on
 	if not on then
 		for model in placed do
 			local p = placed[model]

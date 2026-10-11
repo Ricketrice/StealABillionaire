@@ -66,23 +66,24 @@ gui.DisplayOrder = 3
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- Goal bar ------------------------------------------------------------------------------------------------------
-local goal = UITheme.panel({ Name = "Goal", AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 8), Size = UDim2.fromOffset(360, 58), Parent = gui })
+local topBar = UITheme.topBar() -- (shared with the Golden Parade pill and the effects toggle)
+local goal = UITheme.panel({ Name = "Goal", LayoutOrder = 2, Size = UDim2.fromOffset(360, 60), Parent = topBar })
 goal.Visible = false
-UITheme.scaleWith(goal, 0.75, 1.1)
-local goalIcon = UITheme.icon({ Name = "Icon", Text = "🎁", Size = UDim2.fromOffset(42, 42), Position = UDim2.fromOffset(8, 8), Parent = goal })
+local goalIcon = UITheme.icon({ Name = "Icon", Text = "🎁", Size = UDim2.fromOffset(46, 46), Position = UDim2.fromOffset(7, 7), Parent = goal })
 local popScale = Instance.new("UIScale") -- the completion pop (the panel's own UIScale is for screen size)
 popScale.Parent = goalIcon
 local goalText =
-	UITheme.text({ Name = "Text", Text = "", Role = "Body", TextSize = 17, Align = "Left", Position = UDim2.fromOffset(58, 5), Size = UDim2.new(1, -66, 0, 22), Parent = goal })
-local barFrame, setBar = UITheme.bar({ Name = "Bar", Position = UDim2.fromOffset(58, 32), Size = UDim2.new(1, -124, 0, 16), Parent = goal })
+	UITheme.text({ Name = "Text", Text = "", Role = "Title", TextSize = 20, Align = "Left", Position = UDim2.fromOffset(60, 4), Size = UDim2.new(1, -68, 0, 26), Parent = goal })
+local barFrame, setBar = UITheme.bar({ Name = "Bar", Position = UDim2.fromOffset(60, 35), Size = UDim2.new(1, -132, 0, 16), Parent = goal })
 local goalCount = UITheme.text({
 	Name = "Count",
 	Text = "",
-	Role = "Small",
+	Role = "Body",
+	TextSize = 17,
 	Align = "Right",
 	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, -8, 0, 30),
-	Size = UDim2.fromOffset(56, 20),
+	Position = UDim2.new(1, -8, 0, 31),
+	Size = UDim2.fromOffset(62, 24),
 	Parent = goal,
 })
 
@@ -128,17 +129,13 @@ local function currentGoal(): GoalView?
 end
 
 local shownIndex: number? = nil
-local function tutorialUp(): boolean
-	local hub = player.PlayerGui:FindFirstChild("Hub")
-	return hub ~= nil and hub:GetAttribute("Tutorial") ~= nil
-end
 local function refreshGoal()
 	if not goalOn() then
 		goal.Visible = false
 		return
 	end
 	local view = currentGoal()
-	goal.Visible = view ~= nil and not tutorialUp()
+	goal.Visible = view ~= nil -- (the whole top bar hides while the tutorial card is up)
 	gui:SetAttribute("Goal", view and view.text)
 	if not view then
 		return
@@ -155,28 +152,18 @@ local function refreshGoal()
 	goalText.Text = view.text
 	goalCount.Text = view.label
 	local wide = #view.label > 7
-	goalCount.Size = UDim2.fromOffset(if wide then 120 else 56, 20)
-	barFrame.Size = UDim2.new(1, if wide then -188 else -124, 0, 16)
+	goalCount.Size = UDim2.fromOffset(if wide then 130 else 62, 24)
+	barFrame.Size = UDim2.new(1, if wide then -200 else -132, 0, 16)
 	setBar(view.have / math.max(1, view.need), true)
 end
 
 -- Book ------------------------------------------------------------------------------------------------------------
--- (A holder takes the screen-size scale: the button's own UIScale is its press squash.)
-local bookHolder = UITheme.make("Frame", {
-	Name = "BookHolder",
-	BackgroundTransparency = 1,
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, -10, 0, 108),
-	Size = UDim2.fromOffset(112, UITheme.TouchTarget),
-	Parent = gui,
-})
-UITheme.scaleWith(bookHolder, 0.7, 1.05)
-local bookButton = UITheme.button({ Name = "BookButton", Kind = "Secondary", Text = "📖 Book", TextSize = 16, Size = UDim2.fromScale(1, 1), Parent = bookHolder })
+local bookButton = UITheme.button({ Name = "BookButton", Kind = "Secondary", Text = "📖", TextSize = 26, LayoutOrder = 3, Size = UDim2.fromOffset(52, 52), Parent = topBar })
 bookButton.Visible = false
 
-local book = UITheme.panel({ Name = "Book", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.fromOffset(600, 450), Parent = gui })
+local book = UITheme.panel({ Name = "Book", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.fromOffset(560, 380), Parent = gui })
 book.Visible = false
-UITheme.scaleWith(book, 0.55, 1.05)
+UITheme.scaleWith(book, 0.7, 1.05) -- (380 px tall x 0.7 still fits a small phone under the top inset)
 UITheme.text({ Name = "Title", Text = "📖 COLLECTION BOOK", Role = "Title", Align = "Left", Position = UDim2.fromOffset(16, 10), Size = UDim2.new(1, -90, 0, 30), Parent = book })
 local totalLabel = UITheme.text({
 	Name = "Total",
@@ -191,7 +178,7 @@ local totalLabel = UITheme.text({
 local closeButton = UITheme.button({
 	Name = "Close",
 	Kind = "Ghost",
-	Text = "✕",
+	Text = "X",
 	AnchorPoint = Vector2.new(1, 0),
 	Position = UDim2.new(1, -10, 0, 10),
 	Size = UDim2.fromOffset(UITheme.TouchTarget, UITheme.TouchTarget),
@@ -290,7 +277,7 @@ local function showPage(index: number)
 		stage.Name = "Stage"
 		stage.BackgroundTransparency = 1
 		stage.Position = UDim2.fromOffset(4, 4)
-		stage.Size = UDim2.new(1, -8, 1, -46)
+		stage.Size = UDim2.new(1, -8, 1, -44)
 		stage.Parent = card
 		local handle = WorkerPreview.mount(stage, id, { rotate = false })
 		if not got then
@@ -301,16 +288,17 @@ local function showPage(index: number)
 			Name = "WorkerName",
 			Text = if got then worker.name else "???",
 			Role = "Small",
+			TextSize = 15,
 			AnchorPoint = Vector2.new(0, 1),
-			Position = UDim2.new(0, 4, 1, -20),
-			Size = UDim2.new(1, -8, 0, 18),
+			Position = UDim2.new(0, 4, 1, -19),
+			Size = UDim2.new(1, -8, 0, 19),
 			Parent = card,
 		})
 		UITheme.text({
 			Name = "Rarity",
 			Text = (UITheme.RarityGlyph[rarity] or "") .. " " .. rarity,
 			Role = "Small",
-			TextSize = 12,
+			TextSize = 14,
 			Color = color,
 			AnchorPoint = Vector2.new(0, 1),
 			Position = UDim2.new(0, 4, 1, -3),
@@ -327,7 +315,7 @@ for i, def in ParadeConfig.BOOK_PAGES do
 		Name = def.zone,
 		Kind = "Ghost",
 		Text = def.title,
-		TextSize = 12,
+		TextSize = 14,
 		TextWrapped = true,
 		LayoutOrder = i,
 		Size = UDim2.new(1 / #ParadeConfig.BOOK_PAGES, -4, 1, 0),

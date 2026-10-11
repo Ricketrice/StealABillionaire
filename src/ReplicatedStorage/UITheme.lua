@@ -219,6 +219,54 @@ function UITheme.bar(props: { [string]: any }): (Frame, (number, boolean?) -> ()
 	return track, set
 end
 
+-- The shared top bar (ScreenGui "TopBar028"): one centred row under the Roblox top bar, clear of the
+-- HUD on the left and the PvP buttons on the right. Items: Golden Parade pill (1), goal (2), book (3),
+-- effects toggle (4). Hidden while the 026 tutorial card (same spot) is up. Client only.
+function UITheme.topBar(): Frame
+	local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+	local gui = playerGui:FindFirstChild("TopBar028")
+	if gui then
+		return gui:WaitForChild("Bar") :: Frame
+	end
+	gui = make("ScreenGui", { Name = "TopBar028", ResetOnSpawn = false, DisplayOrder = 3, Parent = playerGui })
+	local bar = make("Frame", {
+		Name = "Bar",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 8),
+		Size = UDim2.fromOffset(0, 56),
+		AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundTransparency = 1,
+	})
+	make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 6),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Parent = bar,
+	})
+	UITheme.scaleWith(bar, 0.75, 1.1)
+	bar.Parent = gui
+	local function follow(hub: Instance)
+		local function update()
+			bar.Visible = hub:GetAttribute("Tutorial") == nil
+		end
+		hub:GetAttributeChangedSignal("Tutorial"):Connect(update)
+		update()
+	end
+	local hub = playerGui:FindFirstChild("Hub")
+	if hub then
+		follow(hub)
+	else
+		playerGui.ChildAdded:Connect(function(child)
+			if child.Name == "Hub" then
+				follow(child)
+			end
+		end)
+	end
+	return bar
+end
+
 -- Scales a phone-first layout: UI is authored for a ~700 px short side.
 function UITheme.scaleWith(obj: GuiObject, minScale: number?, maxScale: number?): UIScale
 	local scale = make("UIScale", { Parent = obj })

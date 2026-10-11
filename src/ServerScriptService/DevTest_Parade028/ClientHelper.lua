@@ -92,18 +92,28 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 	elseif kind == "probe" then
 		local pg = player:WaitForChild("PlayerGui")
 		local parade, goal, juice = pg:FindFirstChild("Parade"), pg:FindFirstChild("GoalBook"), pg:FindFirstChild("Juice")
+		local top = pg:FindFirstChild("TopBar028") and pg.TopBar028:FindFirstChild("Bar")
 		local state: { [string]: any } = { answered = true, events = table.concat(events, ","), feedback = table.concat(feedback, " | ") }
 		state.paradeGui = parade and parade.Enabled
 		state.walkersShown = parade and parade:GetAttribute("Walkers")
 		state.free = parade and parade:GetAttribute("Free")
-		state.pill = parade and parade:FindFirstChild("GoldenPill") and parade.GoldenPill.Text.Text
+		state.pill = top and top:FindFirstChild("GoldenPill") and top.GoldenPill.Visible and top.GoldenPill.Text.Text
 		state.goal = goal and goal:GetAttribute("Goal")
-		state.goalVisible = goal and goal:FindFirstChild("Goal") and goal.Goal.Visible
-		state.bookButton = goal and goal:FindFirstChild("BookButton", true) and goal:FindFirstChild("BookButton", true).Visible
+		state.goalVisible = top and top.Visible and top:FindFirstChild("Goal") and top.Goal.Visible
+		state.bookButton = top and top:FindFirstChild("BookButton") and top.BookButton.Visible
 		state.juiceGui = juice and juice.Enabled
 		local banner = juice and juice:FindFirstChild("RevealBanner")
 		state.banner = banner and banner.Visible and banner.WorkerName.Text
 		state.sign = workspace:FindFirstChild("ParadeLaneSign") ~= nil
+		local claimed = workspace:FindFirstChild("ClaimedNPCs")
+		if claimed then
+			for _, m in claimed:GetChildren() do
+				local hip = m:GetAttribute("ClaimPhase") == "Carrying" and m:FindFirstChild("LeftHip", true)
+				if hip and (hip :: any).Transform.LookVector:Dot(Vector3.new(0, 0, -1)) < 0.9999 then
+					state.wriggle = true
+				end
+			end
+		end
 		local foil = 0
 		local folder = workspace:FindFirstChild("Parade") and workspace.Parade:FindFirstChild("Walkers")
 		if folder then
