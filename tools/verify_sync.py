@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Prints a Luau snippet that compares every script in src/ with the open Studio place (Edit mode).
 
-Run it from the repo root, paste the output into an MCP execute_luau call (or the command bar) and
+Run it from the repo root (add --studio to hand the manifest to Studio through its content folder), paste the output into an MCP execute_luau call (or the command bar) and
 it returns "all match" or one line per script that differs, exists only in Studio or only in src/.
 Backups, _DevOnly._WorkerLineup and the stock Animate scripts inside rigs are ignored.
 """
-import glob, json, re
+import glob, json, os, re, sys
 
 
 def rolling_hash(data: bytes) -> int:
@@ -22,6 +22,18 @@ def main():
         path = re.match(r"-- Studio location: (\S+) ", first).group(1)
         raw = body.encode("utf-8")
         manifest[path] = [len(raw), rolling_hash(raw)]
+    if "--studio" in sys.argv:
+        # Manifest into Studio's content folder; in Studio run the function printed below.
+        for content in glob.glob(os.path.expanduser("~/.var/app/org.vinegarhq.Vinegar/data/vinegar/versions/*/content")):
+            os.makedirs(os.path.join(content, "sab_sync"), exist_ok=True)
+            with open(os.path.join(content, "sab_sync", "verify.rbxmx"), "w", encoding="utf-8") as out:
+                out.write('<roblox version="4"><Item class="StringValue" referent="RBX0"><Properties>'
+                          '<string name="Name">manifest</string><string name="Value"><![CDATA['
+                          + json.dumps(manifest) + "]]></string></Properties></Item></roblox>\n")
+        print("-- manifest written; define once per Studio session, then call shared.sabVerify():")
+        print('shared.sabVerify = function()\nlocal M = game:GetService("HttpService"):JSONDecode('
+              'game:GetObjects("rbxasset://sab_sync/verify.rbxmx")[1].Value)\n' + SNIPPET + "\nend")
+        return
     print('local M = game:GetService("HttpService"):JSONDecode([==[' + json.dumps(manifest) + "]==])")
     print(SNIPPET)
 
