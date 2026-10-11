@@ -1,0 +1,4 @@
+backups/
+*.rbxl
+*.rbxlx
+__pycache__/

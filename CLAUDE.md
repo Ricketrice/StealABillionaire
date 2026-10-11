@@ -1,6 +1,12 @@
 # Steal a Billionaire — Claude rules
 
-Roblox, phone-first. ~80% kids. Code lives in Studio only (no Rojo); work through Roblox Studio MCP + headless Blender.
+Roblox, phone-first. ~80% kids. Work through Roblox Studio MCP (Studio runs through Vinegar on Linux).
+
+## Code
+- Every script's source lives in this repo under `src/` (`src/<Service>/<Path>.lua`, first line `-- Studio location: <Service.Path> (<Class>)`). No Rojo.
+- Edit the file, then sync it into the open Studio: `python3 tools/push_to_studio.py <files>` prints a Luau snippet to run in Edit mode (back up the old scripts first). Afterwards run the snippet from `python3 tools/verify_sync.py`: it must say "all match" before you commit.
+- `tools/rbxl_scripts.py place.rbxl [--export src]` lists or exports scripts from a saved place. `tools/test_guard.sh` guards multi-client tests (max 3 clients on this 13 GB machine).
+- Local place backups go in `backups/` (git-ignored).
 
 ## Read order (stop as soon as you have enough)
 1. `docs/PROJECT_STATUS.md` — what is built, open questions. Always read.
