@@ -7,7 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
-| D9 | **Our zones get room to breathe**: Zone 1, hub/lots and Zone 6 sized at least like the teammate islands. Zones are long avenues with sections (Catch a Beast-style depth), landmarks, and empty reserved plots for future content. Better than teammate zones, same palette and style. | 2026-10 |
+| D9 | **Our zones get room to breathe**: Zone 1, hub/lots and Zone 6 medium-sized (about 2x the old Main Street, roughly teammate-island size, never overwhelming). Zones are avenues with 2 sections (Catch a Beast-style depth), landmarks, and empty reserved plots for future content. Better than teammate zones, same palette and style. | 2026-10 |
 | D8 | Use player psychology + juice (VFX, animation, sound) to attract and keep players, kid-safe only — see `RETENTION_AND_JUICE.md`. Use outside tools (Blender, Figma…) when they make things better — see `TOOLS.md`. | 2026-10 |
 | D7 | **Worker Parade** (Steal a Brainrot-style): mystery workers walk down a lane on the central strip; first catches happen right at spawn. Zones 1–6 = where rarer workers come from. | 2026-10 |
 | D6 | **Art direction = simple and trendy** (Grow a Garden / Steal a Brainrot style): one compact bright map, lots facing a central strip, simple stalls, no detailed building kit. Attracting players beats detail. | 2026-10 |
