@@ -385,7 +385,7 @@ clientEvent.OnClientEvent:Connect(function(kind, info)
 	elseif kind == "ArenaStart" then
 		if info.a == player.UserId or info.b == player.UserId then
 			closePanel()
-			UIKit.toast("info", "Takeover Tower", ("%s vs %s: fight!"):format(tostring(info.workerA), tostring(info.workerB)))
+			UIKit.toast("info", "Battle Arena", ("%s vs %s: fight!"):format(tostring(info.workerA), tostring(info.workerB)))
 		end
 	elseif kind == "ArenaHit" then
 		UIKit.worldPop(fighterOf(info.victim), "-" .. tostring(info.damage), C.Danger, 5)

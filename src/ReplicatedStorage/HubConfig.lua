@@ -12,7 +12,7 @@
 
 local HubConfig = {}
 
-HubConfig.ARENA_ENABLED = false -- Takeover Tower worker battles
+HubConfig.ARENA_ENABLED = false -- Battle Arena worker battles (plaza, by the Golden Vault)
 HubConfig.SHOPS_ENABLED = false -- Bat Boutique and Lot & Decor (cosmetics, in-game cash only)
 HubConfig.NPC_QUESTS_ENABLED = false -- City Guide (tutorial, story) and the Quest Board
 HubConfig.UPGRADES_ENABLED = false -- Upgrade Office (needs SHOPS_ENABLED too); affects the economy
@@ -79,7 +79,7 @@ HubConfig.Quests = {
 		{ id = "rare1", text = "Steal a Rare or better worker", event = "stealRare", goal = 1, reward = 2500 },
 		{ id = "place2", text = "Put 2 workers to work on your stations", event = "place", goal = 2, reward = 1000 },
 		{ id = "earn5k", text = "Collect $5,000", event = "earn", goal = 5000, reward = 2000 },
-		{ id = "arena1", text = "Win a battle at Takeover Tower", event = "arenaWin", goal = 1, reward = 3000, needs = "ARENA_ENABLED" },
+		{ id = "arena1", text = "Win a battle at the Battle Arena", event = "arenaWin", goal = 1, reward = 3000, needs = "ARENA_ENABLED" },
 		{ id = "defend1", text = "Defend your base: knock a stolen worker loose", event = "defend", goal = 1, reward = 3000, needs = "PVP" },
 	},
 }
@@ -89,32 +89,32 @@ HubConfig.NPCs = {
 	Guide = { name = "Mentor Mae", hello = { "Welcome to Billionaire City! I'm Mae. Need a hand?", "Back again? Ask me anything!" } },
 	QuestBoard = { name = "Quest Board", hello = { "Three new jobs every day. Finish them for cash!" } },
 	BatBoutique = { name = "Slugger Sal", hello = { "Fresh bats! Looks only, kid: they all hit the same.", "A shiny bat says 'this base is defended'." } },
-	LotAndDecor = { name = "Daisy Decor", hello = { "Let's make your lot the prettiest on the ring!", "A statue here, a planter there... perfect." } },
+	LotAndDecor = { name = "Daisy Decor", hello = { "Let's make your lot the prettiest on the lane!", "A statue here, a planter there... perfect." } },
 	UpgradeOffice = { name = "Mr. Ledger", hello = { "Paperwork, crates and training plans. How may I help?", "Good investments start at this desk." } },
 }
 HubConfig.Story = {
 	"Billionaire City was built by the legendary Trillionaire.",
 	"One day, the Trillionaire simply vanished.",
 	"Legend says whoever builds the richest empire...",
-	"...will be the one to open the Golden Vault in the Exchange!",
+	"...will be the one to open the Golden Vault in the plaza!",
 }
 HubConfig.Tips = {
 	"Rarer workers earn more. Keep your best six on your stations.",
 	"Storage is safe. Workers on stations can be stolen once PvP is on!",
 	"Lock your base when you see the robbery alarm.",
-	"Workers of similar power are matched at Takeover Tower.",
+	"Workers of similar power are matched at the Battle Arena.",
 	"Check the Quest Board every day for extra cash.",
 }
 -- Tutorial steps. `wait` = what the player has to do before the step ticks off by itself
 -- ("carry", "place", "cash") or nil for a step that only needs reading.
 HubConfig.Tutorial = {
-	{ title = "Steal", text = "Walk through the arch to Main Street and hold E on a worker to steal it.", wait = "carry" },
+	{ title = "Steal", text = "Turn round and walk through the MAIN STREET arch, then hold E on a worker to steal it.", wait = "carry" },
 	{ title = "Reveal", text = "The card shows who you caught and how rare they are.", wait = nil },
-	{ title = "Carry", text = "Carry your worker back to your own lot. Your name is on the sign.", wait = nil },
+	{ title = "Carry", text = "Carry your worker to your own lot: follow the gold YOUR BASE beam.", wait = nil },
 	{ title = "Place", text = "Stand by a round pad on your lot and press E to put the worker to work.", wait = "place" },
 	{ title = "Collect", text = "Workers on pads earn cash every second. Watch it grow!", wait = "cash" },
 	{ title = "Defend", text = "Other players may try to steal placed workers. Lock your base or use your bat!", wait = nil },
-	{ title = "Arena", text = "Takeover Tower is west of the spawn: step on a pad to battle a worker for cash.", wait = nil },
+	{ title = "Arena", text = "The Battle Arena is in the plaza by the Golden Vault: step on a pad to battle a worker for cash.", wait = nil },
 }
 
 return HubConfig

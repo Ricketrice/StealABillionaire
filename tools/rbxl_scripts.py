@@ -132,7 +132,7 @@ def main():
             print("wrote %s  (%d lines)" % (os.path.relpath(fn), src.count("\n") + 1))
     else:
         live = [p for p in scripts if "_Backups" not in p and "_DevOnly._WorkerLineup" not in p]
-        print("instances with a Source:", len(source), "| live scripts:", len(live))
+        print("scripts:", len(scripts), "| live scripts:", len(live))
         for p in sorted(live):
             print("  %-70s %5d lines" % (p, scripts[p][1].count("\n") + 1))
 

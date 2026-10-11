@@ -5,15 +5,18 @@
 --   plot   OwnerUserId (number) / OwnerName (string)   - nil when free
 --   player PlotId (number)                             - nil until assigned
 -- No persistence yet: plots are freed (and their placed NPCs removed) when the owner leaves.
--- Players spawn (and respawn) inside their own plot, so they start at the base that is theirs
--- rather than at the hub's SpawnLocation, far from it and out of sight of its sign.
+-- Players spawn at the hub's SpawnLocation (see SPAWN_AT_PLOT for spawning inside their own plot).
 
 local Players = game:GetService("Players")
 
 local PlotService = {}
 
--- Where a player spawns, in the plot floor's space (-Z points towards the gate): just inside the
--- gate, in the lane between the two rows of stations, facing out towards the gate.
+-- Milestone 027 (D6): everyone spawns at the hub's SpawnLocation, facing down the parade lane, and a
+-- client marker (StarterPlayerScripts.SkyCityLife) points them to their base. Set true to go back
+-- to spawning inside the player's own plot.
+local SPAWN_AT_PLOT = false
+-- Where a player spawns when SPAWN_AT_PLOT is on, in the plot floor's space (-Z points towards the
+-- gate): just inside the gate, in the lane between the two rows of stations, facing the gate.
 local SPAWN_OFFSET = CFrame.new(0, 3.5, -12)
 
 local plotsFolder: Instance
@@ -77,11 +80,13 @@ local function assign(player: Player)
 			player:SetAttribute("PlotId", plot:GetAttribute("PlotId"))
 			setSign(plot, player.DisplayName .. "'s Base")
 
-			spawnConnections[player] = player.CharacterAdded:Connect(function(character)
-				moveToPlot(player, character, plot)
-			end)
-			if player.Character then -- joined before this ran: send the current character home too
-				task.spawn(moveToPlot, player, player.Character, plot)
+			if SPAWN_AT_PLOT then
+				spawnConnections[player] = player.CharacterAdded:Connect(function(character)
+					moveToPlot(player, character, plot)
+				end)
+				if player.Character then -- joined before this ran: send the current character home too
+					task.spawn(moveToPlot, player, player.Character, plot)
+				end
 			end
 			return
 		end

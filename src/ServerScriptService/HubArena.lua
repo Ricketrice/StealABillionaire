@@ -1,6 +1,6 @@
 -- Studio location: ServerScriptService.HubArena (ModuleScript)
 -- HubArena  (Milestone 026)
--- Takeover Tower: worker battles, all decided on the server. A player stands on a queue pad and
+-- Battle Arena (in the plaza, Milestone 027; was Takeover Tower): worker battles, all decided on the server. A player stands on a queue pad and
 -- offers one of their workers (on a station or in storage); two workers of similar power are put
 -- on the arena platforms and fight by themselves. The winner's owner gets cash and a trophy point.
 -- Nobody loses a worker, and the worker never leaves its owner: the fighters are stand-in models.
@@ -19,7 +19,7 @@ local WorkerInventory = require(script.Parent:WaitForChild("WorkerInventory"))
 
 local HubArena = {}
 local CFG = HubConfig.Arena
-local TITLE = "Takeover Tower"
+local TITLE = "Battle Arena"
 
 type Entry = { player: Player, uid: string, id: string, name: string, attack: number, speed: number, defence: number, power: number, at: number }
 local queue: { Entry } = {}
@@ -174,9 +174,8 @@ local function fighterModel(entry: Entry, platform: BasePart, folder: Instance):
 end
 
 local function scoreboard(text: string)
-	local city = workspace:FindFirstChild("World") and workspace.World:FindFirstChild("BillionaireCity")
-	local tower = city and city:FindFirstChild("TakeoverTower")
-	local face = tower and tower:FindFirstChild("ScoreboardFace")
+	local arena = venue()
+	local face = arena and arena:FindFirstChild("Scoreboard")
 	local label = face and face:FindFirstChild("Label", true)
 	if label and label:IsA("TextLabel") then
 		label.Text = text
