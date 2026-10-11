@@ -4,7 +4,7 @@ One milestone = one prompt = one branch `milestone-0NN`. Each ends with a commit
 ## Phase A — Make it look and play like a real game
 **027 Bug sweep + simple trendy map** — Phase 1 bugs, one compact bright island, lots facing a central strip. *(prompt exists)*
 **028 Worker Parade + juice** *(prompt: `docs/prompts/028.md`)* — central lane with walking mystery workers (D7), Golden Parade timer, rarity-scaled reveal/cash/steal VFX + sounds + AI/code-driven animations (`RETENTION_AND_JUICE.md`, D12), one-goal HUD, first worker within 10 s.
-**029 UI kit + V1 screens** — one UITheme (chunky simulator style: thick outlines, ribbons, gradients, big icons), restyle all existing UI incl. 028's; Shop/Store (passes, cash packs, starter pack), Inventory, Index with completion bonus, Daily rewards (7-day), Offline earnings popup, Playtime rewards, Settings (music, low effects). Original icons only.
+**029 UI kit + V1 screens** *(prompt: `docs/prompts/029.md`)* — one UITheme (chunky simulator style: thick outlines, ribbons, gradients, big icons), restyle all existing UI incl. 028's; Shop/Store (passes, cash packs, starter pack), Inventory, Index with completion bonus, Daily rewards (7-day), Offline earnings popup, Playtime rewards, Settings (music, low effects). Original icons only.
 **030 Zone 6 revamp** — Velocity Royale to medium size (D9), same style as the hub, feels like the end-game prize.
 
 ## Growth rule (applies to every milestone)
