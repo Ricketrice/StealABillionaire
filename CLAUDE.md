@@ -13,6 +13,8 @@ Roblox, phone-first. ~80% kids. Work through Roblox Studio MCP (Studio runs thro
 2. `docs/SCRIPT_MAP.md` — where things live in the place. Read before searching Studio.
 3. `docs/GAME_DESIGN.md` — only the section you need.
 4. `docs/ROADMAP.md` — only when planning the next milestone.
+5. `docs/RETENTION_AND_JUICE.md` — when touching the first minute, rewards, UI, VFX, sound.
+6. `docs/TOOLS.md` — when using Blender, Figma or other outside tools.
 
 ## Hard rules
 - **Zones 2, 3, 4, 5 are teammate-owned. Never modify anything inside them.** Bridges/paths may stop at their entrances.
