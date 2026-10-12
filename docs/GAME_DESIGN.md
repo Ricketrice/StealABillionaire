@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D25 | **Map = one rising lane** (like top lane-steal games, but climbing): bases + spawn + parade behind a SAFE ZONE line at the start, then zones in a line, each floating higher; Home button + zone teleports when empty-handed, run back when carrying. Uniqueness: rising lane, workers visibly working at bases, net-worth rank over heads (Broke → Intern → Manager → CEO → Millionaire → Billionaire), signature events. Needs teammate agreement for Zones 2–5. Theme question open (pivot?). | 2026-10 |
 | D24 | **Heist details + Speed**: vault opens every 10 min for 60 s (server-wide countdown); Boss Capsule = guaranteed Epic+, small Legendary/Secret chance; boss = giant security robot (slow, telegraphed attacks, 2 hits). **Speed stat before launch**: shown on HUD, raised by cash-only trails, capped; Royale Race uses fixed speed. | 2026-10 |
 | D23 | **Trailer kit before launch**: a Studio-only trailer mode (hide HUD, cinematic camera paths, scripted scenes: parade, Golden Parade, reveal, steal, Boss Heist chase, Royale Race) so the owner can record ads and a trailer. | 2026-10 |
 | D22 | **Boss Heist before launch (design C)**: at the end of Main Street the billionaire boss guards a vault; grab the vault worker → boss chases you to the safe zone with big telegraphed, dodgeable attacks. Caught = lose only the vault worker, keep everything else. Normal catching has no chase. | 2026-10 |
