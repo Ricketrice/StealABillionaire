@@ -14,15 +14,16 @@ No players = no money. Every milestone should help at least one of: **click** (i
 ## Phase B — Launch-ready V1 (make money)
 **032 Boss Heist + Speed** *(prompt: `docs/prompts/032.md`)* — vault every 10 min, security robot chase, Boss Capsule; Speed stat + cash trails (D22, D24).
 **033 Core loop + monetization** — workers visibly working at their stations (D25), worker stats + types on all 16 (icons on cards), levels 1–10, base slots 7–12 for cash; gamepasses 2x Cash, Extra Slots, VIP; cash packs + starter pack (dev products, `ProcessReceipt` + save); favourite-worker protection, steal cooldown/cap; group reward.
-**034 Launch polish + trailer kit** — feature reveal schedule, arena hidden behind a flag (D29) + first-10-minutes playtest with a real kid (D28), trailer mode (D23), game icon + 3 thumbnails, loading screen, sound pass, mobile check, AnalyticsService funnel, error logging, flags ON for live.
+**034 Art & detail pass** — every zone, bases, lane and shops brought to `ART_STYLE.md`: trims, materials, signage, props, lighting/atmosphere, windows/glow; part budget kept (D30).
+**035 Launch polish + trailer kit** — feature reveal schedule, arena hidden behind a flag (D29) + first-10-minutes playtest with a real kid (D28), trailer mode (D23), game icon + 3 thumbnails, loading screen, sound pass, mobile check, AnalyticsService funnel, error logging, flags ON for live.
 **→ Soft launch.** Then a small update every week (new worker, event or limited-time item) with "UPDATE" in the title — trending games live on weekly updates.
 **→** Watch D1 retention, session length, tutorial drop-off, payer conversion for 1–2 weeks before adding content.
 
 ## Phase C — Content updates (one per 1–2 weeks after launch)
-**035 Merge** — Golden/Diamond, merge machine, Lucky Merge pass later.
-**036 Shop gear tiers** — worker weapons/shields, player weapons/armour, effects; tiers per zone.
-**037 More bosses** — Zone 6 final heist, teammate zones' bosses.
-**038 Rebirth** — reset for a permanent multiplier; base slots 13–18 by rank.
-**039+** — roll out creatures zone by zone if the prototype works (D26); — Legendary/Secret signature animations; remaining passes (Strong Arms first, then Auto Collect, Speed Runner, Lucky, Discount, Billionaire), events, limited workers.
+**036 Merge** — Golden/Diamond, merge machine, Lucky Merge pass later.
+**037 Shop gear tiers** — worker weapons/shields, player weapons/armour, effects; tiers per zone.
+**038 More bosses** — Zone 6 final heist, teammate zones' bosses.
+**039 Rebirth** — reset for a permanent multiplier; base slots 13–18 by rank.
+**040+** — roll out creatures zone by zone if the prototype works (D26); — Legendary/Secret signature animations; remaining passes (Strong Arms first, then Auto Collect, Speed Runner, Lucky, Discount, Billionaire), events, limited workers.
 
 Teammate zones 2–5 move into their reserved lane terraces once they agree — we provide the terrace, gate and unlock price.

@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D30 | **Build first, polish in one dedicated art pass** once the lane layout is final (after 033, before launch polish/trailer). Before that, only a cheap global lighting/atmosphere tune. New builds follow `ART_STYLE.md` so nothing needs redoing. | 2026-10 |
 | D29 | **Arena hidden for V1**: keep the code and the venue, turn it off for players with a flag (ArenaEnabled = false live). No HUD button, no quests or tutorial steps pointing to it. Can return later as an update. Venue anchor names stay. | 2026-10 |
 | D28 | **Simplicity rule: reveal features gradually.** New players see only the core loop (catch → carry → place → earn). Other features appear as they progress, each with a one-time "NEW!" intro (see `RETENTION_AND_JUICE.md` → Feature reveal). Max 2 event timers on the HUD at once (show the next ones). One-sentence test for every feature. | 2026-10 |
 | D27 | Keep the 12 bases (2 rows of 6), spawn, shops and red parade lane as the start of the rising route; rebuild only if testing shows navigation/visibility problems. Teammates must agree before their zones or shared requirements change. | 2026-10 |
