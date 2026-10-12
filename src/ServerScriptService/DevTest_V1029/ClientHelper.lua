@@ -28,7 +28,7 @@ local function probe(): any
 	s.hudV1 = v1 ~= nil
 	if v1 then
 		local left = v1:FindFirstChild("Left", true)
-		local pill = left and left:FindFirstChild("CashPill")
+		local pill = left and left:FindFirstChild("CashPill", true)
 		s.cashText = pill and (pill:FindFirstChild("Amount") :: TextLabel).Text
 		local grid = left and left:FindFirstChild("Buttons")
 		local smallest = math.huge

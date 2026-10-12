@@ -95,7 +95,7 @@ local function showBanner(name: string, rarity: string, hold: number)
 	end
 	banner.Visible = true
 	banner.Position = UDim2.new(0.5, 0, 0, -140)
-	UITheme.tween(banner, UITheme.Motion.Slow, { Position = UDim2.new(0.5, 0, 0, 74) }, Enum.EasingStyle.Back)
+	UITheme.tween(banner, UITheme.Motion.Slow, { Position = UDim2.new(0.5, 0, 0, UITheme.bannerTop()) }, Enum.EasingStyle.Back)
 	task.delay(hold, function()
 		if token == bannerToken then
 			local out = UITheme.tween(banner, UITheme.Motion.Normal, { Position = UDim2.new(0.5, 0, 0, -140) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)

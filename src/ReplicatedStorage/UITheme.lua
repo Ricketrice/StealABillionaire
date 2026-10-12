@@ -525,9 +525,20 @@ function UITheme.button(props: { [string]: any }): TextButton
 		end
 	end
 	if icon then
+		-- Icon on the left, text to its right. The UIPadding (room for the icon) shifts children too,
+		-- so the icon is placed back by the same amount; it follows the button's height.
 		local h = (props.Size and props.Size.Y.Offset or 44) - 12
-		UITheme.image({ Icon = icon, Size = UDim2.fromOffset(h, h), AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 6, 0.5, 0), Parent = button })
-		make("UIPadding", { PaddingLeft = UDim.new(0, h + 4), Parent = button })
+		local pad = make("UIPadding", { PaddingLeft = UDim.new(0, h + 8), Parent = button })
+		local image =
+			UITheme.image({ Icon = icon, Size = UDim2.fromOffset(h, h), AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 6 - (h + 8), 0.5, 0), Parent = button })
+		button:GetPropertyChangedSignal("Size"):Connect(function()
+			local side = math.max(button.Size.Y.Offset - 12, 8)
+			if image.Size.Y.Offset ~= side then
+				image.Size = UDim2.fromOffset(side, side)
+				pad.PaddingLeft = UDim.new(0, side + 8)
+				image.Position = UDim2.new(0, 6 - (side + 8), 0.5, 0)
+			end
+		end)
 	end
 	UITheme.squash(button)
 	if onActivated then
@@ -739,7 +750,7 @@ function UITheme.pill(props: { [string]: any }): (Frame, TextLabel, TextButton?)
 	UITheme.corner(frame, UITheme.PillRadius)
 	UITheme.stroke(frame, UITheme.Colors.Stroke)
 	UITheme.shade(frame, "Panel")
-	UITheme.image({
+	local icon = UITheme.image({
 		Icon = props.Icon or "cash",
 		Size = UDim2.fromOffset(height + 8, height + 8),
 		AnchorPoint = Vector2.new(0, 0.5),
@@ -758,6 +769,8 @@ function UITheme.pill(props: { [string]: any }): (Frame, TextLabel, TextButton?)
 		Position = UDim2.fromOffset(height + 2, 0),
 		Parent = frame,
 	})
+	label.TextScaled = true -- long amounts shrink to fit instead of being cut off
+	local maxText = make("UITextSizeConstraint", { MaxTextSize = math.floor(height * 0.56), MinTextSize = 8, Parent = label })
 	local plus = nil
 	if props.OnPlus then
 		plus = UITheme.button({
@@ -773,6 +786,19 @@ function UITheme.pill(props: { [string]: any }): (Frame, TextLabel, TextButton?)
 		})
 		plus:FindFirstChildOfClass("UICorner").CornerRadius = UITheme.PillRadius
 	end
+	-- Everything inside follows the pill's height (the HUD resizes it for touch screens).
+	frame:GetPropertyChangedSignal("Size"):Connect(function()
+		local h = frame.Size.Y.Offset
+		local r = if plus then h - 4 else 8
+		icon.Size = UDim2.fromOffset(h + 8, h + 8)
+		maxText.MaxTextSize = math.floor(h * 0.56)
+		label.Size = UDim2.new(1, -(h + 4) - r, 1, 0)
+		label.Position = UDim2.fromOffset(h + 2, 0)
+		if plus then
+			plus.Size = UDim2.fromOffset(h - 6, h - 6)
+			plus.TextSize = math.floor(h * 0.5)
+		end
+	end)
 	return frame, label, plus
 end
 
@@ -903,9 +929,85 @@ function UITheme.gui(name: string, displayOrder: number): (ScreenGui, Frame)
 		IgnoreGuiInset = false,
 		ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
 	})
-	local root = make("Frame", { Name = "Root", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = gui })
-	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+	local root = make(
+		"Frame",
+		{ Name = "Root", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Parent = gui }
+	)
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	-- Studio layout testing, same switch as UIKit.root: PlayerGui attribute UITestViewport (Vector2).
+	local function apply()
+		local v = playerGui:GetAttribute("UITestViewport")
+		root.Size = if typeof(v) == "Vector2" then UDim2.fromOffset(v.X, v.Y) else UDim2.fromScale(1, 1)
+	end
+	playerGui:GetAttributeChangedSignal("UITestViewport"):Connect(apply)
+	apply()
+	gui.Parent = playerGui
 	return gui, root
+end
+
+-- HUD layout rule (029 layout fix) ----------------------------------------------------------------------
+-- ONE size rule for the HUD: scale = the safe area's short side / 1000, kept between 0.6 (phones) and
+-- 1.25. HUD pieces are authored at their 1080p PC size (menu buttons 88 px, action buttons 200 x 56,
+-- cash pill 260 x 60) and anything tappable is authored at least TOUCH / scale, so it is never under
+-- 56 px on screen. On touch screens the thumbstick and jump button corners stay clear (`avoid`).
+UITheme.HUD = { REFERENCE = 1000, MIN = 0.6, MAX = 1.25, TOUCH = 56, MARGIN = 14, GAP = 10, ACTION_W = 200 }
+local HUD = UITheme.HUD
+
+function UITheme.hudScale(size: Vector2): number
+	return math.clamp(math.min(size.X, size.Y) / HUD.REFERENCE, HUD.MIN, HUD.MAX)
+end
+-- An authored size that is at least TOUCH px on screen at this scale.
+function UITheme.touchSize(base: number, scale: number): number
+	return math.max(base, math.ceil(HUD.TOUCH / scale))
+end
+-- The safe-area size the HUD lays out in (or the Studio test size).
+function UITheme.viewSize(): Vector2
+	local v = Players.LocalPlayer:WaitForChild("PlayerGui"):GetAttribute("UITestViewport")
+	if typeof(v) == "Vector2" then
+		return v
+	end
+	local camera = workspace.CurrentCamera
+	local size = if camera then camera.ViewportSize else Vector2.new(1280, 720)
+	local inset = game:GetService("GuiService"):GetGuiInset()
+	return size - Vector2.new(0, inset.Y)
+end
+-- Touch controls to keep clear, as { min: Vector2, max: Vector2 } in root coordinates, from Roblox's
+-- own placement: small screens (short side <= 500) put a 70 px thumbstick at (25, H-90) and a 70 px
+-- jump button at (W-95, H-90); bigger ones use 120 px controls at (60, H-210) and (W-170, H-210).
+-- (Each box below adds ~15 px of room.) Studio: PlayerGui attribute UITestTouch = true.
+function UITheme.hudAvoid(size: Vector2): { { min: Vector2, max: Vector2 } }
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	local UserInputService = game:GetService("UserInputService")
+	local touch = playerGui:GetAttribute("UITestTouch") == true or (UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled)
+	if not touch then
+		return {}
+	end
+	local small = math.min(size.X, size.Y) <= 500
+	local w, h = if small then 110 else 195, if small then 105 else 225
+	return {
+		{ min = Vector2.new(0, size.Y - h), max = Vector2.new(w, size.Y) }, -- thumbstick
+		{ min = Vector2.new(size.X - w, size.Y - h), max = size }, -- jump button
+	}
+end
+-- Where top-centre banners and toasts start (V1): just under the shared top piece (Golden timer + goal).
+function UITheme.bannerTop(): number
+	if not V1 then
+		return 74
+	end
+	return 16 + math.ceil(72 * UITheme.hudScale(UITheme.viewSize()) * 1.12) + 10
+end
+-- Calls fn(view) now and whenever the HUD area changes; view = { size, scale, avoid }.
+function UITheme.onHudLayout(root: GuiObject, fn: (any) -> ())
+	local function run()
+		local size = root.AbsoluteSize
+		if size.X < 2 then
+			return
+		end
+		fn({ size = size, scale = UITheme.hudScale(size), avoid = UITheme.hudAvoid(size) })
+	end
+	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(run)
+	Players.LocalPlayer:WaitForChild("PlayerGui"):GetAttributeChangedSignal("UITestTouch"):Connect(run)
+	task.defer(run)
 end
 
 -- Scales a fixed-size window so it fits `root` (with a margin) and never grows past maxScale.
@@ -1252,13 +1354,14 @@ function UITheme.topBar(): Frame
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	local gui = playerGui:FindFirstChild("TopBar028")
 	if gui then
-		return gui:WaitForChild("Bar") :: Frame
+		return gui:WaitForChild("Root"):WaitForChild("Bar") :: Frame
 	end
-	gui = make("ScreenGui", { Name = "TopBar028", ResetOnSpawn = false, DisplayOrder = 3, Parent = playerGui })
+	local root
+	gui, root = UITheme.gui("TopBar028", 3) -- (same safe-area Root as the HUD, so their positions line up)
 	local bar = make("Frame", {
 		Name = "Bar",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 8),
+		Position = UDim2.new(0.5, 0, 0, if V1 then 16 else 8),
 		Size = UDim2.fromOffset(0, 56),
 		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundTransparency = 1,
@@ -1271,8 +1374,37 @@ function UITheme.topBar(): Frame
 		SortOrder = Enum.SortOrder.LayoutOrder,
 		Parent = bar,
 	})
-	UITheme.scaleWith(bar, 0.75, 1.1)
-	bar.Parent = gui
+	if V1 then -- sized and placed by HudV1 (UIScale "Fit"): a touch bigger than the rest of the HUD,
+		-- kept clear of the cash pill and the right-hand column
+		make("UIScale", { Name = "Fit", Parent = bar })
+	else
+		UITheme.scaleWith(bar, 0.75, 1.1)
+	end
+	if V1 then -- one joined piece: the Golden timer and the goal sit on a shared plate
+		bar.BackgroundTransparency = 0
+		bar.BackgroundColor3 = UITheme.Colors.PanelDark
+		UITheme.corner(bar, UITheme.CornerRadius)
+		local plateStroke = UITheme.stroke(bar, UITheme.Colors.Border, 3)
+		make("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), Parent = bar })
+		bar.AutomaticSize = Enum.AutomaticSize.XY
+		bar.Size = UDim2.fromOffset(0, 0)
+		local function plate() -- no empty plate when nothing is on it
+			local any = false
+			for _, child in bar:GetChildren() do
+				any = any or (child:IsA("GuiObject") and child.Visible)
+			end
+			bar.BackgroundTransparency = if any then 0 else 1
+			plateStroke.Enabled = any
+		end
+		bar.ChildAdded:Connect(function(child)
+			if child:IsA("GuiObject") then
+				child:GetPropertyChangedSignal("Visible"):Connect(plate)
+			end
+			plate()
+		end)
+		plate()
+	end
+	bar.Parent = root
 	local function follow(hub: Instance)
 		local function update()
 			bar.Visible = hub:GetAttribute("Tutorial") == nil
@@ -1293,13 +1425,18 @@ function UITheme.topBar(): Frame
 	return bar
 end
 
--- Scales a phone-first layout: UI is authored for a ~700 px short side.
-function UITheme.scaleWith(obj: GuiObject, minScale: number?, maxScale: number?): UIScale
+-- Scales a piece of HUD by the one HUD rule (UITheme.hudScale), times `factor` (default 1).
+-- (With the V1 look the per-call min/max arguments are ignored: one rule for everything; the Classic
+-- look keeps the 028 rule and uses them.)
+function UITheme.scaleWith(obj: GuiObject, _minScale: number?, _maxScale: number?, factor: number?): UIScale
 	local scale = make("UIScale", { Parent = obj })
 	local function update()
-		local camera = workspace.CurrentCamera
-		local v = if camera then camera.ViewportSize else Vector2.new(1280, 720)
-		scale.Scale = math.clamp(math.min(v.X, v.Y) / 700, minScale or 0.75, maxScale or 1.15)
+		if V1 then
+			scale.Scale = UITheme.hudScale(UITheme.viewSize()) * (factor or 1)
+		else -- Classic (V1 look off): the 028 rule, unchanged
+			local v = UITheme.viewSize()
+			scale.Scale = math.clamp(math.min(v.X, v.Y) / 700, _minScale or 0.75, _maxScale or 1.15)
+		end
 	end
 	local function watch()
 		local camera = workspace.CurrentCamera
@@ -1309,6 +1446,7 @@ function UITheme.scaleWith(obj: GuiObject, minScale: number?, maxScale: number?)
 		update()
 	end
 	workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(watch)
+	Players.LocalPlayer:WaitForChild("PlayerGui"):GetAttributeChangedSignal("UITestViewport"):Connect(update)
 	watch()
 	return scale
 end

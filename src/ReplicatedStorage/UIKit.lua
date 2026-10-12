@@ -371,7 +371,8 @@ local function ensureToastHost()
 	toastHolder = make("Frame", {
 		Name = "Stack",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 10),
+		-- (V1 look: under the shared top piece instead of on it)
+		Position = UDim2.new(0.5, 0, 0, if V1 then (require(script.Parent:WaitForChild("UITheme")) :: any).bannerTop() else 10),
 		Size = UDim2.new(0.9, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,

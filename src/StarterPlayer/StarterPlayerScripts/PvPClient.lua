@@ -50,11 +50,17 @@ end
 local gui = UIKit.screen("PvP", UIStyle.DisplayOrder.Hud)
 local root = UIKit.root(gui)
 local column = UIKit.make("Frame", {
-	Name = "Actions", AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.4, 0),
-	Size = UDim2.fromOffset(WIDTH, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Parent = root,
+	Name = "Actions",
+	AnchorPoint = Vector2.new(1, 0.5),
+	Position = UDim2.new(1, -12, 0.4, 0),
+	Size = UDim2.fromOffset(WIDTH, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	BackgroundTransparency = 1,
+	Parent = root,
 }) :: Frame
 UIKit.list(column, Enum.FillDirection.Vertical, UIStyle.Space.S, Enum.HorizontalAlignment.Right)
-UIKit.scaled(column, 0.8, 1.2, root)
+-- (V1 look: sized and placed by the one HUD rule further down; Classic keeps the 022 scaling)
+local columnScale = if UIStyle.v1 then UIKit.make("UIScale", { Parent = column }) :: UIScale else UIKit.scaled(column, 0.8, 1.2, root)
 
 local setLocker: (boolean) -> () -- defined with the locker below
 local lockerOpen = false
@@ -62,19 +68,34 @@ local lockerOpen = false
 local shield = UIKit.chip({ Name = "Protected", Text = "", Height = 26, Color = C.Info, LayoutOrder = 1, Parent = column })
 local shieldLabel = shield:FindFirstChildOfClass("TextLabel") :: TextLabel
 local batButton, batControl = UIKit.button({
-	Name = "BatButton", Kind = "Secondary", Text = "BAT", Size = UDim2.fromOffset(WIDTH, 46), LayoutOrder = 2, Parent = column,
+	Name = "BatButton",
+	Kind = "Secondary",
+	Text = "BAT",
+	Size = UDim2.fromOffset(WIDTH, 46),
+	LayoutOrder = 2,
+	Parent = column,
 	OnActivated = function()
 		actionEvent:FireServer("Equip", player:GetAttribute("BatEquipped") ~= true)
 	end,
 })
 local lockerButton = UIKit.button({
-	Name = "LockerButton", Kind = "Secondary", Text = "LOCKER", Size = UDim2.fromOffset(WIDTH, 46), LayoutOrder = 3, Parent = column,
+	Name = "LockerButton",
+	Kind = "Secondary",
+	Text = "LOCKER",
+	Size = UDim2.fromOffset(WIDTH, 46),
+	LayoutOrder = 3,
+	Parent = column,
 	OnActivated = function()
 		setLocker(not lockerOpen)
 	end,
 })
 local lockButton, lockControl = UIKit.button({
-	Name = "LockButton", Kind = "Secondary", Text = "LOCK BASE", Size = UDim2.fromOffset(WIDTH, 46), LayoutOrder = 4, Parent = column,
+	Name = "LockButton",
+	Kind = "Secondary",
+	Text = "LOCK BASE",
+	Size = UDim2.fromOffset(WIDTH, 46),
+	LayoutOrder = 4,
+	Parent = column,
 	OnActivated = function()
 		actionEvent:FireServer("Lock")
 	end,
@@ -83,6 +104,62 @@ local lockButton, lockControl = UIKit.button({
 local specialChip, specialLabel = UIKit.chip({ Name = "Special", Text = "", Height = 26, Color = C.Gold, LayoutOrder = 5, Parent = column })
 local chargeTrack, chargeMeter = UIKit.meter({ Name = "Charge", Size = UDim2.fromOffset(WIDTH, 10), LayoutOrder = 6, Parent = column })
 chargeTrack.Visible = false
+
+-- V1 layout (029 layout fix): right side, vertically centred, equal gaps, buttons 200 x 56 at 1080p and
+-- never under 56 px on screen; kept above the jump button on touch screens.
+if UIStyle.v1 then
+	local UITheme = require(ReplicatedStorage:WaitForChild("UITheme")) :: any
+	local HUD = UITheme.HUD
+	local BUTTON_W = HUD.ACTION_W
+	local list = column:FindFirstChildOfClass("UIListLayout")
+	if list then
+		list.Padding = UDim.new(0, HUD.GAP)
+	end
+	local view: any = nil
+	local function place()
+		if not view then
+			return
+		end
+		local s = view.scale
+		columnScale.Scale = s
+		local buttonH = UITheme.touchSize(56, s)
+		local buttonText = math.max(22, math.ceil(13 / s)) -- never under 13 px on screen
+		for _, b in { batButton, lockerButton, lockButton } do
+			b.Size = UDim2.fromOffset(BUTTON_W, buttonH)
+			local label = b:FindFirstChildOfClass("TextLabel")
+			if label then
+				label.TextSize = buttonText
+			end
+		end
+		local chipText = math.max(17, math.ceil(11 / s))
+		local chipH = chipText + 12
+		for _, chip in { shield, specialChip } do
+			chip.Size = UDim2.fromOffset(0, chipH)
+			local label = chip:FindFirstChildOfClass("TextLabel")
+			if label then
+				label.TextSize = chipText
+			end
+		end
+		chargeTrack.Size = UDim2.fromOffset(BUTTON_W, 12)
+		column.Size = UDim2.fromOffset(BUTTON_W, 0)
+		local h = column.AbsoluteSize.Y
+		local left = view.size.X - HUD.MARGIN - BUTTON_W * s
+		local bottom = view.size.Y - HUD.MARGIN
+		for _, r in view.avoid do
+			if r.max.X > left then
+				bottom = math.min(bottom, r.min.Y - HUD.GAP)
+			end
+		end
+		local y = math.clamp(view.size.Y / 2 - h / 2, HUD.MARGIN, math.max(HUD.MARGIN, bottom - h))
+		column.AnchorPoint = Vector2.new(1, 0)
+		column.Position = UDim2.fromOffset(view.size.X - HUD.MARGIN, y)
+	end
+	UITheme.onHudLayout(root, function(v)
+		view = v
+		place()
+	end)
+	column:GetPropertyChangedSignal("AbsoluteSize"):Connect(place)
+end
 
 -- Attack input: bound only while the bat is out, so it never takes clicks away from normal play ---------
 -- Press = start charging, let go = swing. The server times the hold: a short press is a basic
@@ -151,7 +228,14 @@ end)
 -- Weapon locker: bat look and special attack. Looks only; the server keeps the choice ------------------
 local lockerGui = UIKit.screen("PvPLocker", UIStyle.DisplayOrder.Inventory)
 local lockerRoot = UIKit.root(lockerGui)
-local locker = UIKit.panel({ Name = "Locker", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(420, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = lockerRoot })
+local locker = UIKit.panel({
+	Name = "Locker",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.fromOffset(420, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Parent = lockerRoot,
+})
 locker.Visible = false
 UIKit.padding(locker, UIStyle.Space.L, UIStyle.Space.M)
 UIKit.list(locker, Enum.FillDirection.Vertical, UIStyle.Space.S, Enum.HorizontalAlignment.Center)
@@ -160,15 +244,28 @@ UIKit.scaled(locker, 0.62, 1.15, lockerRoot)
 local header = UIKit.make("Frame", { Name = "Header", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, UIStyle.TouchTarget), LayoutOrder = 1, Parent = locker })
 UIKit.text({ Text = "WEAPON LOCKER", Role = "Title", Size = UDim2.new(1, -52, 1, 0), Parent = header })
 UIKit.button({
-	Name = "Close", Kind = "Ghost", Text = "X", AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0),
-	Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget), Parent = header,
+	Name = "Close",
+	Kind = "Ghost",
+	Text = "X",
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.fromScale(1, 0),
+	Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget),
+	Parent = header,
 	OnActivated = function()
 		setLocker(false)
 	end,
 })
 
 local function preview(parent: Instance, skinName: string)
-	local view = UIKit.make("ViewportFrame", { Name = "Preview", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 84), Ambient = Color3.fromRGB(200, 200, 210), LightColor = Color3.new(1, 1, 1), LightDirection = Vector3.new(-1, -1, -1), Parent = parent }) :: ViewportFrame
+	local view = UIKit.make("ViewportFrame", {
+		Name = "Preview",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 84),
+		Ambient = Color3.fromRGB(200, 200, 210),
+		LightColor = Color3.new(1, 1, 1),
+		LightDirection = Vector3.new(-1, -1, -1),
+		Parent = parent,
+	}) :: ViewportFrame
 	local bat = PvPBat.build(skinName)
 	for _, part in bat:GetDescendants() do
 		if part:IsA("BasePart") then
@@ -186,7 +283,10 @@ end
 
 -- A selectable card; returns a function that marks it chosen or not.
 local function card(props): (boolean) -> ()
-	local button = UIKit.make("TextButton", { Name = props.Name, AutoButtonColor = false, Text = "", BackgroundColor3 = C.PanelRaised, Size = props.Size, LayoutOrder = props.LayoutOrder, Parent = props.Parent }) :: TextButton
+	local button = UIKit.make(
+		"TextButton",
+		{ Name = props.Name, AutoButtonColor = false, Text = "", BackgroundColor3 = C.PanelRaised, Size = props.Size, LayoutOrder = props.LayoutOrder, Parent = props.Parent }
+	) :: TextButton
 	UIStyle.corner(button, UIStyle.Radius.M)
 	local stroke = UIStyle.outline(button, C.Border, 1.5)
 	UIKit.padding(button, 8, 8)
@@ -196,9 +296,20 @@ local function card(props): (boolean) -> ()
 	end
 	UIKit.text({ Text = props.Title, Role = "Heading", AlignX = Enum.TextXAlignment.Center, LayoutOrder = 2, Parent = button })
 	if props.Hint then
-		UIKit.text({ Text = props.Hint, Role = "Small", Color = C.TextMuted, AlignX = Enum.TextXAlignment.Center, Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 34), LayoutOrder = 3, Parent = button })
+		UIKit.text({
+			Text = props.Hint,
+			Role = "Small",
+			Color = C.TextMuted,
+			AlignX = Enum.TextXAlignment.Center,
+			Wrap = true,
+			Truncate = false,
+			Size = UDim2.new(1, 0, 0, 34),
+			LayoutOrder = 3,
+			Parent = button,
+		})
 	end
-	local state = UIKit.text({ Name = "State", Text = "", Role = "Micro", Font = UIStyle.FontBold, Color = C.Gold, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 4, Parent = button })
+	local state =
+		UIKit.text({ Name = "State", Text = "", Role = "Micro", Font = UIStyle.FontBold, Color = C.Gold, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 4, Parent = button })
 	button.Activated:Connect(props.OnActivated)
 	return function(chosen: boolean)
 		stroke.Color = if chosen then C.Gold else C.Border
@@ -220,7 +331,12 @@ local skinRow = row("Skins", 3, 150)
 local skinCards: { [string]: (boolean) -> () } = {}
 for index, name in PvPConfig.SKIN_ORDER do
 	skinCards[name] = card({
-		Name = name, Skin = name, Title = PvPBat.SKINS[name].name, Size = UDim2.new(0, 110, 1, 0), LayoutOrder = index, Parent = skinRow,
+		Name = name,
+		Skin = name,
+		Title = PvPBat.SKINS[name].name,
+		Size = UDim2.new(0, 110, 1, 0),
+		LayoutOrder = index,
+		Parent = skinRow,
 		OnActivated = function()
 			actionEvent:FireServer("Loadout", "skin", name)
 		end,
@@ -232,7 +348,12 @@ local specialCards: { [string]: (boolean) -> () } = {}
 for index, name in PvPConfig.SPECIAL_ORDER do
 	local def = PvPConfig.Specials[name]
 	specialCards[name] = card({
-		Name = name, Title = def.name, Hint = def.hint, Size = UDim2.new(0, 170, 1, 0), LayoutOrder = index, Parent = specialRow,
+		Name = name,
+		Title = def.name,
+		Hint = def.hint,
+		Size = UDim2.new(0, 170, 1, 0),
+		LayoutOrder = index,
+		Parent = specialRow,
 		OnActivated = function()
 			actionEvent:FireServer("Loadout", "special", name)
 		end,

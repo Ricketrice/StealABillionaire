@@ -92,7 +92,7 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 	elseif kind == "probe" then
 		local pg = player:WaitForChild("PlayerGui")
 		local parade, goal, juice = pg:FindFirstChild("Parade"), pg:FindFirstChild("GoalBook"), pg:FindFirstChild("Juice")
-		local top = pg:FindFirstChild("TopBar028") and pg.TopBar028:FindFirstChild("Bar")
+		local top = pg:FindFirstChild("TopBar028") and pg.TopBar028:FindFirstChild("Bar", true)
 		local state: { [string]: any } = { answered = true, events = table.concat(events, ","), feedback = table.concat(feedback, " | ") }
 		state.paradeGui = parade and parade.Enabled
 		state.walkersShown = parade and parade:GetAttribute("Walkers")

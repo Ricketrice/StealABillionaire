@@ -50,79 +50,236 @@ local HALO = { 0.3, 0.18, 0.1 } -- opacity of the three glow layers at full stre
 local TIER = {
 	Common = { size = 0.82, build = 0, hold = 1.3, sound = "pop", eyebrow = "NEW WORKER" },
 	Rare = { size = 0.9, build = 0, hold = 2, sound = "chime", eyebrow = "RARE CATCH", ring = true, shine = true },
-	Epic = { size = 1, build = 0.6, hold = 2.4, sound = "epic", eyebrow = "EPIC CATCH", ring = true, shine = true, sparkles = 10, waves = 1, glow = 0.6, dim = 0.72, dimAfter = 0.8, tease = "WHO IS IT?", tap = true },
-	Legendary = { size = 1, build = 1.1, hold = 3.2, sound = "legendary", eyebrow = "INCREDIBLE CATCH", ring = true, shine = true, sparkles = 16, waves = 2, glow = 1, dim = 0.5, dimAfter = 0.6, rays = true, banner = true, flash = 0.6, countUp = true, tease = "SOMETHING BIG…", tap = true },
-	Secret = { size = 1, build = 1.8, hold = 3.6, sound = "secret", eyebrow = "ULTRA RARE FIND", ring = true, shine = true, sparkles = SPARKLES, waves = 3, glow = 1, dim = 0.25, dimAfter = 0.45, rays = true, beam = true, banner = true, flash = 0.55, countUp = true, tease = "A SECRET APPROACHES…", tap = true },
+	Epic = {
+		size = 1,
+		build = 0.6,
+		hold = 2.4,
+		sound = "epic",
+		eyebrow = "EPIC CATCH",
+		ring = true,
+		shine = true,
+		sparkles = 10,
+		waves = 1,
+		glow = 0.6,
+		dim = 0.72,
+		dimAfter = 0.8,
+		tease = "WHO IS IT?",
+		tap = true,
+	},
+	Legendary = {
+		size = 1,
+		build = 1.1,
+		hold = 3.2,
+		sound = "legendary",
+		eyebrow = "INCREDIBLE CATCH",
+		ring = true,
+		shine = true,
+		sparkles = 16,
+		waves = 2,
+		glow = 1,
+		dim = 0.5,
+		dimAfter = 0.6,
+		rays = true,
+		banner = true,
+		flash = 0.6,
+		countUp = true,
+		tease = "SOMETHING BIG…",
+		tap = true,
+	},
+	Secret = {
+		size = 1,
+		build = 1.8,
+		hold = 3.6,
+		sound = "secret",
+		eyebrow = "ULTRA RARE FIND",
+		ring = true,
+		shine = true,
+		sparkles = SPARKLES,
+		waves = 3,
+		glow = 1,
+		dim = 0.25,
+		dimAfter = 0.45,
+		rays = true,
+		beam = true,
+		banner = true,
+		flash = 0.55,
+		countUp = true,
+		tease = "A SECRET APPROACHES…",
+		tap = true,
+	},
 }
 
 -- Full-screen layer behind the card: the dim and the single soft flash. Never takes input.
 local fxGui = UIKit.screen("WorkerRevealFx", UIStyle.DisplayOrder.Reveal - 1)
 fxGui.IgnoreGuiInset = true
 fxGui.ScreenInsets = Enum.ScreenInsets.None
-local dim = UIKit.make("Frame", { Name = "Dim", Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.Overlay, BackgroundTransparency = 1, BorderSizePixel = 0, Active = false, Parent = fxGui }) :: Frame
-local flash = UIKit.make("Frame", { Name = "Flash", Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, BorderSizePixel = 0, Active = false, Parent = fxGui }) :: Frame
+local dim = UIKit.make(
+	"Frame",
+	{ Name = "Dim", Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.Overlay, BackgroundTransparency = 1, BorderSizePixel = 0, Active = false, Parent = fxGui }
+) :: Frame
+local flash = UIKit.make(
+	"Frame",
+	{ Name = "Flash", Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, BorderSizePixel = 0, Active = false, Parent = fxGui }
+) :: Frame
 
 local gui = UIKit.screen("WorkerReveal", UIStyle.DisplayOrder.Reveal)
 local root = UIKit.root(gui)
 -- The card sits just above the screen centre and is scaled to fit the safe area on any device.
-local holder = UIKit.make("Frame", { Name = "Holder", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.47), Size = UDim2.fromOffset(W, H), BackgroundTransparency = 1, Visible = false, Active = false, Parent = root }) :: Frame
+local holder = UIKit.make("Frame", {
+	Name = "Holder",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.47),
+	Size = UDim2.fromOffset(W, H),
+	BackgroundTransparency = 1,
+	Visible = false,
+	Active = false,
+	Parent = root,
+}) :: Frame
 local fit = UIKit.make("UIScale", { Parent = holder }) :: UIScale
 UIKit.onResize(root, function(size)
 	fit.Scale = math.clamp(math.min(size.Y * 0.94 / FIT_H, size.X * 0.9 / W), 0.6, 1.2)
 end)
 
 -- behind the card: light beam (Secret), sun rays (Legendary/Secret), burst ring, glow halo
-local beam = UIKit.make("Frame", { Name = "Beam", AnchorPoint = Vector2.new(0.5, 0.5), Position = CENTRE, Size = UDim2.fromOffset(30, H * 2.4), BackgroundColor3 = WHITE, BackgroundTransparency = 1, BorderSizePixel = 0, Visible = false, ZIndex = 1, Parent = holder }) :: Frame
-UIKit.make("UIGradient", { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.45), NumberSequenceKeypoint.new(1, 1) }), Parent = beam })
+local beam = UIKit.make("Frame", {
+	Name = "Beam",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = CENTRE,
+	Size = UDim2.fromOffset(30, H * 2.4),
+	BackgroundColor3 = WHITE,
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	Visible = false,
+	ZIndex = 1,
+	Parent = holder,
+}) :: Frame
+UIKit.make(
+	"UIGradient",
+	{ Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.45), NumberSequenceKeypoint.new(1, 1) }), Parent = beam }
+)
 
-local wheel = UIKit.make("Frame", { Name = "Rays", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.4), Size = UDim2.fromOffset(0, 0), BackgroundTransparency = 1, ZIndex = 2, Parent = holder }) :: Frame
+local wheel = UIKit.make("Frame", {
+	Name = "Rays",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.4),
+	Size = UDim2.fromOffset(0, 0),
+	BackgroundTransparency = 1,
+	ZIndex = 2,
+	Parent = holder,
+}) :: Frame
 local rayBars: { Frame } = {}
 for i = 1, RAY_BARS do
-	local bar = UIKit.make("Frame", { Name = "Ray", AnchorPoint = Vector2.new(0.5, 0.5), Position = CENTRE, Size = UDim2.fromOffset(W * 2.6, if i % 2 == 0 then 20 else 36), Rotation = (i - 1) * (180 / RAY_BARS), BackgroundColor3 = WHITE, BackgroundTransparency = 1, BorderSizePixel = 0, Parent = wheel }) :: Frame
-	UIKit.make("UIGradient", { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.8), NumberSequenceKeypoint.new(0.5, 0.5), NumberSequenceKeypoint.new(0.7, 0.8), NumberSequenceKeypoint.new(1, 1) }), Parent = bar })
+	local bar = UIKit.make("Frame", {
+		Name = "Ray",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = CENTRE,
+		Size = UDim2.fromOffset(W * 2.6, if i % 2 == 0 then 20 else 36),
+		Rotation = (i - 1) * (180 / RAY_BARS),
+		BackgroundColor3 = WHITE,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Parent = wheel,
+	}) :: Frame
+	UIKit.make("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.3, 0.8),
+			NumberSequenceKeypoint.new(0.5, 0.5),
+			NumberSequenceKeypoint.new(0.7, 0.8),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = bar,
+	})
 	rayBars[i] = bar
 end
 
-local ring = UIKit.make("Frame", { Name = "Ring", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.4), Size = UDim2.fromOffset(60, 60), BackgroundTransparency = 1, Visible = false, ZIndex = 3, Parent = holder }) :: Frame
+local ring = UIKit.make("Frame", {
+	Name = "Ring",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.4),
+	Size = UDim2.fromOffset(60, 60),
+	BackgroundTransparency = 1,
+	Visible = false,
+	ZIndex = 3,
+	Parent = holder,
+}) :: Frame
 UIStyle.corner(ring, UIStyle.Radius.Pill)
 local ringStroke = UIStyle.outline(ring, WHITE, 7)
 
 local halo: { Frame } = {}
 for i, grow in { 16, 38, 66 } do
-	local layer = UIKit.make("Frame", { Name = "Glow" .. i, AnchorPoint = Vector2.new(0.5, 0.5), Position = CENTRE, Size = UDim2.new(1, grow, 1, grow), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 3, Parent = holder }) :: Frame
+	local layer = UIKit.make("Frame", {
+		Name = "Glow" .. i,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = CENTRE,
+		Size = UDim2.new(1, grow, 1, grow),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 3,
+		Parent = holder,
+	}) :: Frame
 	UIStyle.corner(layer, UDim.new(0, 16 + grow / 2))
 	halo[i] = layer
 end
 
 -- the card
-local card = UIKit.make("Frame", { Name = "Card", AnchorPoint = Vector2.new(0.5, 0.5), Position = CENTRE, Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 5, Parent = holder }) :: Frame
+local card = UIKit.make(
+	"Frame",
+	{ Name = "Card", AnchorPoint = Vector2.new(0.5, 0.5), Position = CENTRE, Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 5, Parent = holder }
+) :: Frame
 local pop = UIKit.make("UIScale", { Parent = card }) :: UIScale
 local panel = UIKit.panel({ Name = "Panel", Size = UDim2.fromScale(1, 1), Radius = UDim.new(0, 20), Parent = card })
 panel.ClipsDescendants = true
 local stroke = panel:FindFirstChildOfClass("UIStroke") :: UIStroke
 stroke.Thickness = 2.5
 
-local stage = UIKit.make("Frame", { Name = "Stage", Size = UDim2.new(1, 0, 0, STAGE_H), BackgroundColor3 = C.PanelDark, BorderSizePixel = 0, ClipsDescendants = true, Parent = panel })
+local stage =
+	UIKit.make("Frame", { Name = "Stage", Size = UDim2.new(1, 0, 0, STAGE_H), BackgroundColor3 = C.PanelDark, BorderSizePixel = 0, ClipsDescendants = true, Parent = panel })
 UIStyle.corner(stage, UDim.new(0, 20))
 local backdrop = UIKit.make("UIGradient", { Rotation = 90, Parent = stage }) :: UIGradient
 -- optional zone artwork behind the worker; 20 px taller than the stage so only its top corners round
-local backdropArt = UIKit.make("ImageLabel", { Name = "BackdropArt", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 20), ScaleType = Enum.ScaleType.Crop, Visible = false, Parent = stage }) :: ImageLabel
+local backdropArt = UIKit.make(
+	"ImageLabel",
+	{ Name = "BackdropArt", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 20), ScaleType = Enum.ScaleType.Crop, Visible = false, Parent = stage }
+) :: ImageLabel
 UIStyle.corner(backdropArt, UDim.new(0, 20))
 local modelHolder = UIKit.make("Frame", { Name = "Model", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, -4), Position = UDim2.fromOffset(0, 4), Parent = stage })
 
 -- optional frame artwork: drawn over the preview and under the text (it carries the text plates)
-local frameArt = UIKit.make("ImageLabel", { Name = "FrameArt", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, Visible = false, Parent = panel }) :: ImageLabel
+local frameArt = UIKit.make(
+	"ImageLabel",
+	{ Name = "FrameArt", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, Visible = false, Parent = panel }
+) :: ImageLabel
 
 local body = UIKit.make("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, STAGE_H), Size = UDim2.new(1, 0, 1, -STAGE_H), Parent = panel })
 local bodyPad = UIKit.padding(body, 16, 10)
 bodyPad.PaddingTop = UDim.new(0, 22) -- room for the rarity badge on the seam
 UIKit.list(body, Enum.FillDirection.Vertical, 4, Enum.HorizontalAlignment.Center)
-local eyebrow = UIKit.text({ Text = "NEW WORKER", Role = "Micro", Font = UIStyle.FontBold, TextSize = 13, Color = C.Gold, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 1, Parent = body })
-local nameLabel = UIKit.text({ Name = "WorkerName", Role = "Display", TextSize = 30, AlignX = Enum.TextXAlignment.Center, Size = UDim2.new(1, 0, 0, 36), Truncate = false, LayoutOrder = 2, Parent = body })
+local eyebrow =
+	UIKit.text({ Text = "NEW WORKER", Role = "Micro", Font = UIStyle.FontBold, TextSize = 13, Color = C.Gold, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 1, Parent = body })
+local nameLabel = UIKit.text({
+	Name = "WorkerName",
+	Role = "Display",
+	TextSize = 30,
+	AlignX = Enum.TextXAlignment.Center,
+	Size = UDim2.new(1, 0, 0, 36),
+	Truncate = false,
+	LayoutOrder = 2,
+	Parent = body,
+})
 nameLabel.TextScaled = true -- long names shrink instead of being cut off
 UIKit.make("UITextSizeConstraint", { MaxTextSize = 30, MinTextSize = 16, Parent = nameLabel })
 local nameScale = UIKit.make("UIScale", { Parent = nameLabel }) :: UIScale
-local incomeLabel = UIKit.text({ Name = "Income", Role = "Display", TextSize = 24, Color = C.Cash, AlignX = Enum.TextXAlignment.Center, Size = UDim2.new(1, 0, 0, 30), LayoutOrder = 3, Parent = body })
+local incomeLabel = UIKit.text({
+	Name = "Income",
+	Role = "Display",
+	TextSize = 24,
+	Color = C.Cash,
+	AlignX = Enum.TextXAlignment.Center,
+	Size = UDim2.new(1, 0, 0, 30),
+	LayoutOrder = 3,
+	Parent = body,
+})
 local incomeScale = UIKit.make("UIScale", { Parent = incomeLabel }) :: UIScale
 local secondary = UIKit.text({ Name = "Secondary", Role = "Small", TextSize = 14, Color = C.TextMuted, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 4, Parent = body })
 
@@ -138,21 +295,71 @@ do
 end
 
 -- optional rarity crest on the seam; once loaded it replaces the badge pill (never both)
-local emblemArt = UIKit.make("ImageLabel", { Name = "EmblemArt", BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0, STAGE_H), Size = UDim2.fromOffset(50, 50), ZIndex = 4, Visible = false, Parent = panel }) :: ImageLabel
+local emblemArt = UIKit.make("ImageLabel", {
+	Name = "EmblemArt",
+	BackgroundTransparency = 1,
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.new(0.5, 0, 0, STAGE_H),
+	Size = UDim2.fromOffset(50, 50),
+	ZIndex = 4,
+	Visible = false,
+	Parent = panel,
+}) :: ImageLabel
 
 -- light sweep across the card on impact
-local shine = UIKit.make("Frame", { Name = "Shine", BackgroundColor3 = WHITE, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), BackgroundTransparency = 0, Visible = false, ZIndex = 5, Parent = panel }) :: Frame
-local shineGrad = UIKit.make("UIGradient", { Rotation = 20, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.42, 1), NumberSequenceKeypoint.new(0.5, 0.65), NumberSequenceKeypoint.new(0.58, 1), NumberSequenceKeypoint.new(1, 1) }), Parent = shine }) :: UIGradient
+local shine = UIKit.make(
+	"Frame",
+	{ Name = "Shine", BackgroundColor3 = WHITE, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), BackgroundTransparency = 0, Visible = false, ZIndex = 5, Parent = panel }
+) :: Frame
+local shineGrad = UIKit.make("UIGradient", {
+	Rotation = 20,
+	Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.42, 1),
+		NumberSequenceKeypoint.new(0.5, 0.65),
+		NumberSequenceKeypoint.new(0.58, 1),
+		NumberSequenceKeypoint.new(1, 1),
+	}),
+	Parent = shine,
+}) :: UIGradient
 
 -- big banner on the card's top edge (Legendary/Secret)
-local banner = UIKit.make("Frame", { Name = "Banner", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0), Size = UDim2.fromOffset(0, 40), AutomaticSize = Enum.AutomaticSize.X, BackgroundColor3 = C.Panel, Visible = false, ZIndex = 6, Parent = holder }) :: Frame
+local banner = UIKit.make("Frame", {
+	Name = "Banner",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0),
+	Size = UDim2.fromOffset(0, 40),
+	AutomaticSize = Enum.AutomaticSize.X,
+	BackgroundColor3 = C.Panel,
+	Visible = false,
+	ZIndex = 6,
+	Parent = holder,
+}) :: Frame
 UIStyle.corner(banner, UIStyle.Radius.Pill)
 local bannerStroke = UIStyle.outline(banner, C.Gold, 2.5)
 UIKit.padding(banner, 20, 0)
-local bannerText = UIKit.text({ Text = "", Role = "Title", TextSize = 22, AlignX = Enum.TextXAlignment.Center, Size = UDim2.fromScale(0, 1), AutomaticSize = Enum.AutomaticSize.X, Truncate = false, Parent = banner })
+local bannerText = UIKit.text({
+	Text = "",
+	Role = "Title",
+	TextSize = 22,
+	AlignX = Enum.TextXAlignment.Center,
+	Size = UDim2.fromScale(0, 1),
+	AutomaticSize = Enum.AutomaticSize.X,
+	Truncate = false,
+	Parent = banner,
+})
 local bannerScale = UIKit.make("UIScale", { Parent = banner }) :: UIScale
 -- optional plate artwork behind the banner text; once loaded it replaces the plain pill
-local bannerArt = UIKit.make("ImageLabel", { Name = "BannerArt", BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(300, 45), ZIndex = 0, Visible = false, Parent = banner }) :: ImageLabel
+local bannerArt = UIKit.make("ImageLabel", {
+	Name = "BannerArt",
+	BackgroundTransparency = 1,
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.fromOffset(300, 45),
+	ZIndex = 0,
+	Visible = false,
+	Parent = banner,
+}) :: ImageLabel
 
 -- Artwork state. The badge pill and the plain banner pill stay until their artwork has really
 -- loaded, so a missing or moderated image never leaves a hole in the card.
@@ -187,16 +394,40 @@ end)
 -- pooled sparkles (reused by every burst)
 local sparkles: { TextLabel } = {}
 for i = 1, SPARKLES do
-	local s = UIKit.text({ Name = "Sparkle", Text = "✦", Role = "Heading", TextSize = 20, AlignX = Enum.TextXAlignment.Center, AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(34, 34), Truncate = false, Parent = holder })
+	local s = UIKit.text({
+		Name = "Sparkle",
+		Text = "✦",
+		Role = "Heading",
+		TextSize = 20,
+		AlignX = Enum.TextXAlignment.Center,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.fromOffset(34, 34),
+		Truncate = false,
+		Parent = holder,
+	})
 	s.ZIndex = 10
 	s.Visible = false
 	sparkles[i] = s
 end
 
-local hint = UIKit.text({ Name = "Hint", Text = "Tap card to skip", Role = "Small", TextSize = 14, Color = C.TextMuted, AlignX = Enum.TextXAlignment.Center, AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 1, 8), Size = UDim2.new(1, 0, 0, 20), Parent = holder })
+local hint = UIKit.text({
+	Name = "Hint",
+	Text = "Tap card to skip",
+	Role = "Small",
+	TextSize = 14,
+	Color = C.TextMuted,
+	AlignX = Enum.TextXAlignment.Center,
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 1, 8),
+	Size = UDim2.new(1, 0, 0, 20),
+	Parent = holder,
+})
 hint.Visible = false
 -- the whole card is the tap target (Epic and above only)
-local tap = UIKit.make("TextButton", { Name = "Tap", Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 20, Visible = false, Parent = holder }) :: TextButton
+local tap = UIKit.make(
+	"TextButton",
+	{ Name = "Tap", Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 20, Visible = false, Parent = holder }
+) :: TextButton
 
 UIKit.mount(fxGui)
 UIKit.mount(gui)
@@ -274,7 +505,11 @@ local function burst(count: number, color: Color3)
 		s.TextTransparency = 0
 		s.Rotation = 0
 		s.Visible = true
-		tw(s, rng:NextNumber(0.6, 1), { Position = UDim2.new(0.5, math.cos(angle) * dist, 0, STAGE_H * 0.5 + math.sin(angle) * dist), TextTransparency = 1, Rotation = rng:NextInteger(-120, 120) })
+		tw(
+			s,
+			rng:NextNumber(0.6, 1),
+			{ Position = UDim2.new(0.5, math.cos(angle) * dist, 0, STAGE_H * 0.5 + math.sin(angle) * dist), TextTransparency = 1, Rotation = rng:NextInteger(-120, 120) }
+		)
 	end
 end
 
@@ -457,7 +692,19 @@ local function show(workerId: string)
 	if state and state.sound then
 		state.sound:Stop() -- a long reveal effect must not run on under the next card
 	end
-	local st = { token = token, worker = worker, rarity = rarity, tier = tier, color = color, started = os.clock(), revealed = false, revealedAt = 0, closing = false, sound = nil :: Sound?, soundHit = 0 }
+	local st = {
+		token = token,
+		worker = worker,
+		rarity = rarity,
+		tier = tier,
+		color = color,
+		started = os.clock(),
+		revealed = false,
+		revealedAt = 0,
+		closing = false,
+		sound = nil :: Sound?,
+		soundHit = 0,
+	}
 	state = st
 
 	-- zone artwork, if this worker's zone (or the worker itself) has any
@@ -584,7 +831,8 @@ revealEvent.OnClientEvent:Connect(show)
 
 -- Studio-only review helper: an "FX" button that previews each rarity's reveal and the steal /
 -- place / refusal feedback. Nothing here exists in live servers, and it only plays local visuals.
-if RunService:IsStudio() then
+-- (Not with the V1 look: its button sat on the right-hand HUD column; Low effects is in Settings.)
+if RunService:IsStudio() and not UIStyle.v1 then
 	local ids: { [string]: string } = {}
 	local function scan(list: any, depth: number)
 		for key, w in list do
@@ -600,12 +848,30 @@ if RunService:IsStudio() then
 	end
 	scan(WorkerCatalogue.WORKERS, 0)
 
-	local devPanel = UIKit.make("Frame", { Name = "DevFxPanel", AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -64, 0.5, 0), Size = UDim2.fromOffset(132, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Visible = false, Parent = root }) :: Frame
+	local devPanel = UIKit.make("Frame", {
+		Name = "DevFxPanel",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -64, 0.5, 0),
+		Size = UDim2.fromOffset(132, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Visible = false,
+		Parent = root,
+	}) :: Frame
 	UIKit.list(devPanel, Enum.FillDirection.Vertical, 4)
 	local order = 0
 	local function add(label: string, fn: () -> ())
 		order += 1
-		UIKit.button({ Name = "Dev_" .. label, Kind = "Secondary", Text = label, TextSize = 13, Size = UDim2.fromOffset(132, UIStyle.TouchTarget), LayoutOrder = order, Parent = devPanel, OnActivated = fn })
+		UIKit.button({
+			Name = "Dev_" .. label,
+			Kind = "Secondary",
+			Text = label,
+			TextSize = 13,
+			Size = UDim2.fromOffset(132, UIStyle.TouchTarget),
+			LayoutOrder = order,
+			Parent = devPanel,
+			OnActivated = fn,
+		})
 	end
 	-- which zone's workers (and so which artwork) the rarity buttons preview
 	local PREVIEW_ZONES = { { id = "MainStreet", label = "Main Street" }, { id = "BillionaireHills", label = "Velocity Royale" }, { id = "", label = "Plain card" } }
@@ -627,10 +893,19 @@ if RunService:IsStudio() then
 	end
 	order += 1
 	local zoneCtl -- assigned below; the click handler needs it as an upvalue
-	local _, ctl = UIKit.button({ Name = "Dev_Zone", Kind = "Primary", Text = PREVIEW_ZONES[1].label, TextSize = 13, Size = UDim2.fromOffset(132, UIStyle.TouchTarget), LayoutOrder = order, Parent = devPanel, OnActivated = function()
-		zoneIndex = zoneIndex % #PREVIEW_ZONES + 1
-		zoneCtl.setText(PREVIEW_ZONES[zoneIndex].label)
-	end })
+	local _, ctl = UIKit.button({
+		Name = "Dev_Zone",
+		Kind = "Primary",
+		Text = PREVIEW_ZONES[1].label,
+		TextSize = 13,
+		Size = UDim2.fromOffset(132, UIStyle.TouchTarget),
+		LayoutOrder = order,
+		Parent = devPanel,
+		OnActivated = function()
+			zoneIndex = zoneIndex % #PREVIEW_ZONES + 1
+			zoneCtl.setText(PREVIEW_ZONES[zoneIndex].label)
+		end,
+	})
 	zoneCtl = ctl
 	for _, rarity in WorkerCatalogue.RARITIES do
 		add(rarity, function()
@@ -649,7 +924,16 @@ if RunService:IsStudio() then
 	add("Refusal", function()
 		UIKit.Signals.DebugFx:Fire("refuse")
 	end)
-	UIKit.button({ Name = "DevFxToggle", Kind = "Ghost", Text = "FX", Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Parent = root, OnActivated = function()
-		devPanel.Visible = not devPanel.Visible
-	end })
+	UIKit.button({
+		Name = "DevFxToggle",
+		Kind = "Ghost",
+		Text = "FX",
+		Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget),
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -12, 0.5, 0),
+		Parent = root,
+		OnActivated = function()
+			devPanel.Visible = not devPanel.Visible
+		end,
+	})
 end

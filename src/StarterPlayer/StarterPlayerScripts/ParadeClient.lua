@@ -68,10 +68,21 @@ gui.Enabled = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- Golden Parade countdown pill (first item of the shared top bar).
-local pill = UITheme.panel({ Name = "GoldenPill", LayoutOrder = 1, Size = UDim2.fromOffset(150, 44), Parent = UITheme.topBar() })
+local pill =
+	UITheme.panel({ Name = "GoldenPill", LayoutOrder = 1, Size = UDim2.fromOffset(if UITheme.v1 then 170 else 150, if UITheme.v1 then 60 else 44), Parent = UITheme.topBar() })
 pill.Visible = false
-local pillIcon = UITheme.icon({ Text = "🌟", Size = UDim2.fromOffset(28, 28), Position = UDim2.fromOffset(8, 8), Parent = pill })
-local pillText = UITheme.text({ Name = "Text", Text = "", Role = "Body", Align = "Left", Position = UDim2.fromOffset(40, 0), Size = UDim2.new(1, -46, 1, 0), Parent = pill })
+local pillIcon = if UITheme.v1
+	then UITheme.image({ Icon = "hourglass", Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(6, 8), Parent = pill })
+	else UITheme.icon({ Text = "🌟", Size = UDim2.fromOffset(28, 28), Position = UDim2.fromOffset(8, 8), Parent = pill })
+local pillText = UITheme.text({
+	Name = "Text",
+	Text = "",
+	Role = "Body",
+	Align = "Left",
+	Position = UDim2.fromOffset(if UITheme.v1 then 54 else 40, 0),
+	Size = UDim2.new(1, if UITheme.v1 then -58 else -46, 1, 0),
+	Parent = pill,
+})
 pillIcon.Name = "Icon"
 
 -- Announcement banner (top centre, below where the goal bar sits).
@@ -88,6 +99,7 @@ local function announce(text: string, color: Color3, sound: string)
 	local token = bannerToken
 	bannerText.Text = text
 	bannerText.TextColor3 = color
+	banner.Position = UDim2.new(0.5, 0, 0, UITheme.bannerTop()) -- (under the top piece)
 	banner.Visible = true
 	bannerScale.Scale = 0.5
 	UITheme.tween(bannerScale, UITheme.Motion.Normal, { Scale = 1 }, Enum.EasingStyle.Back)
