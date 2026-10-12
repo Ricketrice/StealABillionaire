@@ -45,6 +45,22 @@ local rgb = Color3.fromRGB
 if RunService:IsClient() then
 	V1Flags.waitReady(6)
 end
+
+-- Sound groups for the Settings screen (client): "SFX" (UIKit/FxKit effects) and "Music".
+function UITheme.soundGroup(name: string): SoundGroup?
+	if not RunService:IsClient() then
+		return nil
+	end
+	local SoundService = game:GetService("SoundService")
+	local group = SoundService:FindFirstChild(name)
+	if not (group and group:IsA("SoundGroup")) then
+		group = Instance.new("SoundGroup")
+		group.Name = name
+		group.Volume = 1
+		group.Parent = SoundService
+	end
+	return group :: SoundGroup
+end
 UITheme.v1 = V1Flags.on("UI_V1_ENABLED")
 local V1 = UITheme.v1
 

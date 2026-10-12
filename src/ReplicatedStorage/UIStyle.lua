@@ -58,6 +58,38 @@ UIStyle.OutlineThickness = UIStyle.BorderThickness
 UIStyle.TextStrokeThickness = 1.5
 UIStyle.DisplayOrder = { Hud = 2, Inventory = 4, Reveal = 6, Toast = 8 }
 
+-- Milestone 029: with the V1 look on (V1Flags.UI_V1_ENABLED), every token above follows UITheme, so the
+-- older screens (HUD, inventory, reveal card, shops, quests, PvP, zone gates) get the same look as the
+-- new ones. With it off, nothing here changes.
+do
+	local UITheme = require(script.Parent:WaitForChild("UITheme")) :: any
+	if UITheme.v1 then
+		local T, c = UITheme.Colors, UIStyle.Colors
+		c.Panel, c.PanelDark, c.PanelRaised = T.Panel, T.PanelDark, T.PanelRaised
+		c.Outline, c.Border = T.Stroke, T.Border
+		c.Gold, c.GoldDark = T.Accent, T.AccentDark
+		c.Text, c.TextMuted, c.TextDim = T.Text, T.TextMuted, T.TextDim
+		c.Cash, c.CashDark = T.Cash, T.CashDark
+		c.Success, c.Danger, c.Info = T.Success, T.Danger, T.Info
+		c.Primary, c.PrimaryText = UITheme.Button.Primary.fill, UITheme.Button.Primary.text
+		c.Secondary = UITheme.Button.Secondary.fill
+		c.Disabled, c.Overlay = T.Disabled, T.Overlay
+		for rarity, color in UITheme.Rarity do
+			UIStyle.Rarity[rarity] = color
+		end
+		UIStyle.Font = UITheme.Fonts.Display
+		UIStyle.FontBody = UITheme.Fonts.Body
+		UIStyle.FontBold = UITheme.Fonts.Bold
+		UIStyle.TextSize = { Display = 32, Title = 24, Heading = 18, Body = 16, Small = 14, Micro = 12 }
+		UIStyle.Radius = { S = UDim.new(0, 10), M = UDim.new(0, 14), L = UDim.new(0, 18), Pill = UDim.new(1, 0) }
+		UIStyle.CornerRadius = UIStyle.Radius.M
+		UIStyle.BorderThickness = UITheme.StrokeThickness
+		UIStyle.OutlineThickness = UIStyle.BorderThickness
+		UIStyle.TextStrokeThickness = UITheme.TextStrokeThickness
+	end
+	UIStyle.v1 = UITheme.v1 == true
+end
+
 function UIStyle.corner(parent: GuiObject, radius: UDim?): UICorner
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = radius or UIStyle.CornerRadius
@@ -71,7 +103,7 @@ function UIStyle.outline(parent: GuiObject, color: Color3?, thickness: number?):
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = color or (if isText then UIStyle.Colors.Outline else UIStyle.Colors.Border)
 	stroke.Thickness = thickness or (if isText then UIStyle.TextStrokeThickness else UIStyle.BorderThickness)
-	stroke.Transparency = if isText and not color then 0.35 else 0
+	stroke.Transparency = if isText and not color and not UIStyle.v1 then 0.35 else 0
 	stroke.ApplyStrokeMode = if isText then Enum.ApplyStrokeMode.Contextual else Enum.ApplyStrokeMode.Border
 	stroke.LineJoinMode = Enum.LineJoinMode.Round
 	stroke.Parent = parent

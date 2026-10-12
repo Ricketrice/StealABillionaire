@@ -13,6 +13,17 @@ local TweenService = game:GetService("TweenService")
 
 local UIStyle = require(ReplicatedStorage:WaitForChild("UIStyle"))
 local C = UIStyle.Colors
+-- Milestone 029: with the V1 look on, components take UITheme's chunky style (thick dark outlines,
+-- light-top gradients, bright buttons with outlined white text). Off = unchanged.
+local V1 = UIStyle.v1 == true
+local function shade(obj: GuiObject, dark: number?)
+	if V1 then
+		local g = Instance.new("UIGradient")
+		g.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(dark or 0.84, dark or 0.84, dark or 0.84))
+		g.Rotation = 90
+		g.Parent = obj
+	end
+end
 
 local UIKit = {}
 
@@ -52,22 +63,32 @@ function UIKit.tween(obj: Instance, time: number, goal: { [string]: any }, style
 end
 
 function UIKit.padding(parent: Instance, px: number, py: number?)
-	return make("UIPadding", { PaddingLeft = UDim.new(0, px), PaddingRight = UDim.new(0, px), PaddingTop = UDim.new(0, py or px), PaddingBottom = UDim.new(0, py or px), Parent = parent })
+	return make(
+		"UIPadding",
+		{ PaddingLeft = UDim.new(0, px), PaddingRight = UDim.new(0, px), PaddingTop = UDim.new(0, py or px), PaddingBottom = UDim.new(0, py or px), Parent = parent }
+	)
 end
 
 function UIKit.list(parent: Instance, dir: Enum.FillDirection?, gap: number?, alignX: Enum.HorizontalAlignment?, alignY: Enum.VerticalAlignment?)
 	return make("UIListLayout", {
-		FillDirection = dir or Enum.FillDirection.Vertical, Padding = UDim.new(0, gap or UIStyle.Space.S),
-		HorizontalAlignment = alignX or Enum.HorizontalAlignment.Left, VerticalAlignment = alignY or Enum.VerticalAlignment.Top,
-		SortOrder = Enum.SortOrder.LayoutOrder, Parent = parent,
+		FillDirection = dir or Enum.FillDirection.Vertical,
+		Padding = UDim.new(0, gap or UIStyle.Space.S),
+		HorizontalAlignment = alignX or Enum.HorizontalAlignment.Left,
+		VerticalAlignment = alignY or Enum.VerticalAlignment.Top,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Parent = parent,
 	})
 end
 
 -- A ScreenGui that stays clear of the Roblox top bar and device notches.
 function UIKit.screen(name: string, displayOrder: number): ScreenGui
 	return make("ScreenGui", {
-		Name = name, ResetOnSpawn = false, DisplayOrder = displayOrder, ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		IgnoreGuiInset = false, ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
+		Name = name,
+		ResetOnSpawn = false,
+		DisplayOrder = displayOrder,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		IgnoreGuiInset = false,
+		ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
 	}) :: ScreenGui
 end
 
@@ -79,7 +100,10 @@ end
 -- in Studio, setting the PlayerGui attribute "UITestViewport" (a Vector2, e.g. 390x780) shrinks
 -- every Root to that size, so the real responsive code runs at phone dimensions. Unset = normal.
 function UIKit.root(gui: ScreenGui): Frame
-	local root = make("Frame", { Name = "Root", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Parent = gui }) :: Frame
+	local root = make(
+		"Frame",
+		{ Name = "Root", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Parent = gui }
+	) :: Frame
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	local function apply()
 		local v = playerGui:GetAttribute("UITestViewport")
@@ -93,8 +117,12 @@ end
 
 -- Calls fn(size) now and whenever the root's size changes.
 function UIKit.onResize(root: GuiObject, fn: (Vector2) -> ())
-	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() fn(root.AbsoluteSize) end)
-	task.defer(function() fn(root.AbsoluteSize) end)
+	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		fn(root.AbsoluteSize)
+	end)
+	task.defer(function()
+		fn(root.AbsoluteSize)
+	end)
 end
 
 -- UIScale for a fixed-pixel component. With a root, it follows the root's short side (so the
@@ -114,11 +142,22 @@ end
 
 function UIKit.panel(props: { [string]: any }?): Frame
 	local p = props or {}
-	local f = make("Frame", { BackgroundColor3 = p.Color or C.Panel, BorderSizePixel = 0, Size = p.Size, Position = p.Position, AnchorPoint = p.AnchorPoint, Name = p.Name, AutomaticSize = p.AutomaticSize, LayoutOrder = p.LayoutOrder, Parent = p.Parent }) :: Frame
+	local f = make("Frame", {
+		BackgroundColor3 = p.Color or C.Panel,
+		BorderSizePixel = 0,
+		Size = p.Size,
+		Position = p.Position,
+		AnchorPoint = p.AnchorPoint,
+		Name = p.Name,
+		AutomaticSize = p.AutomaticSize,
+		LayoutOrder = p.LayoutOrder,
+		Parent = p.Parent,
+	}) :: Frame
 	UIStyle.corner(f, p.Radius or UIStyle.Radius.L)
 	if p.Border ~= false then
-		UIStyle.outline(f, p.BorderColor or C.Border, p.BorderThickness)
+		UIStyle.outline(f, if V1 then C.Border else p.BorderColor or C.Border, p.BorderThickness)
 	end
+	shade(f)
 	return f
 end
 
@@ -127,16 +166,25 @@ function UIKit.text(props: { [string]: any }): TextLabel
 	local role = props.Role or "Body"
 	local font = props.Font or (if role == "Display" or role == "Title" then UIStyle.Font elseif role == "Heading" then UIStyle.FontBold else UIStyle.FontBody)
 	local l = make("TextLabel", {
-		Name = props.Name, BackgroundTransparency = 1, Text = props.Text or "", Font = font,
-		TextSize = props.TextSize or UIStyle.TextSize[role] or 15, TextColor3 = props.Color or C.Text,
-		TextXAlignment = props.AlignX or Enum.TextXAlignment.Left, TextYAlignment = props.AlignY or Enum.TextYAlignment.Center,
+		Name = props.Name,
+		BackgroundTransparency = 1,
+		Text = props.Text or "",
+		Font = font,
+		TextSize = props.TextSize or UIStyle.TextSize[role] or 15,
+		TextColor3 = props.Color or C.Text,
+		TextXAlignment = props.AlignX or Enum.TextXAlignment.Left,
+		TextYAlignment = props.AlignY or Enum.TextYAlignment.Center,
 		TextTruncate = props.Truncate == false and Enum.TextTruncate.None or Enum.TextTruncate.AtEnd,
-		TextWrapped = props.Wrap or false, RichText = props.Rich or false,
+		TextWrapped = props.Wrap or false,
+		RichText = props.Rich or false,
 		Size = props.Size or UDim2.new(1, 0, 0, (props.TextSize or UIStyle.TextSize[role] or 15) + 6),
-		Position = props.Position, AnchorPoint = props.AnchorPoint, AutomaticSize = props.AutomaticSize,
-		LayoutOrder = props.LayoutOrder, Parent = props.Parent,
+		Position = props.Position,
+		AnchorPoint = props.AnchorPoint,
+		AutomaticSize = props.AutomaticSize,
+		LayoutOrder = props.LayoutOrder,
+		Parent = props.Parent,
 	}) :: TextLabel
-	if props.Stroke ~= false and (role == "Display" or role == "Title") then
+	if props.Stroke ~= false and (role == "Display" or role == "Title" or V1 and role == "Heading") then
 		UIStyle.outline(l)
 	end
 	return l
@@ -148,15 +196,34 @@ function UIKit.button(props: { [string]: any })
 	local kind = props.Kind or "Primary"
 	local bg = if kind == "Primary" then C.Primary elseif kind == "Secondary" then C.Secondary else C.PanelDark
 	local fg = if kind == "Primary" then C.PrimaryText else C.Text
+	if V1 then
+		fg = Color3.new(1, 1, 1)
+	end
 	local b = make("TextButton", {
-		Name = props.Name or "Button", AutoButtonColor = false, Text = "", BackgroundColor3 = bg,
+		Name = props.Name or "Button",
+		AutoButtonColor = false,
+		Text = "",
+		BackgroundColor3 = bg,
 		BackgroundTransparency = if kind == "Ghost" then 0.2 else 0,
-		Size = props.Size or UDim2.new(1, 0, 0, UIStyle.TouchTarget), Position = props.Position, AnchorPoint = props.AnchorPoint,
-		LayoutOrder = props.LayoutOrder, Parent = props.Parent,
+		Size = props.Size or UDim2.new(1, 0, 0, UIStyle.TouchTarget),
+		Position = props.Position,
+		AnchorPoint = props.AnchorPoint,
+		LayoutOrder = props.LayoutOrder,
+		Parent = props.Parent,
 	}) :: TextButton
 	UIStyle.corner(b, props.Radius or UIStyle.Radius.M)
-	local stroke = UIStyle.outline(b, if kind == "Primary" then C.GoldDark else C.Border)
-	local label = UIKit.text({ Text = props.Text or "", Role = "Heading", TextSize = props.TextSize, Color = fg, AlignX = Enum.TextXAlignment.Center, Size = UDim2.fromScale(1, 1), Parent = b })
+	local restStroke = if V1 then C.Border elseif kind == "Primary" then C.GoldDark else C.Border
+	local stroke = UIStyle.outline(b, restStroke)
+	shade(b, 0.78)
+	local label = UIKit.text({
+		Text = props.Text or "",
+		Role = "Heading",
+		TextSize = props.TextSize,
+		Color = fg,
+		AlignX = Enum.TextXAlignment.Center,
+		Size = UDim2.fromScale(1, 1),
+		Parent = b,
+	})
 	local press = make("UIScale", { Parent = b }) :: UIScale
 	local enabled = true
 	b.InputBegan:Connect(function(input)
@@ -169,12 +236,12 @@ function UIKit.button(props: { [string]: any })
 	end)
 	b.MouseEnter:Connect(function()
 		if enabled then
-			stroke.Color = C.Gold
+			stroke.Color = if V1 then C.Border else C.Gold
 			b.BackgroundColor3 = bg:Lerp(Color3.new(1, 1, 1), 0.08)
 		end
 	end)
 	b.MouseLeave:Connect(function()
-		stroke.Color = if kind == "Primary" then C.GoldDark else C.Border
+		stroke.Color = restStroke
 		if enabled then
 			b.BackgroundColor3 = bg
 		end
@@ -208,17 +275,39 @@ end
 
 -- Small rounded chip: text on a dark pill.
 function UIKit.chip(props: { [string]: any }): (Frame, TextLabel)
-	local f = make("Frame", { Name = props.Name or "Chip", BackgroundColor3 = props.Background or C.PanelDark, AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, props.Height or 24), LayoutOrder = props.LayoutOrder, Position = props.Position, AnchorPoint = props.AnchorPoint, Parent = props.Parent }) :: Frame
+	local f = make("Frame", {
+		Name = props.Name or "Chip",
+		BackgroundColor3 = props.Background or C.PanelDark,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, props.Height or 24),
+		LayoutOrder = props.LayoutOrder,
+		Position = props.Position,
+		AnchorPoint = props.AnchorPoint,
+		Parent = props.Parent,
+	}) :: Frame
 	UIStyle.corner(f, UIStyle.Radius.Pill)
+	if V1 then
+		UIStyle.outline(f, C.Border, 2)
+	end
 	UIKit.padding(f, 10, 0)
-	local l = UIKit.text({ Text = props.Text or "", Role = props.Role or "Small", Font = props.Font or UIStyle.FontBold, Color = props.Color or C.Text, AlignX = Enum.TextXAlignment.Center, Size = UDim2.fromScale(0, 1), AutomaticSize = Enum.AutomaticSize.X, Truncate = false, Parent = f })
+	local l = UIKit.text({
+		Text = props.Text or "",
+		Role = props.Role or "Small",
+		Font = props.Font or UIStyle.FontBold,
+		Color = props.Color or C.Text,
+		AlignX = Enum.TextXAlignment.Center,
+		Size = UDim2.fromScale(0, 1),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Truncate = false,
+		Parent = f,
+	})
 	return f, l
 end
 
 -- Rarity tag: glyph + name in the rarity colour, on a dark pill with a rarity-tinted border.
 function UIKit.rarityTag(props: { [string]: any })
 	local f, l = UIKit.chip({ Height = props.Height or 22, Parent = props.Parent, LayoutOrder = props.LayoutOrder, Position = props.Position, AnchorPoint = props.AnchorPoint })
-	local stroke = UIStyle.outline(f, C.Border, 1)
+	local stroke = f:FindFirstChildOfClass("UIStroke") or UIStyle.outline(f, C.Border, 1) -- (one outline per frame)
 	local ctl = {}
 	function ctl.set(rarity: string)
 		local color = UIStyle.Rarity[rarity] or C.TextMuted
@@ -235,10 +324,22 @@ end
 
 -- Horizontal meter with :set(fraction, color?).
 function UIKit.meter(props: { [string]: any })
-	local track = make("Frame", { Name = props.Name or "Meter", BackgroundColor3 = C.PanelDark, BorderSizePixel = 0, Size = props.Size or UDim2.new(1, 0, 0, 8), Position = props.Position, LayoutOrder = props.LayoutOrder, Parent = props.Parent }) :: Frame
+	local track = make("Frame", {
+		Name = props.Name or "Meter",
+		BackgroundColor3 = C.PanelDark,
+		BorderSizePixel = 0,
+		Size = props.Size or UDim2.new(1, 0, 0, 8),
+		Position = props.Position,
+		LayoutOrder = props.LayoutOrder,
+		Parent = props.Parent,
+	}) :: Frame
 	UIStyle.corner(track, UIStyle.Radius.Pill)
+	if V1 then
+		UIStyle.outline(track, C.Border, 2)
+	end
 	local fill = make("Frame", { Name = "Fill", BackgroundColor3 = props.Color or C.Gold, BorderSizePixel = 0, Size = UDim2.fromScale(0, 1), Parent = track }) :: Frame
 	UIStyle.corner(fill, UIStyle.Radius.Pill)
+	shade(fill, 0.72)
 	local ctl = {}
 	function ctl.set(fraction: number, color: Color3?)
 		fill.Size = UDim2.fromScale(math.clamp(fraction, 0, 1), 1)
@@ -267,7 +368,15 @@ local function ensureToastHost()
 	end
 	toastGui = UIKit.screen("Toasts", UIStyle.DisplayOrder.Toast)
 	local root = UIKit.root(toastGui)
-	toastHolder = make("Frame", { Name = "Stack", AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 10), Size = UDim2.new(0.9, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Parent = root })
+	toastHolder = make("Frame", {
+		Name = "Stack",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		Size = UDim2.new(0.9, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Parent = root,
+	})
 	make("UISizeConstraint", { MaxSize = Vector2.new(400, math.huge), Parent = toastHolder })
 	UIKit.list(toastHolder, Enum.FillDirection.Vertical, 6, Enum.HorizontalAlignment.Center)
 	UIKit.mount(toastGui)
@@ -313,10 +422,19 @@ function UIKit.toast(kind: string, title: string?, message: string?)
 	end
 	local k = KIND[kind] or KIND.info
 	seq += 1
-	local f = UIKit.panel({ Name = "Toast", Color = C.Panel, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Radius = UIStyle.Radius.M, LayoutOrder = seq, Parent = toastHolder })
+	local f = UIKit.panel({
+		Name = "Toast",
+		Color = C.Panel,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Radius = UIStyle.Radius.M,
+		LayoutOrder = seq,
+		Parent = toastHolder,
+	})
 	f.BackgroundTransparency = 0.04
 	UIKit.padding(f, 12, 9)
-	local accent = make("Frame", { Name = "Accent", BackgroundColor3 = k.color, BorderSizePixel = 0, Size = UDim2.new(0, 4, 1, -6), Position = UDim2.fromOffset(-6, 3), Parent = f })
+	local accent =
+		make("Frame", { Name = "Accent", BackgroundColor3 = k.color, BorderSizePixel = 0, Size = UDim2.new(0, 4, 1, -6), Position = UDim2.fromOffset(-6, 3), Parent = f })
 	UIStyle.corner(accent, UIStyle.Radius.Pill)
 	local icon = make("Frame", { Name = "Icon", BackgroundColor3 = k.color, Size = UDim2.fromOffset(22, 22), Position = UDim2.fromOffset(4, 0), Parent = f })
 	UIStyle.corner(icon, UIStyle.Radius.Pill)
@@ -327,7 +445,18 @@ function UIKit.toast(kind: string, title: string?, message: string?)
 		UIKit.text({ Text = title, Role = "Heading", TextSize = 15, Color = C.Text, LayoutOrder = 1, Parent = body })
 	end
 	if message and message ~= "" then
-		UIKit.text({ Text = message, Role = "Body", TextSize = 14, Color = C.TextMuted, Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = body })
+		UIKit.text({
+			Text = message,
+			Role = "Body",
+			TextSize = 14,
+			Color = C.TextMuted,
+			Wrap = true,
+			Truncate = false,
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 2,
+			Parent = body,
+		})
 	end
 	local entry = { key = key, frame = f, shown = now, bumped = now, expires = now + TOAST_TIME, scale = nil :: UIScale? }
 	table.insert(active, entry)
@@ -377,6 +506,10 @@ local function pooled(key: string, def): Sound
 	local s = soundPool[key]
 	if not s then
 		s = make("Sound", { Name = "UI_" .. key, SoundId = def.id, Volume = def.volume, PlaybackSpeed = def.speed, Parent = SoundService }) :: Sound
+		if V1 then
+			local UITheme = require(ReplicatedStorage:WaitForChild("UITheme")) :: any
+			s.SoundGroup = UITheme.soundGroup("SFX") -- (029 Settings: Sounds on/off)
+		end
 		soundPool[key] = s
 	end
 	return s
@@ -420,8 +553,21 @@ function UIKit.worldPop(adornee: Instance?, text: string, color: Color3?, height
 	end
 	local bb = table.remove(popPool)
 	if not bb then
-		bb = make("BillboardGui", { Name = "WorldPop", Size = UDim2.fromOffset(240, 52), AlwaysOnTop = true, LightInfluence = 0, MaxDistance = 150, ResetOnSpawn = false, Enabled = false }) :: BillboardGui
-		local l = UIKit.text({ Name = "Label", Role = "Display", TextSize = 32, AlignX = Enum.TextXAlignment.Center, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromScale(1, 1), Truncate = false, Parent = bb })
+		bb = make(
+			"BillboardGui",
+			{ Name = "WorldPop", Size = UDim2.fromOffset(240, 52), AlwaysOnTop = true, LightInfluence = 0, MaxDistance = 150, ResetOnSpawn = false, Enabled = false }
+		) :: BillboardGui
+		local l = UIKit.text({
+			Name = "Label",
+			Role = "Display",
+			TextSize = 32,
+			AlignX = Enum.TextXAlignment.Center,
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromScale(1, 1),
+			Truncate = false,
+			Parent = bb,
+		})
 		make("UIScale", { Parent = l })
 		bb.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 	end

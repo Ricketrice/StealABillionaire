@@ -360,7 +360,7 @@ if game:GetService("RunService"):IsStudio() then -- test hook (DevTest_Parade028
 end
 
 local function refreshBook()
-	bookButton.Visible = bookOn()
+	bookButton.Visible = bookOn() and not UITheme.v1 -- (the V1 look opens the Index from the HUD instead)
 	if not bookOn() and book.Visible then
 		closeBook()
 	elseif book.Visible then

@@ -20,6 +20,10 @@ local UIStyle = require(ReplicatedStorage:WaitForChild("UIStyle"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local WorkerState = require(ReplicatedStorage:WaitForChild("WorkerState"))
 
+if UIStyle.v1 then
+	return -- Milestone 029: with the V1 look on, HudV1 is the HUD
+end
+
 local player = Players.LocalPlayer
 local C, S = UIStyle.Colors, UIStyle.Space
 local CAPACITY = InventoryConfig.INVENTORY_SLOTS + InventoryConfig.STATION_SLOTS
@@ -29,20 +33,37 @@ local gui = UIKit.screen("Hud", UIStyle.DisplayOrder.Hud)
 local root = UIKit.root(gui)
 
 local stack = UIKit.make("Frame", {
-	Name = "Stack", AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 12, 0.48, 0),
-	Size = UDim2.fromOffset(WIDTH, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Parent = root,
+	Name = "Stack",
+	AnchorPoint = Vector2.new(0, 0.5),
+	Position = UDim2.new(0, 12, 0.48, 0),
+	Size = UDim2.fromOffset(WIDTH, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	BackgroundTransparency = 1,
+	Parent = root,
 })
 UIKit.list(stack, Enum.FillDirection.Vertical, S.S)
 UIKit.scaled(stack, 0.8, 1.2, root)
 
 -- Cash card
 local cash = UIKit.panel({ Name = "CashCard", Size = UDim2.fromOffset(WIDTH, 64), LayoutOrder = 1, Parent = stack })
-local coin = UIKit.make("Frame", { Name = "Coin", AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 11, 0.5, 0), Size = UDim2.fromOffset(40, 40), BackgroundColor3 = C.Gold, Parent = cash })
+local coin = UIKit.make(
+	"Frame",
+	{ Name = "Coin", AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 11, 0.5, 0), Size = UDim2.fromOffset(40, 40), BackgroundColor3 = C.Gold, Parent = cash }
+)
 UIStyle.corner(coin, UIStyle.Radius.Pill)
 UIStyle.outline(coin, C.GoldDark, 2)
 UIKit.text({ Text = "$", Role = "Title", TextSize = 24, Color = C.PrimaryText, AlignX = Enum.TextXAlignment.Center, Size = UDim2.fromScale(1, 1), Stroke = false, Parent = coin })
 local cashLabel = UIKit.text({ Name = "Cash", Text = "$0", Role = "Display", TextSize = 26, Position = UDim2.fromOffset(60, 7), Size = UDim2.new(1, -68, 0, 30), Parent = cash })
-local incomeLabel = UIKit.text({ Name = "Income", Text = "+$0/s", Role = "Heading", TextSize = 14, Color = C.Cash, Position = UDim2.fromOffset(60, 38), Size = UDim2.new(1, -68, 0, 18), Parent = cash })
+local incomeLabel = UIKit.text({
+	Name = "Income",
+	Text = "+$0/s",
+	Role = "Heading",
+	TextSize = 14,
+	Color = C.Cash,
+	Position = UDim2.fromOffset(60, 38),
+	Size = UDim2.new(1, -68, 0, 18),
+	Parent = cash,
+})
 
 -- With the 028 juice on (ReplicatedStorage.JuiceOn) the cash counter rolls up instead of jumping.
 local cashValue = Instance.new("NumberValue")
@@ -108,24 +129,70 @@ updateIncome()
 
 -- Workers button: label + "x/6 earning" on the left, owned/capacity chip on the right
 local workersButton = UIKit.button({
-	Name = "WorkersButton", Kind = "Secondary", Text = "", Size = UDim2.fromOffset(WIDTH, 52), LayoutOrder = 2, Parent = stack,
+	Name = "WorkersButton",
+	Kind = "Secondary",
+	Text = "",
+	Size = UDim2.fromOffset(WIDTH, 52),
+	LayoutOrder = 2,
+	Parent = stack,
 	OnActivated = function()
 		UIKit.Signals.ToggleInventory:Fire(nil)
 	end,
 })
 UIKit.text({ Text = "WORKERS", Role = "Heading", TextSize = 15, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(1, -96, 0, 18), Parent = workersButton })
-local earningLabel = UIKit.text({ Name = "Earning", Text = "0/6 earning", Role = "Micro", Font = UIStyle.FontBold, Color = C.TextMuted, Position = UDim2.fromOffset(14, 27), Size = UDim2.new(1, -96, 0, 14), Parent = workersButton })
-local _, countLabel = UIKit.chip({ Name = "Owned", Text = "0/" .. CAPACITY, Height = 26, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0), Color = C.Gold, Parent = workersButton })
+local earningLabel = UIKit.text({
+	Name = "Earning",
+	Text = "0/6 earning",
+	Role = "Micro",
+	Font = UIStyle.FontBold,
+	Color = C.TextMuted,
+	Position = UDim2.fromOffset(14, 27),
+	Size = UDim2.new(1, -96, 0, 14),
+	Parent = workersButton,
+})
+local _, countLabel = UIKit.chip({
+	Name = "Owned",
+	Text = "0/" .. CAPACITY,
+	Height = 26,
+	AnchorPoint = Vector2.new(1, 0.5),
+	Position = UDim2.new(1, -10, 0.5, 0),
+	Color = C.Gold,
+	Parent = workersButton,
+})
 
 -- Carrying row: compact, with a large Store target
 local carry = UIKit.panel({ Name = "CarryCard", Size = UDim2.fromOffset(WIDTH, 56), LayoutOrder = 3, BorderColor = C.Gold, Parent = stack })
 carry.Visible = false
-local carryTag = UIKit.text({ Name = "CarryRarity", Text = "CARRYING", Role = "Micro", Font = UIStyle.FontBold, Color = C.Gold, Position = UDim2.fromOffset(12, 8), Size = UDim2.new(1, -112, 0, 14), Parent = carry })
+local carryTag = UIKit.text({
+	Name = "CarryRarity",
+	Text = "CARRYING",
+	Role = "Micro",
+	Font = UIStyle.FontBold,
+	Color = C.Gold,
+	Position = UDim2.fromOffset(12, 8),
+	Size = UDim2.new(1, -112, 0, 14),
+	Parent = carry,
+})
 local carryScale = UIKit.make("UIScale", { Parent = carry }) :: UIScale
-local carryName = UIKit.text({ Name = "CarryName", Text = "", Role = "Heading", TextSize = 14, Rich = true, Position = UDim2.fromOffset(12, 25), Size = UDim2.new(1, -112, 0, 20), Parent = carry })
+local carryName = UIKit.text({
+	Name = "CarryName",
+	Text = "",
+	Role = "Heading",
+	TextSize = 14,
+	Rich = true,
+	Position = UDim2.fromOffset(12, 25),
+	Size = UDim2.new(1, -112, 0, 20),
+	Parent = carry,
+})
 local storeCtl -- assigned below; the click handler needs it as an upvalue
 local _, ctl = UIKit.button({
-	Name = "StoreButton", Kind = "Primary", Text = "Store", Size = UDim2.fromOffset(88, UIStyle.TouchTarget), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -6, 0.5, 0), Parent = carry,
+	Name = "StoreButton",
+	Kind = "Primary",
+	Text = "Store",
+	Size = UDim2.fromOffset(88, UIStyle.TouchTarget),
+	AnchorPoint = Vector2.new(1, 0.5),
+	Position = UDim2.new(1, -6, 0.5, 0),
+	Parent = carry,
 	OnActivated = function()
 		storeCtl.setEnabled(false, "…")
 		WorkerState.request("StoreCarried")

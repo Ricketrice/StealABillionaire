@@ -652,7 +652,7 @@ end)
 local function refresh()
 	local on = juiceOn()
 	gui.Enabled = on
-	fxButton.Visible = on
+	fxButton.Visible = on and not UITheme.v1 -- (the V1 look has it in Settings instead)
 	if not on then
 		for model in placed do
 			local p = placed[model]

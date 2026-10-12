@@ -175,7 +175,7 @@ while true do
 		if not e.Parent then
 			emitters[e] = nil
 		elseif eye then
-			e.Enabled = (part.Position - eye).Magnitude < FX_RANGE
+			e.Enabled = player:GetAttribute("LowGraphics") ~= true and (part.Position - eye).Magnitude < FX_RANGE -- (029 Settings)
 		end
 	end
 	if marker == nil and player:GetAttribute("PlotId") then

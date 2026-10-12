@@ -19,6 +19,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local UIKit = require(ReplicatedStorage:WaitForChild("UIKit"))
+local UITheme = require(ReplicatedStorage:WaitForChild("UITheme"))
 
 local FxKit = {}
 
@@ -284,6 +285,7 @@ function FxKit.sound(name: string)
 		s.SoundId = def.id
 		s.Volume = def.volume
 		s.PlaybackSpeed = def.speed
+		s.SoundGroup = UITheme.soundGroup("SFX") -- (029 Settings: Sounds on/off)
 		s.Parent = workspace
 		pool[name] = s
 	end
