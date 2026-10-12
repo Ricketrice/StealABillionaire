@@ -121,14 +121,17 @@ local chargeTrack, chargeMeter = UIKit.meter({ Name = "Charge", Size = UDim2.fro
 chargeTrack.Visible = false
 
 -- V1 layout (029 layout fix): right side, vertically centred, equal gaps, buttons 200 x 56 at 1080p and
--- never under 56 px on screen; kept above the jump button on touch screens.
+-- never under 56 px on screen; kept above the jump button on touch screens. Where the whole column (every
+-- item it can show) can't fit above the jump button (short landscape phones) it is always two columns:
+-- the three buttons on the right, by the thumb, and the status items (Protected, Special, charge) to
+-- their left, under the top piece. Decided by the screen size alone, so nothing moves on a swing.
 if UITheme then
 	local HUD = UITheme.HUD
 	local BUTTON_W = HUD.ACTION_W
-	local list = column:FindFirstChildOfClass("UIListLayout")
-	if list then
-		list.Padding = UDim.new(0, HUD.GAP)
-	end
+	local list = column:FindFirstChildOfClass("UIListLayout") :: UIListLayout
+	list.Padding = UDim.new(0, HUD.GAP)
+	local items = { shield, batButton, lockerButton, lockButton, specialChip, chargeTrack }
+	local isButton = { [batButton] = true, [lockerButton] = true, [lockButton] = true }
 	local view: any = nil
 	local function place()
 		if not view then
@@ -149,8 +152,6 @@ if UITheme then
 		shieldLabel.TextSize = chipText
 		specialLabel.TextSize = chipText
 		chargeTrack.Size = UDim2.fromOffset(BUTTON_W, 12)
-		column.Size = UDim2.fromOffset(BUTTON_W, 0)
-		local h = column.AbsoluteSize.Y
 		local left = view.size.X - HUD.MARGIN - BUTTON_W * s
 		local bottom = view.size.Y - HUD.MARGIN
 		for _, r in view.avoid do
@@ -158,15 +159,54 @@ if UITheme then
 				bottom = math.min(bottom, r.min.Y - HUD.GAP)
 			end
 		end
+		-- (heights below are authored; on screen they are x s)
+		local full = 0
+		for _, item in items do
+			full += item.Size.Y.Offset
+		end
+		full += (#items - 1) * HUD.GAP
+		local wrap = full * s > bottom - HUD.MARGIN
+		local stacks = { 0, 0 } -- one column: [1] everything; two: [1] buttons, [2] status items
+		for _, item in items do
+			if item.Visible then
+				local i = if wrap and not isButton[item] then 2 else 1
+				stacks[i] += item.Size.Y.Offset + HUD.GAP
+			end
+		end
+		local h = math.max(stacks[1] - HUD.GAP, 0) * s
 		local y = math.clamp(view.size.Y / 2 - h / 2, HUD.MARGIN, math.max(HUD.MARGIN, bottom - h))
 		column.AnchorPoint = Vector2.new(1, 0)
 		column.Position = UDim2.fromOffset(view.size.X - HUD.MARGIN, y)
+		column:SetAttribute("Columns", if wrap then 2 else 1)
+		if not wrap then
+			list.Parent = column
+			column.AutomaticSize = Enum.AutomaticSize.Y
+			column.Size = UDim2.fromOffset(BUTTON_W, 0)
+			return
+		end
+		list.Parent = nil
+		-- the status items start under the top piece (Golden timer + goal, at its full size so they never
+		-- squeeze it; +6 px for rounding, HudV1 keeps a gap) when the buttons start higher
+		local statusY = math.max(0, (UITheme.topPieceBottom(s) + HUD.GAP + 6 - y) / s)
+		local at = { 0, statusY }
+		for _, item in items do
+			if item.Visible then
+				local i = if isButton[item] then 1 else 2
+				item.Position = UDim2.fromOffset(if i == 1 then BUTTON_W + HUD.GAP else 0, at[i])
+				at[i] += item.Size.Y.Offset + HUD.GAP
+			end
+		end
+		column.AutomaticSize = Enum.AutomaticSize.None
+		column.Size = UDim2.fromOffset(2 * BUTTON_W + HUD.GAP, math.max(at[1], at[2]) - HUD.GAP)
 	end
 	UITheme.onHudLayout(root, function(v)
 		view = v
 		place()
 	end)
 	column:GetPropertyChangedSignal("AbsoluteSize"):Connect(place)
+	for _, item in items do
+		item:GetPropertyChangedSignal("Visible"):Connect(place)
+	end
 end
 
 -- Attack input: bound only while the bat is out, so it never takes clicks away from normal play ---------

@@ -294,10 +294,21 @@ player:GetAttributeChangedSignal("CarryingNPC"):Connect(updateWorkers)
 -- Layout ------------------------------------------------------------------------------------------------------
 local topBar = UITheme.topBar()
 local view: any = nil
-local function pvpColumn(): GuiObject?
+-- The right-hand (PvP) column's visible pieces, as Rects in root coordinates. On short landscape phones
+-- it is two columns (buttons, and status items under the top piece), so its frame isn't one solid block.
+local function pvpRects(): { Rect }
 	local pvp = player.PlayerGui:FindFirstChild("PvP")
 	local column = pvp and pvp:FindFirstChild("Actions", true)
-	return if column and column:IsA("GuiObject") and column.Visible and column.AbsoluteSize.Y > 1 then column else nil
+	local rects = {}
+	if column and column:IsA("GuiObject") and column.Visible then
+		for _, item in column:GetChildren() do
+			if item:IsA("GuiObject") and item.Visible and item.AbsoluteSize.Y > 1 then
+				local p = item.AbsolutePosition - root.AbsolutePosition
+				table.insert(rects, Rect.new(p, p + item.AbsoluteSize))
+			end
+		end
+	end
+	return rects
 end
 local function inAvoid(y0: number, y1: number, x0: number, x1: number): number?
 	-- the top edge of the first touch control this box would cover, if any
@@ -342,6 +353,17 @@ function relayout()
 	local sL = s * factor
 	local floor = HUD.TOUCH * factor -- its smallest tap size grows with it (70 px on phones)
 	local maxW = size.X - 2 * HUD.MARGIN - HUD.ACTION_W * s - gap -- room left of the right-hand column
+	local pvp = pvpRects()
+	local function rightLimit(y0: number, y1: number): number
+		-- the left edge of the right-hand column's pieces beside this band (or of the screen's margin)
+		local x = size.X - HUD.MARGIN
+		for _, r in pvp do
+			if r.Min.Y < y1 + gap and r.Max.Y > y0 - gap then
+				x = math.min(x, r.Min.X)
+			end
+		end
+		return x
+	end
 	-- the pill (its "+" is a button, pillH - 6), narrowed to fit beside the right-hand column
 	local pillH = math.max(PILL_H, math.ceil(floor / sL) + 6)
 	local pillW = math.max(PILL_W, math.min(math.ceil(200 * factor / sL), math.floor(maxW / sL)))
@@ -381,12 +403,15 @@ function relayout()
 		local cols, rows, h, fits = 2, 1, 0, false
 		for _, c in { 2, 3, 6 } do
 			local tryCols = math.min(c, math.max(n, 1))
-			if tryCols > 2 and (tryCols * cell + (tryCols - 1) * CELL_GAP) * sL > maxW then
+			local w = (tryCols * cell + (tryCols - 1) * CELL_GAP) * sL
+			local tryRows = math.ceil(n / tryCols)
+			local tryH = if n > 0 then (tryRows * cell + (tryRows - 1) * CELL_GAP) * sL else 0
+			local tryTop = math.clamp(size.Y / 2 - (pillBlock + gap + tryH) / 2, topMin, math.max(topMin, bottomLimit - pillBlock - gap - tryH))
+			local gridTop = tryTop + pillBlock + gap
+			if tryCols > 2 and (w > maxW or HUD.MARGIN + w + gap > rightLimit(gridTop, gridTop + tryH)) then
 				break -- wider would run into the right-hand column
 			end
-			cols = tryCols
-			rows = math.ceil(n / cols)
-			h = if n > 0 then (rows * cell + (rows - 1) * CELL_GAP) * sL else 0
+			cols, rows, h = tryCols, tryRows, tryH
 			fits = h <= room
 			if fits then
 				break
@@ -397,7 +422,8 @@ function relayout()
 		return { top = top, cols = cols, rows = rows, h = h, fits = fits }
 	end
 	local group
-	local chat = chatRect() or (if small then nil else CHAT_RESERVE)
+	local openChat = chatRect()
+	local chat = openChat or (if small then nil else CHAT_RESERVE)
 	if chat and chat.Min.X < size.X / 2 then
 		group = placeGroup(math.max(8, math.ceil(chat.Max.Y) + gap))
 	end
@@ -406,24 +432,17 @@ function relayout()
 	end
 
 	-- the shared top piece (Golden timer + goal): centred and a touch bigger, narrowed to fit between the
-	-- left group and the right-hand column where they reach its height; on portrait screens, if it would
-	-- lose more than 20%, the left group moves under it instead
+	-- left group (and the open chat window) and the right-hand column where they reach its height; on
+	-- portrait screens, if it would lose more than 20%, the left group moves under it instead
 	local fit = topBar:FindFirstChild("Fit") :: UIScale?
 	if fit and fit.Scale > 0 and topBar.AbsoluteSize.X > 0 then
 		local natural = topBar.AbsoluteSize / fit.Scale
 		local want = s * 1.12
-		local column = pvpColumn()
-		local function rightLimit(y0: number, y1: number): number
-			if column then
-				local cy = column.AbsolutePosition.Y - root.AbsolutePosition.Y
-				if cy < y1 + gap and cy + column.AbsoluteSize.Y > y0 then
-					return column.AbsolutePosition.X - root.AbsolutePosition.X
-				end
-			end
-			return size.X - HUD.MARGIN
-		end
 		local function leftLimit(y0: number, y1: number): number
 			local x = HUD.MARGIN
+			if openChat and openChat.Min.X < size.X / 2 and y0 < openChat.Max.Y + gap and y1 > openChat.Min.Y - gap then
+				x = math.max(x, openChat.Max.X + gap)
+			end
 			if y0 < group.top + pillBlock + gap and y1 > group.top - gap then
 				x = math.max(x, pillRight + gap)
 			end
@@ -493,15 +512,30 @@ topBar:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		relayout()
 	end
 end)
-task.spawn(function() -- the PvP column (another script) moves: keep the top piece clear of it
+task.spawn(function() -- the PvP column (another script) moves or changes: keep clear of its pieces
 	local pvp = player.PlayerGui:WaitForChild("PvP", 30)
 	local column = pvp and pvp:FindFirstChild("Actions", true)
-	if column and column:IsA("GuiObject") then
-		column:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
-			if relayout then
-				relayout()
-			end
-		end)
+	if not (column and column:IsA("GuiObject")) then
+		return
+	end
+	local queued = false
+	local function soon()
+		if not queued then
+			queued = true
+			task.defer(function()
+				queued = false
+				if relayout then
+					relayout()
+				end
+			end)
+		end
+	end
+	for _, piece in { column, table.unpack(column:GetChildren()) } do
+		if piece:IsA("GuiObject") then
+			piece:GetPropertyChangedSignal("AbsolutePosition"):Connect(soon)
+			piece:GetPropertyChangedSignal("AbsoluteSize"):Connect(soon)
+			piece:GetPropertyChangedSignal("Visible"):Connect(soon)
+		end
 	end
 end)
 updateWorkers()

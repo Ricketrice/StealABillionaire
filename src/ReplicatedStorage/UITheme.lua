@@ -1041,7 +1041,12 @@ function UITheme.bannerTop(): number
 	if bar and bar:IsA("GuiObject") and bar.AbsoluteSize.Y > 0 then
 		return math.ceil(bar.AbsolutePosition.Y - (root :: GuiObject).AbsolutePosition.Y + bar.AbsoluteSize.Y) + 10
 	end
-	return 16 + math.ceil(72 * UITheme.hudScale(UITheme.viewSize()) * 1.12) + 10
+	return UITheme.topPieceBottom(UITheme.hudScale(UITheme.viewSize())) + 10
+end
+-- Where the shared top piece (Golden timer + goal) ends at its full size (V1, landscape): HudV1 puts it at
+-- y = 16, 72 px tall x the HUD scale x 1.12. Narrowing can only make it shorter.
+function UITheme.topPieceBottom(scale: number): number
+	return 16 + math.ceil(72 * scale * 1.12)
 end
 -- Calls fn(view) now and whenever the HUD area changes; view = { size, scale, avoid }.
 function UITheme.onHudLayout(root: GuiObject, fn: (any) -> ())
