@@ -64,16 +64,13 @@ UITheme.setCashTarget(pill)
 local plus = pill:FindFirstChild("Plus") :: TextButton
 
 local incomeRow = UITheme.make("Frame", { Name = "IncomeRow", BackgroundTransparency = 1, Size = UDim2.fromOffset(222, 26), LayoutOrder = 2, Parent = left })
-UITheme.make(
-	"UIListLayout",
-	{
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, 6),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Parent = incomeRow,
-	}
-)
+UITheme.make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	VerticalAlignment = Enum.VerticalAlignment.Center,
+	Padding = UDim.new(0, 6),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = incomeRow,
+})
 UITheme.make("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = incomeRow })
 local incomeLabel = UITheme.text({
 	Name = "Income",

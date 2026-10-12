@@ -643,7 +643,7 @@ function UITheme.tabs(props: { [string]: any }): (Frame, (string) -> ())
 		Name = props.Name or "Tabs",
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		Size = props.Size or UDim2.new(1, 0, 0, 48),
+		Size = props.Size or UDim2.new(1, 0, 0, 58),
 		Position = props.Position,
 		CanvasSize = UDim2.new(),
 		AutomaticCanvasSize = Enum.AutomaticSize.X,
@@ -672,7 +672,7 @@ function UITheme.tabs(props: { [string]: any }): (Frame, (string) -> ())
 			props.OnSelect(key)
 		end
 	end
-	local height = (props.Size and props.Size.Y.Offset or 48) - 4
+	local height = (props.Size and props.Size.Y.Offset or 58) - 4
 	for i, tab in props.Tabs do
 		local b = UITheme.button({
 			Name = "Tab_" .. tab.key,
@@ -752,13 +752,16 @@ function UITheme.gui(name: string, displayOrder: number): (ScreenGui, Frame)
 end
 
 -- Scales a fixed-size window so it fits `root` (with a margin) and never grows past maxScale.
+-- Phone rule: windows are authored wide and short (about 800 x 350 at most) with touch targets of
+-- 52+ px, so on the smallest landscape phone (705 x 338 safe area) they scale to ~0.85 and every
+-- button stays at least 44 px.
 local function fitScale(scale: UIScale, size: Vector2, root: GuiObject, maxScale: number?)
 	local function update()
 		local avail = root.AbsoluteSize
 		if avail.X < 1 then
 			return
 		end
-		local s = math.min((avail.X - 16) / size.X, (avail.Y - 16) / size.Y, maxScale or 1.15, math.min(avail.X, avail.Y) / 520)
+		local s = math.min((avail.X - 16) / size.X, (avail.Y - 16) / size.Y, maxScale or 1.15)
 		scale.Scale = math.max(s, 0.4)
 	end
 	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(update)

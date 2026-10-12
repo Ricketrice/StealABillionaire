@@ -25,6 +25,11 @@ local WorkerPreview = require(ReplicatedStorage:WaitForChild("WorkerPreview"))
 local WorkerState = require(ReplicatedStorage:WaitForChild("WorkerState"))
 
 local C, S = UIStyle.Colors, UIStyle.Space
+-- Milestone 029 (V1 look only): sort by rarity or income, and favourite stars (saved on the server,
+-- favourites first within each section).
+local V1 = UIStyle.v1 == true
+local sortMode = "rarity" -- or "income"
+local favs: { [string]: boolean } = {}
 local CAPACITY = InventoryConfig.INVENTORY_SLOTS + InventoryConfig.STATION_SLOTS
 local CARD_H, GAP, PREVIEW_H = 212, 10, 108
 local DETAIL_W = 300
@@ -55,7 +60,23 @@ local panelScale = UIKit.make("UIScale", { Parent = panel }) :: UIScale
 local header = UIKit.make("Frame", { Name = "Header", BackgroundTransparency = 1, Position = UDim2.fromOffset(S.L, S.M), Size = UDim2.new(1, -S.L * 2, 0, 36), Parent = panel })
 UIKit.text({ Text = "Workers", Role = "Title", TextSize = 24, Size = UDim2.new(0, 120, 1, 0), Parent = header })
 local ownedChip, ownedLabel = UIKit.chip({ Name = "Owned", Text = "0/" .. CAPACITY, Height = 24, Color = C.Gold, AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 116, 0.5, 0), Parent = header })
-local closeButton = UIKit.button({ Name = "Close", Kind = "Ghost", Text = "✕", Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 4, 0.5, 0), Parent = header })
+local closeButton = UIKit.button({ Name = "Close", Kind = "Ghost", Text = if V1 then "X" else "✕", Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 4, 0.5, 0), Parent = header })
+local sortCtl = nil
+local requestRender: (() -> ())? = nil -- set once render exists (below)
+if V1 then
+	local _, ctl = UIKit.button({
+		Name = "Sort", Kind = "Secondary", Text = "Sort: Rarity", TextSize = 15, Size = UDim2.fromOffset(150, UIStyle.TouchTarget),
+		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -UIStyle.TouchTarget - 6, 0.5, 0), Parent = header,
+		OnActivated = function()
+			sortMode = if sortMode == "rarity" then "income" else "rarity"
+			sortCtl.setText(if sortMode == "rarity" then "Sort: Rarity" else "Sort: Income")
+			if requestRender then
+				requestRender()
+			end
+		end,
+	})
+	sortCtl = ctl
+end
 
 -- capacity
 local capRow = UIKit.make("Frame", { Name = "Capacity", BackgroundTransparency = 1, Position = UDim2.fromOffset(S.L, 54), Size = UDim2.new(1, -S.L * 2, 0, 38), Parent = panel })
@@ -164,6 +185,24 @@ local function newCard(uid: string)
 	local _, tag = UIKit.rarityTag({ Height = 20, Position = UDim2.fromOffset(6, 6), Parent = stage })
 	local locChip, locLabel = UIKit.chip({ Height = 20, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -6), Parent = stage })
 	local name = UIKit.text({ Name = "WorkerName", Role = "Heading", TextSize = 15, Position = UDim2.fromOffset(10, PREVIEW_H + 12), Size = UDim2.new(1, -20, 0, 20), Parent = card })
+	local star = nil
+	if V1 then
+		star = UIKit.make("TextButton", { Name = "Favourite", Text = "☆", Font = UIStyle.Font, TextSize = 30, TextColor3 = C.TextMuted, BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -2, 0, 2), Size = UDim2.fromOffset(44, 44), ZIndex = 3, Parent = stage }) :: TextButton
+		UIStyle.outline(star, C.Outline, 2)
+		star.Activated:Connect(function()
+			local on = not favs[uid]
+			favs[uid] = if on then true else nil
+			ctl.paintStar()
+			ReplicatedStorage:WaitForChild("RewardsAction"):FireServer("Favourite", uid, on)
+		end)
+	end
+	function ctl.paintStar()
+		if star then
+			star.Text = if favs[uid] then "★" else "☆"
+			star.TextColor3 = if favs[uid] then C.Gold else C.TextMuted
+			ctl.frame:SetAttribute("Favourite", favs[uid] == true)
+		end
+	end
 	local income = UIKit.text({ Name = "Income", Role = "Small", Font = UIStyle.FontBold, Rich = true, Position = UDim2.fromOffset(10, PREVIEW_H + 33), Size = UDim2.new(1, -20, 0, 18), Parent = card })
 	local _, actionCtl = UIKit.button({ Name = "Action", Kind = "Primary", Text = "Equip", Size = UDim2.new(1, -12, 0, 40), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -6), Parent = card,
 		OnActivated = function()
@@ -202,6 +241,7 @@ local function newCard(uid: string)
 		income.Text = if entry.loc == "station"
 			then ('<font color="#%s">%s</font>'):format(C.Cash:ToHex(), rate)
 			else ('<font color="#%s">%s</font> <font color="#%s">when placed</font>'):format(C.TextMuted:ToHex(), rate, C.TextDim:ToHex())
+		ctl.paintStar()
 		if ctl.preview and ctl.previewId ~= entry.id then
 			ctl.preview.set(entry.id)
 			ctl.previewId = entry.id
@@ -380,10 +420,13 @@ local function render()
 
 	local entries = table.clone(snap.workers)
 	table.sort(entries, function(a, b)
+		local fa, fb = favs[a.uid] == true, favs[b.uid] == true
+		if fa ~= fb then return fa end -- favourites first (only ever set in the V1 look)
 		local wa, wb = WorkerCatalogue.get(a.id), WorkerCatalogue.get(b.id)
 		local ra, rb = wa and rarityRank[wa.rarity] or 0, wb and rarityRank[wb.rarity] or 0
-		if ra ~= rb then return ra > rb end
 		local ia, ib = wa and wa.income or 0, wb and wb.income or 0
+		if sortMode == "income" and ia ~= ib then return ia > ib end
+		if ra ~= rb then return ra > rb end
 		if ia ~= ib then return ia > ib end
 		return a.uid < b.uid
 	end)
@@ -509,5 +552,22 @@ WorkerState.Changed:Connect(function()
 	dirty = true
 	if isOpen then render() end
 end)
+if V1 then
+	requestRender = function()
+		dirty = true
+		if isOpen then render() end
+	end
+	-- Favourites come from the server's rewards state (RewardsService keeps them in the save).
+	ReplicatedStorage:WaitForChild("RewardsState").OnClientEvent:Connect(function(state)
+		if type(state) == "table" and type(state.favs) == "table" then
+			favs = {}
+			for uid, v in state.favs do
+				favs[uid] = v == true or nil
+			end
+			dirty = true
+			if isOpen then render() end
+		end
+	end)
+end
 
 UIKit.mount(gui)

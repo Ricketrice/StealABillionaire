@@ -38,20 +38,20 @@ local function ask(action: string, a: any?, b: any?)
 end
 
 -- Daily ------------------------------------------------------------------------------------------------------
-local daily = UITheme.window({ Name = "Daily", Title = "Daily Rewards", Icon = "calendar", Size = Vector2.new(660, 380), Parent = root })
+local daily = UITheme.window({ Name = "Daily", Title = "Daily Rewards", Icon = "calendar", Size = Vector2.new(700, 340), Parent = root })
 local dailyNote = UITheme.text({
 	Name = "Note",
 	Text = "",
 	Role = "Body",
 	TextSize = 18,
 	TextWrapped = true,
-	Size = UDim2.new(1, 0, 0, 44),
-	Position = UDim2.fromOffset(0, 14),
+	Size = UDim2.new(1, -40, 0, 40),
+	Position = UDim2.fromOffset(20, 12),
 	ZIndex = 13,
 	Parent = daily.content,
 })
 local dayRow =
-	UITheme.make("Frame", { Name = "Days", BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 64), Size = UDim2.new(1, 0, 0, 160), ZIndex = 13, Parent = daily.content })
+	UITheme.make("Frame", { Name = "Days", BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 58), Size = UDim2.new(1, 0, 0, 150), ZIndex = 13, Parent = daily.content })
 UITheme.make("UIGridLayout", { CellSize = UDim2.new(1 / 7, -6, 1, 0), CellPadding = UDim2.fromOffset(6, 0), SortOrder = Enum.SortOrder.LayoutOrder, Parent = dayRow })
 local dayCards = {}
 for day = 1, 7 do
@@ -88,7 +88,7 @@ for day = 1, 7 do
 		Parent = card,
 	})
 	local check =
-		UITheme.image({ Icon = "check", Size = UDim2.fromOffset(40, 40), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -4), ZIndex = 15, Parent = card })
+		UITheme.image({ Icon = "check", Size = UDim2.fromOffset(46, 46), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0, 62), ZIndex = 15, Parent = card })
 	local scale = UITheme.make("UIScale", { Parent = card })
 	dayCards[day] = { card = card, title = title, amount = amount, check = check, scale = scale, stroke = card:FindFirstChildOfClass("UIStroke") }
 end
@@ -98,7 +98,7 @@ local dailyButton = UITheme.button({
 	Text = "Claim",
 	Icon = "gift",
 	TextSize = 24,
-	Size = UDim2.fromOffset(300, 60),
+	Size = UDim2.fromOffset(320, 60),
 	AnchorPoint = Vector2.new(0.5, 1),
 	Position = UDim2.new(0.5, 0, 1, -4),
 	ZIndex = 14,
@@ -136,25 +136,32 @@ local function paintDaily()
 end
 
 -- Gifts (playtime) -------------------------------------------------------------------------------------------
-local gifts = UITheme.window({ Name = "Gifts", Title = "Playtime Gifts", Icon = "gift", Size = Vector2.new(640, 420), Parent = root })
-local giftNote =
-	UITheme.text({ Name = "Note", Text = "", Role = "Body", TextSize = 18, Size = UDim2.new(1, 0, 0, 28), Position = UDim2.fromOffset(0, 14), ZIndex = 13, Parent = gifts.content })
+local gifts = UITheme.window({ Name = "Gifts", Title = "Playtime Gifts", Icon = "gift", Size = Vector2.new(800, 340), Parent = root })
+local giftNote = UITheme.text({
+	Name = "Note",
+	Text = "",
+	Role = "Body",
+	TextSize = 18,
+	Size = UDim2.new(1, -40, 0, 28),
+	Position = UDim2.fromOffset(20, 14),
+	ZIndex = 13,
+	Parent = gifts.content,
+})
 local giftGrid =
-	UITheme.make("Frame", { Name = "Grid", BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 48), Size = UDim2.new(1, 0, 1, -48), ZIndex = 13, Parent = gifts.content })
-UITheme.make("UIGridLayout", { CellSize = UDim2.new(1 / 3, -8, 0.5, -8), CellPadding = UDim2.fromOffset(8, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = giftGrid })
+	UITheme.make("Frame", { Name = "Grid", BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 50), Size = UDim2.new(1, 0, 1, -52), ZIndex = 13, Parent = gifts.content })
+UITheme.make("UIGridLayout", { CellSize = UDim2.new(1 / 6, -8, 1, 0), CellPadding = UDim2.fromOffset(8, 0), SortOrder = Enum.SortOrder.LayoutOrder, Parent = giftGrid })
 local giftCards = {}
 local function giftCard(index: number)
 	local card = UITheme.card({ Name = "Gift" .. index, LayoutOrder = index, ZIndex = 13, Parent = giftGrid })
-	UITheme.image({ Icon = "gift", Size = UDim2.fromOffset(54, 54), Position = UDim2.fromOffset(8, 8), ZIndex = 14, Parent = card })
+	UITheme.image({ Icon = "gift", Size = UDim2.fromOffset(62, 62), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 6), ZIndex = 14, Parent = card })
 	local mins = UITheme.text({
 		Name = "Minutes",
 		Text = "",
 		Role = "Small",
 		Font = UITheme.Fonts.Display,
-		TextSize = 18,
-		Align = "Left",
-		Size = UDim2.new(1, -72, 0, 24),
-		Position = UDim2.fromOffset(68, 10),
+		TextSize = 19,
+		Size = UDim2.new(1, -8, 0, 24),
+		Position = UDim2.fromOffset(4, 72),
 		ZIndex = 14,
 		Parent = card,
 	})
@@ -163,22 +170,21 @@ local function giftCard(index: number)
 		Text = "",
 		Role = "Small",
 		Font = UITheme.Fonts.Display,
-		TextSize = 18,
+		TextSize = 19,
 		Color = T.Cash,
-		Align = "Left",
-		Size = UDim2.new(1, -72, 0, 24),
-		Position = UDim2.fromOffset(68, 36),
+		Size = UDim2.new(1, -8, 0, 24),
+		Position = UDim2.fromOffset(4, 98),
 		ZIndex = 14,
 		Parent = card,
 	})
-	local bar, setBar = UITheme.bar({ Name = "Progress", Size = UDim2.new(1, -16, 0, 12), Position = UDim2.fromOffset(8, 70), ZIndex = 14, Parent = card })
+	local bar, setBar = UITheme.bar({ Name = "Progress", Size = UDim2.new(1, -16, 0, 12), Position = UDim2.fromOffset(8, 130), ZIndex = 14, Parent = card })
 	bar.ZIndex = 14
 	local button = UITheme.button({
 		Name = "Open",
 		Kind = "Primary",
 		Text = "Open",
 		TextSize = 18,
-		Size = UDim2.new(1, -16, 0, 46),
+		Size = UDim2.new(1, -12, 0, 54),
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -6),
 		ZIndex = 14,
@@ -260,7 +266,7 @@ end
 UITheme.registerScreen("Offline", offline.open, offline.close)
 
 -- Settings ------------------------------------------------------------------------------------------------------
-local settingsWin = UITheme.window({ Name = "Settings", Title = "Settings", Icon = "settings", Size = Vector2.new(470, 390), Parent = root })
+local settingsWin = UITheme.window({ Name = "Settings", Title = "Settings", Icon = "settings", Size = Vector2.new(640, 310), Parent = root })
 local settings = { music = true, sfx = true, lowfx = false, lowgfx = false }
 local SETTING_ROWS = {
 	{ key = "music", icon = "music", text = "Music" },
@@ -270,9 +276,9 @@ local SETTING_ROWS = {
 }
 local settingsList = UITheme.make(
 	"Frame",
-	{ Name = "List", BackgroundTransparency = 1, Position = UDim2.fromOffset(4, 20), Size = UDim2.new(1, -8, 1, -24), ZIndex = 13, Parent = settingsWin.content }
+	{ Name = "List", BackgroundTransparency = 1, Position = UDim2.fromOffset(4, 22), Size = UDim2.new(1, -8, 1, -26), ZIndex = 13, Parent = settingsWin.content }
 )
-UITheme.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder, Parent = settingsList })
+UITheme.make("UIGridLayout", { CellSize = UDim2.new(0.5, -6, 0.5, -6), CellPadding = UDim2.fromOffset(12, 12), SortOrder = Enum.SortOrder.LayoutOrder, Parent = settingsList })
 local toggles = {}
 local mapShadows = Lighting.GlobalShadows -- what the map uses; Low graphics only ever turns it off
 local function apply()
@@ -288,15 +294,25 @@ local function apply()
 	end
 end
 for i, row in SETTING_ROWS do
-	local line = UITheme.card({ Name = row.key, Size = UDim2.new(1, 0, 0, 62), LayoutOrder = i, ZIndex = 13, Parent = settingsList })
-	UITheme.image({ Icon = row.icon, Size = UDim2.fromOffset(46, 46), Position = UDim2.fromOffset(8, 8), ZIndex = 14, Parent = line })
-	UITheme.text({ Text = row.text, Role = "Title", TextSize = 22, Align = "Left", Size = UDim2.new(1, -190, 1, 0), Position = UDim2.fromOffset(64, 0), ZIndex = 14, Parent = line })
+	local line = UITheme.card({ Name = row.key, LayoutOrder = i, ZIndex = 13, Parent = settingsList })
+	UITheme.image({ Icon = row.icon, Size = UDim2.fromOffset(56, 56), AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 8, 0.5, 0), ZIndex = 14, Parent = line })
+	UITheme.text({
+		Text = row.text,
+		Role = "Title",
+		TextSize = 21,
+		Align = "Left",
+		TextWrapped = true,
+		Size = UDim2.new(1, -186, 1, 0),
+		Position = UDim2.fromOffset(70, 0),
+		ZIndex = 14,
+		Parent = line,
+	})
 	toggles[row.key] = UITheme.button({
 		Name = "Toggle",
 		Kind = "Primary",
 		Text = "ON",
 		TextSize = 20,
-		Size = UDim2.fromOffset(104, 48),
+		Size = UDim2.fromOffset(104, 54),
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -8, 0.5, 0),
 		ZIndex = 14,
