@@ -48,5 +48,5 @@ Built in Studio: ParticleEmitter, Beam, Trail, TweenService, Highlight, Animatio
 | first Golden Parade | Golden Parade timer |
 | reaching end of Zone 1 | Vault/heist timer |
 | reaching Zone 6 | Royale Race |
-| later | Arena, speed trails, ranks explained |
+| later | Speed trails, ranks explained (Arena hidden in V1, D29) |
 Rules: hidden buttons don't exist yet (no greyed-out clutter); each new thing gets one short "NEW!" popup with an icon and one sentence; max 2 timers on the HUD.

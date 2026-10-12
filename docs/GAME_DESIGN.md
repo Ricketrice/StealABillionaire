@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D29 | **Arena hidden for V1**: keep the code and the venue, turn it off for players with a flag (ArenaEnabled = false live). No HUD button, no quests or tutorial steps pointing to it. Can return later as an update. Venue anchor names stay. | 2026-10 |
 | D28 | **Simplicity rule: reveal features gradually.** New players see only the core loop (catch → carry → place → earn). Other features appear as they progress, each with a one-time "NEW!" intro (see `RETENTION_AND_JUICE.md` → Feature reveal). Max 2 event timers on the HUD at once (show the next ones). One-sentence test for every feature. | 2026-10 |
 | D27 | Keep the 12 bases (2 rows of 6), spawn, shops and red parade lane as the start of the rising route; rebuild only if testing shows navigation/visibility problems. Teammates must agree before their zones or shared requirements change. | 2026-10 |
 | D26 | **Theme = hybrid "Billionaire's Collection"**: keep the Steal a Billionaire brand, cash economy, workers, vaults and zones (his properties). Add creatures, monsters, robots and bosses as collectibles at **every** rarity, with more impressive designs higher up. Prototype first (Zone 6: Slime Rookie, Dragon Pup, Mech Beast), showcase only; adding to live pools needs a separate decision on roster size and odds. | 2026-10 |

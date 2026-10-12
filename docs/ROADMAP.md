@@ -14,7 +14,7 @@ No players = no money. Every milestone should help at least one of: **click** (i
 ## Phase B — Launch-ready V1 (make money)
 **032 Boss Heist + Speed** *(prompt: `docs/prompts/032.md`)* — vault every 10 min, security robot chase, Boss Capsule; Speed stat + cash trails (D22, D24).
 **033 Core loop + monetization** — workers visibly working at their stations (D25), worker stats + types on all 16 (icons on cards), levels 1–10, base slots 7–12 for cash; gamepasses 2x Cash, Extra Slots, VIP; cash packs + starter pack (dev products, `ProcessReceipt` + save); favourite-worker protection, steal cooldown/cap; group reward.
-**034 Launch polish + trailer kit** — feature reveal schedule + first-10-minutes playtest with a real kid (D28), trailer mode (D23), game icon + 3 thumbnails, loading screen, sound pass, mobile check, AnalyticsService funnel, error logging, flags ON for live.
+**034 Launch polish + trailer kit** — feature reveal schedule, arena hidden behind a flag (D29) + first-10-minutes playtest with a real kid (D28), trailer mode (D23), game icon + 3 thumbnails, loading screen, sound pass, mobile check, AnalyticsService funnel, error logging, flags ON for live.
 **→ Soft launch.** Then a small update every week (new worker, event or limited-time item) with "UPDATE" in the title — trending games live on weekly updates.
 **→** Watch D1 retention, session length, tutorial drop-off, payer conversion for 1–2 weeks before adding content.
 
