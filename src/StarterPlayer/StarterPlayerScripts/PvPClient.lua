@@ -65,50 +65,64 @@ local columnScale = if UIStyle.v1 then UIKit.make("UIScale", { Parent = column }
 local setLocker: (boolean) -> () -- defined with the locker below
 local lockerOpen = false
 
-local shield = UIKit.chip({ Name = "Protected", Text = "", Height = 26, Color = C.Info, LayoutOrder = 1, Parent = column })
-local shieldLabel = shield:FindFirstChildOfClass("TextLabel") :: TextLabel
-local batButton, batControl = UIKit.button({
-	Name = "BatButton",
-	Kind = "Secondary",
-	Text = "BAT",
-	Size = UDim2.fromOffset(WIDTH, 46),
-	LayoutOrder = 2,
-	Parent = column,
-	OnActivated = function()
-		actionEvent:FireServer("Equip", player:GetAttribute("BatEquipped") ~= true)
-	end,
-})
-local lockerButton = UIKit.button({
-	Name = "LockerButton",
-	Kind = "Secondary",
-	Text = "LOCKER",
-	Size = UDim2.fromOffset(WIDTH, 46),
-	LayoutOrder = 3,
-	Parent = column,
-	OnActivated = function()
-		setLocker(not lockerOpen)
-	end,
-})
-local lockButton, lockControl = UIKit.button({
-	Name = "LockButton",
-	Kind = "Secondary",
-	Text = "LOCK BASE",
-	Size = UDim2.fromOffset(WIDTH, 46),
-	LayoutOrder = 4,
-	Parent = column,
-	OnActivated = function()
-		actionEvent:FireServer("Lock")
-	end,
-})
+-- V1 look: Check-UI 3D buttons and status plates (UITheme); Classic: the 022 UIKit ones. Both give the
+-- same controller: setEnabled(on, textWhileDisabled?), setText(text), setKind(kind) (V1 only).
+local UITheme = if UIStyle.v1 then require(ReplicatedStorage:WaitForChild("UITheme")) :: any else nil
+local function actionButton(name: string, text: string, kind: string, order: number, onActivated: () -> ())
+	if not UITheme then
+		return UIKit.button({ Name = name, Kind = "Secondary", Text = text, Size = UDim2.fromOffset(WIDTH, 46), LayoutOrder = order, Parent = column, OnActivated = onActivated })
+	end
+	local b = UITheme.button({ Name = name, Kind = kind, Text = text, Size = UDim2.fromOffset(WIDTH, 46), LayoutOrder = order, Parent = column, OnActivated = onActivated })
+	local on, shown = true, text
+	local ctl = {}
+	function ctl.setEnabled(enabled: boolean, disabledText: string?)
+		local want = if enabled then shown else disabledText or shown
+		if enabled ~= on or b.Text ~= want then
+			on = enabled
+			UITheme.setEnabled(b, enabled, want)
+		end
+	end
+	function ctl.setText(t: string)
+		shown = t
+		if on and b.Text ~= t then
+			b.Text = t
+		end
+	end
+	function ctl.setKind(k: string)
+		if b:GetAttribute("Kind") ~= k then
+			b:SetAttribute("Kind", k)
+			if on then
+				UITheme.paint(b, k)
+			end
+		end
+	end
+	return b, ctl
+end
+local function statusChip(name: string, kind: string, color: Color3, order: number): (GuiObject, TextLabel)
+	if UITheme then
+		return UITheme.plate({ Name = name, Kind = kind, Size = UDim2.fromOffset(WIDTH, 26), LayoutOrder = order, Parent = column })
+	end
+	return UIKit.chip({ Name = name, Text = "", Height = 26, Color = color, LayoutOrder = order, Parent = column })
+end
+
+local shield, shieldLabel = statusChip("Protected", "Secondary", C.Info, 1)
+local batButton, batControl = actionButton("BatButton", "BAT", "Danger", 2, function()
+	actionEvent:FireServer("Equip", player:GetAttribute("BatEquipped") ~= true)
+end)
+local lockerButton = actionButton("LockerButton", "LOCKER", "Ghost", 3, function()
+	setLocker(not lockerOpen)
+end)
+local lockButton, lockControl = actionButton("LockButton", "LOCK BASE", "Primary", 4, function()
+	actionEvent:FireServer("Lock")
+end)
 -- Only while the bat is out: the special's name and cooldown, and the charge meter.
-local specialChip, specialLabel = UIKit.chip({ Name = "Special", Text = "", Height = 26, Color = C.Gold, LayoutOrder = 5, Parent = column })
+local specialChip, specialLabel = statusChip("Special", "Gold", C.Gold, 5)
 local chargeTrack, chargeMeter = UIKit.meter({ Name = "Charge", Size = UDim2.fromOffset(WIDTH, 10), LayoutOrder = 6, Parent = column })
 chargeTrack.Visible = false
 
 -- V1 layout (029 layout fix): right side, vertically centred, equal gaps, buttons 200 x 56 at 1080p and
 -- never under 56 px on screen; kept above the jump button on touch screens.
-if UIStyle.v1 then
-	local UITheme = require(ReplicatedStorage:WaitForChild("UITheme")) :: any
+if UITheme then
 	local HUD = UITheme.HUD
 	local BUTTON_W = HUD.ACTION_W
 	local list = column:FindFirstChildOfClass("UIListLayout")
@@ -126,20 +140,14 @@ if UIStyle.v1 then
 		local buttonText = math.max(22, math.ceil(13 / s)) -- never under 13 px on screen
 		for _, b in { batButton, lockerButton, lockButton } do
 			b.Size = UDim2.fromOffset(BUTTON_W, buttonH)
-			local label = b:FindFirstChildOfClass("TextLabel")
-			if label then
-				label.TextSize = buttonText
-			end
+			b.TextSize = buttonText -- (shown by its ButtonText label)
 		end
 		local chipText = math.max(17, math.ceil(11 / s))
-		local chipH = chipText + 12
-		for _, chip in { shield, specialChip } do
-			chip.Size = UDim2.fromOffset(0, chipH)
-			local label = chip:FindFirstChildOfClass("TextLabel")
-			if label then
-				label.TextSize = chipText
-			end
-		end
+		local chipH = chipText + 16
+		shield.Size = UDim2.fromOffset(BUTTON_W, chipH)
+		specialChip.Size = UDim2.fromOffset(BUTTON_W, chipH)
+		shieldLabel.TextSize = chipText
+		specialLabel.TextSize = chipText
 		chargeTrack.Size = UDim2.fromOffset(BUTTON_W, 12)
 		column.Size = UDim2.fromOffset(BUTTON_W, 0)
 		local h = column.AbsoluteSize.Y
@@ -405,12 +413,23 @@ local function refresh()
 
 	local equipped = player:GetAttribute("BatEquipped") == true
 	batControl.setText(if equipped then "BAT: OUT" else "BAT")
+	if batControl.setKind then
+		batControl.setKind(if equipped then "Pink" else "Danger") -- (V1) brighter while the bat is out
+	end
 	bindAttack(showCombat and equipped)
 
 	local cooling = math.ceil(secondsLeft("SpecialReadyAt"))
 	specialChip.Visible = showCombat and equipped
 	specialLabel.Text = PvPConfig.Specials[special()].name:upper() .. (if cooling > 0 then "  " .. cooling .. "s" else "  READY")
-	specialLabel.TextColor3 = if cooling > 0 then C.TextDim else C.Gold
+	if UITheme then
+		local kind = if cooling > 0 then "Disabled" else "Gold"
+		if specialChip:GetAttribute("Kind") ~= kind then
+			specialChip:SetAttribute("Kind", kind)
+			UITheme.paint(specialChip, kind)
+		end
+	else
+		specialLabel.TextColor3 = if cooling > 0 then C.TextDim else C.Gold
+	end
 	if bound then
 		ContextActionService:SetTitle(SPECIAL_ACTION, if cooling > 0 then tostring(cooling) else "SPECIAL")
 	end

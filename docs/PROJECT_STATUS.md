@@ -18,7 +18,8 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
 - `DevTest_Save029` rewards rejoin 26/26 on the REAL Studio DataStore (2 SIM; catches kept); parade rejoin 24/24 (earlier today, unchanged code path).
 - `DevTest_Parade028` 76/76 (2 SIM; Golden ticket first outside a Golden Parade, then free catch). `DevTest_PvP022` main 330/330 (16 SIM). `DevTest_Hub026` 118/118 (12 SIM).
 - Textures: both load once their window opens (checked in Play). UI instances: 1,544 V1 on / 1,070 off (measured before the review changes).
-- HUD layout (2026-10-13): left group (cash pill + menu) x1.25 on phones, x1.15 on tablet/PC (menu 70 px phone, 103 px 1080p); moves under the chat window while chat is open when it fits (PC/tablet; on phones the open chat covers it); portrait phones get the top piece on its own row and the carry bar above the touch controls. Overlap check at 7 sizes (window, iPhone 14 + SE landscape and portrait, iPad mini, 1080p) x chat closed/open/carrying: 0 issues. v1029:ui 39/39. Phone/tablet sizes and the phone chat window size are simulated.
+- HUD layout (2026-10-13, `9d0a5e2`): left group x1.25 phones / x1.15 tablet+PC, overlap check at 7 sizes: 0 issues; v1029:ui 39/39 (sizes simulated).
+- HUD follow-up (2026-10-13, NOT yet run in Studio: Studio was closed): cash pill + income now sit directly above the menu grid as one left-centre group (top-left free for chat; on tablet/PC it stays under the chat window's spot, on phones the open chat may cover it); right column (Protected, Bat, Locker, Lock Base, Special) in Check-UI 3D style (`UITheme.plate` for status chips). stylua/selene/luau-lsp clean; a Python model of the geometry (SIMULATED) shows no left-group overlaps at 8 sizes. To do: push to Studio, layout check at 5 sizes, v1029:ui, parade.
 
 ## Not built
 Purchases (031), worker levels, merge, gear tiers, zone bosses, rebirth, base visual growth, Legendary/Secret keyframe animations (D12, later).

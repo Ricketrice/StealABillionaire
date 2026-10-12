@@ -482,8 +482,8 @@ local function textLabel(button: TextButton)
 	button.TextTransparency = 1
 end
 
--- Recolours a UITheme button to another Kind (tab selection, enabled/disabled).
-function UITheme.paint(button: GuiButton, kind: string)
+-- Recolours a UITheme button (or plate) to another Kind (tab selection, enabled/disabled).
+function UITheme.paint(button: GuiObject, kind: string)
 	local style = UITheme.Button[kind] or UITheme.Button.Primary
 	local gradient = button:FindFirstChild("Face")
 	if V1 and gradient and gradient:IsA("UIGradient") then
@@ -549,6 +549,46 @@ function UITheme.button(props: { [string]: any }): TextButton
 		end)
 	end
 	return button
+end
+
+-- A status plate: a button's face (V1: the 3D bevel) that isn't tappable, for HUD status chips.
+-- props: the Frame's own properties plus Kind and Text. Returns the plate and its text label;
+-- recolour with UITheme.paint.
+function UITheme.plate(props: { [string]: any }): (Frame, TextLabel)
+	local kind = props.Kind or "Ghost"
+	local style = UITheme.Button[kind] or UITheme.Button.Ghost
+	local text = props.Text or ""
+	props.Kind, props.Text = nil, nil
+	props.BackgroundColor3 = if V1 then Color3.new(1, 1, 1) else style.fill
+	props.BorderSizePixel = 0
+	local plate = make("Frame", props)
+	plate:SetAttribute("Kind", kind)
+	UITheme.corner(plate, if V1 then UITheme.SmallRadius else UITheme.PillRadius)
+	UITheme.stroke(plate, style.stroke, if V1 then 2.8 else nil)
+	if V1 then
+		make("UIGradient", { Name = "Face", Color = face(style), Rotation = 90, Parent = plate })
+	end
+	local label = make("TextLabel", {
+		Name = "PlateText",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, if V1 then BEVEL_AT else 1),
+		Text = text,
+		Font = UITheme.Fonts[UITheme.Button.Font],
+		TextSize = UITheme.Button.TextSize,
+		TextColor3 = style.text,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Parent = plate,
+	})
+	if UITheme.Button.TextStroke then
+		make("UIStroke", {
+			Color = Color3.new(0, 0, 0),
+			Thickness = UITheme.TextStrokeThickness,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+			LineJoinMode = Enum.LineJoinMode.Round,
+			Parent = label,
+		})
+	end
+	return plate, label
 end
 
 -- Greys a UITheme button out (and back). text = what it says while disabled.
