@@ -266,6 +266,7 @@ scenario("parade running", function()
 end)
 
 scenario("first catch within 10 s of spawning", function()
+	local bannerSeen: string? = nil
 	for _, p in { A, B } do
 		local spawnedAt: number? = nil
 		local conn = p.CharacterAdded:Connect(function()
@@ -295,10 +296,16 @@ scenario("first catch within 10 s of spawning", function()
 		)
 		expect(p.Name .. ": the first catch was free", CashService.get(p) == cash, CashService.get(p))
 		expect(p.Name .. ": no longer free afterwards", not ParadeService.isFree(p) and ParadeService._test.hubOf(p).paradeFree == true)
+		if p == A then -- the banner only stays up ~2.4 s: look for it now, not after B's catch
+			bannerSeen = waitUntil(3, function()
+				local banner = probe(A).banner
+				return if type(banner) == "string" and #banner > 0 then banner else nil
+			end)
+		end
 	end
 	task.wait(2.2)
 	local s = probe(A)
-	expect("A saw the reveal banner (juice)", type(s.banner) == "string" and #s.banner > 0, s.banner)
+	expect("A saw the reveal banner (juice)", bannerSeen ~= nil, bannerSeen)
 	expect("the carried worker wriggles (joint Transforms move)", s.wriggle == true, s.wriggle)
 	expect("A's goal moved on after the catch", s.goal ~= "Catch your first worker", s.goal)
 	expect("A's client got the Caught event", tostring(s.events):find("Caught") ~= nil, s.events)
@@ -313,12 +320,13 @@ scenario("paying", function()
 	local ok, message = ParadeService.tryCatch(A, w)
 	expect("no cash: the catch is refused with a clear message", ok == false and tostring(message):find("need") ~= nil, message)
 	task.wait(ParadeConfig.CATCH_COOLDOWN + 0.1)
-	CashService.add(A, 100)
+	local budget = ParadeConfig.CATCH_PRICE * 3 -- enough for this catch and the two below
+	CashService.add(A, budget)
 	w = freshWalker() :: Model
 	standBy(A, w)
 	ok, message = ParadeService.tryCatch(A, w)
 	expect("with cash the catch goes through", ok == true, message)
-	expect("the price is taken once", CashService.get(A) == 100 - ParadeConfig.CATCH_PRICE, CashService.get(A))
+	expect("the price is taken once", CashService.get(A) == budget - ParadeConfig.CATCH_PRICE, CashService.get(A))
 	expect(
 		"A is carrying the new worker",
 		waitUntil(3, function()
