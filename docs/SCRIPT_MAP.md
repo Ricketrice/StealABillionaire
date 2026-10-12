@@ -12,7 +12,7 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - Arena: `HubArena` (Battle Arena in the plaza; scoreboard = `Venues.Arena.Scoreboard` Label)
 - Tutorial / Guide / Daily quests / shopkeepers: `HubQuests` (avatars from `ServerStorage.HubNPCs_026`, root anchored only) · client `HubClient` · client `HubNPCLife` (idle, look-at ≤15 studs, wave; tag `HubNPC`)
 - Feature flags: `ReplicatedStorage.HubConfig` (ARENA/SHOPS/NPC_QUESTS/UPGRADES) and `PvPConfig` (stealing, weapons); Studio overrides = `ServerStorage` attributes `Studio*`
-- Zone gates / unlocks: `ZoneConfig` · `ZoneServer` → `ZoneProgress` · client `ZoneGates`
+- Zone gates / unlocks: `ZoneConfig` (`requires` = explicit prerequisite, `prerequisite()`) · `ZoneServer` → `ZoneProgress` (`entryPoint`, lane gates = Gate attribute `LaneGate`) · client `ZoneGates`
 - Entry points: `HubServer` (plots, placement, income, saves) · `HubServer026` (hub gameplay) · `PvPServer` · `ZoneServer` · `NPCSpawner`
 - Workers: `WorkerCatalogue` (ids, rarity, stats, odds) · `CustomWorkers` (switch) · `ServerStorage.CustomWorkerLooks` + `_DevOnly.AvatarBuilder019R.buildAll()` → `ServerStorage.WorkerRigs019R`, `ReplicatedStorage.WorkerPreviews019R` (props fitted by rule: grip ≤0.3, upright, clear of body)
 - Extra stations 7–8: spots in `HubConfig.EXTRA_STATION_SPOTS` (lot-local), pads built by `HubShops.buildStations`
@@ -41,7 +41,7 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - `ServerStorage._Backups` — in-place backups, one folder per change
 
 ## Studio-only test harnesses (inert in live servers)
-`DevTest_PvP022` (tag `@@T022|`; main run needs ServerStorage StudioPvPStealing/StudioWeaponCombat OFF at launch), `DevTest_V1029` (`@@T029|`, args `v1029:off` / `v1029:ui`, 2 clients, StudioMemoryStore), `DevTest_Save029` (`@@T029S|`, args `save029:parade` / `save029:rewards`, 2 clients, REAL Studio DataStore, test users -1/-2), `DevTest_Hub026` (`@@T026|`, arg `hub026`, 2 clients), `DevTest_Parade028` (`@@T028|`, arg `parade028`, 2 clients, needs StudioMemoryStore), `DevTest_Workers019`, `DevTest_BrokeBob_018B/018B4` (disabled)
+`DevTest_Lane030` (`@@T030|`, arg `lane030`, 2 clients, StudioMemoryStore; launch from Edit with `task.spawn(function() StudioTestService:ExecuteMultiplayerTestAsync(2,"lane030") end)` and watch with `TAG=T030 tools/test_guard.sh lane030`), `DevTest_PvP022` (tag `@@T022|`; main run needs ServerStorage StudioPvPStealing/StudioWeaponCombat OFF at launch), `DevTest_V1029` (`@@T029|`, args `v1029:off` / `v1029:ui`, 2 clients, StudioMemoryStore), `DevTest_Save029` (`@@T029S|`, args `save029:parade` / `save029:rewards`, 2 clients, REAL Studio DataStore, test users -1/-2), `DevTest_Hub026` (`@@T026|`, arg `hub026`, 2 clients), `DevTest_Parade028` (`@@T028|`, arg `parade028`, 2 clients, needs StudioMemoryStore), `DevTest_Workers019`, `DevTest_BrokeBob_018B/018B4` (disabled)
 - `DevTest_Save027` (`@@T027|`, REAL Studio DataStore): solo Play with ServerStorage `StudioTest027`="a", Stop, ="b" (+ StudioUpgrades off) = rejoin; or 2 clients arg `save027:steal`. Solo uses the Studio user's own key: back it up and seed schema 2 first, write it back after. Studio Stop does not release the session lock: the next Play takes it over after ~15 s.
 
 ## Map builder

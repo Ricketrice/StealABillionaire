@@ -404,11 +404,11 @@ function relayout()
 
 	-- The left group: the cash pill (income under it) directly above the menu grid, vertically centred
 	-- on the left, above the thumbstick and, when it fits, under the chat window. The grid takes the
-	-- most columns-first shape (2, 3 or 6 columns) that fits and leaves room for the right-hand column.
+	-- most columns-first shape (2, 3, 4 or 6 columns) that fits and leaves room for the right-hand column.
 	local function placeGroup(topMin: number)
 		local room = bottomLimit - topMin - pillBlock - gap
 		local cols, rows, h, fits = 2, 1, 0, false
-		for _, c in { 2, 3, 6 } do
+		for _, c in { 2, 3, 4, 6 } do
 			local tryCols = math.min(c, math.max(n, 1))
 			local w = (tryCols * cell + (tryCols - 1) * CELL_GAP) * sL
 			local tryRows = math.ceil(n / tryCols)
@@ -435,6 +435,11 @@ function relayout()
 		group = placeGroup(math.max(8, math.ceil(chat.Max.Y) + gap))
 	end
 	if not (group and group.fits) then
+		group = placeGroup(8)
+	end
+	if not group.fits and n > 6 then
+		-- still too tall (a very short screen with the right column wrapped): smaller menu buttons, never under 48 px
+		cell = math.max(math.floor(CELL * 0.75), math.ceil(48 / sL))
 		group = placeGroup(8)
 	end
 
