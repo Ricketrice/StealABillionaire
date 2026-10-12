@@ -36,18 +36,15 @@ end
 local grid =
 	UITheme.make("Frame", { Name = "Grid", BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 74), Size = UDim2.new(1, -236, 1, -74), ZIndex = 13, Parent = win.content })
 UITheme.make("UIGridLayout", { CellSize = UDim2.new(0.25, -8, 0.5, -8), CellPadding = UDim2.fromOffset(8, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
-local side = UITheme.make(
-	"Frame",
-	{
-		Name = "Side",
-		BackgroundTransparency = 1,
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, 0, 0, 74),
-		Size = UDim2.new(0, 226, 1, -74),
-		ZIndex = 13,
-		Parent = win.content,
-	}
-)
+local side = UITheme.make("Frame", {
+	Name = "Side",
+	BackgroundTransparency = 1,
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, 0, 0, 74),
+	Size = UDim2.new(0, 226, 1, -74),
+	ZIndex = 13,
+	Parent = win.content,
+})
 local progressText = UITheme.text({ Name = "Progress", Text = "", Role = "Title", TextSize = 20, Align = "Left", Size = UDim2.new(1, 0, 0, 24), ZIndex = 14, Parent = side })
 local progressBar, setProgress = UITheme.bar({ Name = "Bar", Size = UDim2.new(1, -4, 0, 14), Position = UDim2.fromOffset(2, 26), ZIndex = 14, Parent = side })
 progressBar.ZIndex = 14

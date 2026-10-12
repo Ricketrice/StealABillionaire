@@ -435,7 +435,11 @@ scenario("golden parade", function()
 	end
 	expect("golden rolls follow the golden odds (40,000 rolls)", worst < 8, ("worst gap %.1f per mille"):format(worst), true)
 	local g = ParadeConfig.GOLDEN_PER_MILLE
-	expect("golden odds 500/300/145/50/5 (D16), never worse than normal", g.Common == 500 and g.Rare == 300 and g.Epic == 145 and g.Legendary == 50 and g.Secret == 5 and counts.Secret > 0, ("Secret rolls %d"):format(counts.Secret))
+	expect(
+		"golden odds 500/300/145/50/5 (D16), never worse than normal",
+		g.Common == 500 and g.Rare == 300 and g.Epic == 145 and g.Legendary == 50 and g.Secret == 5 and counts.Secret > 0,
+		("Secret rolls %d"):format(counts.Secret)
+	)
 
 	ParadeService.startGolden()
 	task.wait(0.8)

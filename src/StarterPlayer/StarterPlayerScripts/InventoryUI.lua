@@ -50,7 +50,10 @@ local LOC = {
 -- Build -------------------------------------------------------------------------------------------
 local gui = UIKit.screen("Inventory", UIStyle.DisplayOrder.Inventory)
 local root = UIKit.root(gui)
-local overlay = UIKit.make("TextButton", { Name = "Overlay", Text = "", AutoButtonColor = false, BackgroundColor3 = C.Overlay, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Visible = false, Parent = root }) :: TextButton
+local overlay = UIKit.make(
+	"TextButton",
+	{ Name = "Overlay", Text = "", AutoButtonColor = false, BackgroundColor3 = C.Overlay, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Visible = false, Parent = root }
+) :: TextButton
 local panel = UIKit.panel({ Name = "Panel", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(600, 400), Parent = root })
 panel.Visible = false
 panel.ClipsDescendants = true
@@ -59,14 +62,29 @@ local panelScale = UIKit.make("UIScale", { Parent = panel }) :: UIScale
 -- header
 local header = UIKit.make("Frame", { Name = "Header", BackgroundTransparency = 1, Position = UDim2.fromOffset(S.L, S.M), Size = UDim2.new(1, -S.L * 2, 0, 36), Parent = panel })
 UIKit.text({ Text = "Workers", Role = "Title", TextSize = 24, Size = UDim2.new(0, 120, 1, 0), Parent = header })
-local ownedChip, ownedLabel = UIKit.chip({ Name = "Owned", Text = "0/" .. CAPACITY, Height = 24, Color = C.Gold, AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 116, 0.5, 0), Parent = header })
-local closeButton = UIKit.button({ Name = "Close", Kind = "Ghost", Text = if V1 then "X" else "✕", Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 4, 0.5, 0), Parent = header })
+local ownedChip, ownedLabel =
+	UIKit.chip({ Name = "Owned", Text = "0/" .. CAPACITY, Height = 24, Color = C.Gold, AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 116, 0.5, 0), Parent = header })
+local closeButton = UIKit.button({
+	Name = "Close",
+	Kind = "Ghost",
+	Text = if V1 then "X" else "✕",
+	Size = UDim2.fromOffset(UIStyle.TouchTarget, UIStyle.TouchTarget),
+	AnchorPoint = Vector2.new(1, 0.5),
+	Position = UDim2.new(1, 4, 0.5, 0),
+	Parent = header,
+})
 local sortCtl = nil
 local requestRender: (() -> ())? = nil -- set once render exists (below)
 if V1 then
 	local _, ctl = UIKit.button({
-		Name = "Sort", Kind = "Secondary", Text = "Sort: Rarity", TextSize = 15, Size = UDim2.fromOffset(150, UIStyle.TouchTarget),
-		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -UIStyle.TouchTarget - 6, 0.5, 0), Parent = header,
+		Name = "Sort",
+		Kind = "Secondary",
+		Text = "Sort: Rarity",
+		TextSize = 15,
+		Size = UDim2.fromOffset(150, UIStyle.TouchTarget),
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -UIStyle.TouchTarget - 6, 0.5, 0),
+		Parent = header,
 		OnActivated = function()
 			sortMode = if sortMode == "rarity" then "income" else "rarity"
 			sortCtl.setText(if sortMode == "rarity" then "Sort: Rarity" else "Sort: Income")
@@ -86,7 +104,10 @@ local pips = UIKit.make("Frame", { BackgroundTransparency = 1, Position = UDim2.
 UIKit.list(pips, Enum.FillDirection.Horizontal, 4)
 local pipFrames = {}
 for i = 1, InventoryConfig.STATION_SLOTS do
-	local p = UIKit.make("Frame", { Name = "Pip" .. i, BackgroundColor3 = C.PanelDark, BorderSizePixel = 0, Size = UDim2.new(1 / InventoryConfig.STATION_SLOTS, -4, 1, 0), LayoutOrder = i, Parent = pips })
+	local p = UIKit.make(
+		"Frame",
+		{ Name = "Pip" .. i, BackgroundColor3 = C.PanelDark, BorderSizePixel = 0, Size = UDim2.new(1 / InventoryConfig.STATION_SLOTS, -4, 1, 0), LayoutOrder = i, Parent = pips }
+	)
 	UIStyle.corner(p, UIStyle.Radius.Pill)
 	pipFrames[i] = p
 end
@@ -97,21 +118,41 @@ local _, storageMeter = UIKit.meter({ Size = UDim2.new(1, 0, 0, 12), Position = 
 -- body: grid (scrolling) + detail
 local body = UIKit.make("Frame", { Name = "Body", BackgroundTransparency = 1, Position = UDim2.fromOffset(S.L, 102), Size = UDim2.new(1, -S.L * 2, 1, -102 - S.M), Parent = panel })
 local scroll = UIKit.make("ScrollingFrame", {
-	Name = "List", BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
-	CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollingDirection = Enum.ScrollingDirection.Y,
-	ScrollBarThickness = 6, ScrollBarImageColor3 = C.TextDim, Parent = body,
+	Name = "List",
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	Size = UDim2.fromScale(1, 1),
+	CanvasSize = UDim2.new(),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	ScrollingDirection = Enum.ScrollingDirection.Y,
+	ScrollBarThickness = 6,
+	ScrollBarImageColor3 = C.TextDim,
+	Parent = body,
 }) :: ScrollingFrame
 UIKit.list(scroll, Enum.FillDirection.Vertical, S.M)
 UIKit.make("UIPadding", { PaddingRight = UDim.new(0, 10), PaddingBottom = UDim.new(0, 8), Parent = scroll })
 
 local grids = {}
 local function section(key: string, title: string, order: number)
-	local holder = UIKit.make("Frame", { Name = key, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = order, Parent = scroll })
+	local holder =
+		UIKit.make("Frame", { Name = key, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = order, Parent = scroll })
 	UIKit.list(holder, Enum.FillDirection.Vertical, 6)
 	local head = UIKit.text({ Text = string.upper(title), Role = "Micro", Font = UIStyle.FontBold, Color = C.Gold, LayoutOrder = 1, Parent = holder })
-	local grid = UIKit.make("Frame", { Name = "Grid", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = holder })
-	local layout = UIKit.make("UIGridLayout", { CellSize = UDim2.fromOffset(160, CARD_H), CellPadding = UDim2.fromOffset(GAP, GAP), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
-	local empty = UIKit.text({ Text = "", Role = "Small", Color = C.TextDim, Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 3, Parent = holder })
+	local grid =
+		UIKit.make("Frame", { Name = "Grid", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = holder })
+	local layout =
+		UIKit.make("UIGridLayout", { CellSize = UDim2.fromOffset(160, CARD_H), CellPadding = UDim2.fromOffset(GAP, GAP), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
+	local empty = UIKit.text({
+		Text = "",
+		Role = "Small",
+		Color = C.TextDim,
+		Wrap = true,
+		Truncate = false,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 3,
+		Parent = holder,
+	})
 	grids[key] = { holder = holder, head = head, grid = grid, layout = layout, empty = empty }
 end
 section("carried", "Carrying", 1)
@@ -121,21 +162,65 @@ grids.inventory.empty.Text = "Storage is empty. Steal workers on Main Street, th
 
 -- whole-inventory empty state
 local emptyAll = UIKit.make("Frame", { Name = "EmptyAll", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 150), LayoutOrder = 0, Visible = false, Parent = scroll })
-UIKit.text({ Text = "✦", Role = "Display", TextSize = 40, Color = C.Gold, AlignX = Enum.TextXAlignment.Center, Size = UDim2.new(1, 0, 0, 50), Position = UDim2.fromOffset(0, 10), Stroke = false, Parent = emptyAll })
+UIKit.text({
+	Text = "✦",
+	Role = "Display",
+	TextSize = 40,
+	Color = C.Gold,
+	AlignX = Enum.TextXAlignment.Center,
+	Size = UDim2.new(1, 0, 0, 50),
+	Position = UDim2.fromOffset(0, 10),
+	Stroke = false,
+	Parent = emptyAll,
+})
 UIKit.text({ Text = "No workers yet", Role = "Title", TextSize = 20, AlignX = Enum.TextXAlignment.Center, Position = UDim2.fromOffset(0, 62), Parent = emptyAll })
-UIKit.text({ Text = "Steal a mystery worker on Main Street and bring it home to start earning.", Role = "Body", Color = C.TextMuted, AlignX = Enum.TextXAlignment.Center, Wrap = true, Truncate = false, Position = UDim2.fromOffset(0, 92), Size = UDim2.new(1, 0, 0, 40), Parent = emptyAll })
+UIKit.text({
+	Text = "Steal a mystery worker on Main Street and bring it home to start earning.",
+	Role = "Body",
+	Color = C.TextMuted,
+	AlignX = Enum.TextXAlignment.Center,
+	Wrap = true,
+	Truncate = false,
+	Position = UDim2.fromOffset(0, 92),
+	Size = UDim2.new(1, 0, 0, 40),
+	Parent = emptyAll,
+})
 
 -- detail view (pane on wide screens, sheet on narrow)
 local detail = UIKit.panel({ Name = "Detail", Color = C.PanelDark, Radius = UIStyle.Radius.L, Size = UDim2.fromOffset(DETAIL_W, 300), Parent = body })
 detail.ClipsDescendants = true
-local detailEmpty = UIKit.text({ Text = "Select a worker to see its details.", Role = "Body", Color = C.TextDim, AlignX = Enum.TextXAlignment.Center, Wrap = true, Truncate = false, Size = UDim2.new(1, -24, 0, 60), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Parent = detail })
+local detailEmpty = UIKit.text({
+	Text = "Select a worker to see its details.",
+	Role = "Body",
+	Color = C.TextDim,
+	AlignX = Enum.TextXAlignment.Center,
+	Wrap = true,
+	Truncate = false,
+	Size = UDim2.new(1, -24, 0, 60),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Parent = detail,
+})
 local detailContent = UIKit.make("Frame", { Name = "Content", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Visible = false, Parent = detail })
-local backButton = UIKit.button({ Name = "Back", Kind = "Ghost", Text = "‹  Back", Size = UDim2.fromOffset(96, UIStyle.TouchTarget), Position = UDim2.fromOffset(8, 8), Parent = detailContent })
+local backButton =
+	UIKit.button({ Name = "Back", Kind = "Ghost", Text = "‹  Back", Size = UDim2.fromOffset(96, UIStyle.TouchTarget), Position = UDim2.fromOffset(8, 8), Parent = detailContent })
 backButton.ZIndex = 4
-local dStage = UIKit.make("Frame", { Name = "Stage", BackgroundColor3 = C.Panel, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0.44, 0), ClipsDescendants = true, Parent = detailContent })
+local dStage =
+	UIKit.make("Frame", { Name = "Stage", BackgroundColor3 = C.Panel, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0.44, 0), ClipsDescendants = true, Parent = detailContent })
 local dBackdrop = UIKit.make("UIGradient", { Rotation = 90, Parent = dStage }) :: UIGradient
 local dModel = UIKit.make("Frame", { Name = "Model", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = dStage })
-local dInfo = UIKit.make("ScrollingFrame", { Name = "Info", BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.new(0, 0, 0.44, 0), Size = UDim2.new(1, 0, 0.56, -60), CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, ScrollBarImageColor3 = C.TextDim, Parent = detailContent }) :: ScrollingFrame
+local dInfo = UIKit.make("ScrollingFrame", {
+	Name = "Info",
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	Position = UDim2.new(0, 0, 0.44, 0),
+	Size = UDim2.new(1, 0, 0.56, -60),
+	CanvasSize = UDim2.new(),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	ScrollBarThickness = 4,
+	ScrollBarImageColor3 = C.TextDim,
+	Parent = detailContent,
+}) :: ScrollingFrame
 UIKit.padding(dInfo, 14, 10)
 UIKit.list(dInfo, Enum.FillDirection.Vertical, 6)
 local dName = UIKit.text({ Name = "WorkerName", Role = "Display", TextSize = 24, Size = UDim2.new(1, 0, 0, 30), LayoutOrder = 1, Parent = dInfo })
@@ -154,7 +239,15 @@ for i, s in { { "ATK", "attack", UIStyle.Stats.Attack }, { "SPD", "speed", UISty
 	statBars[i] = { key = s[2], short = s[1], label = label, meter = meter }
 end
 local dAction, dActionCtl
-dAction, dActionCtl = UIKit.button({ Name = "Action", Kind = "Primary", Text = "Equip", Size = UDim2.new(1, -24, 0, 48), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -10), Parent = detailContent })
+dAction, dActionCtl = UIKit.button({
+	Name = "Action",
+	Kind = "Primary",
+	Text = "Equip",
+	Size = UDim2.new(1, -24, 0, 48),
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -10),
+	Parent = detailContent,
+})
 
 -- Cards -------------------------------------------------------------------------------------------
 local cards: { [string]: any } = {} -- uid -> card controller
@@ -167,8 +260,26 @@ local requestAction, selectWorker, queuePreviews -- forward declared (used befor
 local function makeEmptySlot(index: number)
 	local f = UIKit.panel({ Name = "EmptySlot" .. index, Color = C.PanelDark, Radius = UIStyle.Radius.M, BorderColor = C.Border })
 	f:FindFirstChildOfClass("UIStroke").Transparency = 0.4
-	UIKit.text({ Text = "+", Role = "Display", TextSize = 34, Color = C.TextDim, AlignX = Enum.TextXAlignment.Center, Size = UDim2.new(1, 0, 0, 40), Position = UDim2.new(0, 0, 0.5, -46), Stroke = false, Parent = f })
-	UIKit.text({ Text = "Station " .. index, Role = "Heading", TextSize = 14, Color = C.TextMuted, AlignX = Enum.TextXAlignment.Center, Position = UDim2.new(0, 0, 0.5, -2), Parent = f })
+	UIKit.text({
+		Text = "+",
+		Role = "Display",
+		TextSize = 34,
+		Color = C.TextDim,
+		AlignX = Enum.TextXAlignment.Center,
+		Size = UDim2.new(1, 0, 0, 40),
+		Position = UDim2.new(0, 0, 0.5, -46),
+		Stroke = false,
+		Parent = f,
+	})
+	UIKit.text({
+		Text = "Station " .. index,
+		Role = "Heading",
+		TextSize = 14,
+		Color = C.TextMuted,
+		AlignX = Enum.TextXAlignment.Center,
+		Position = UDim2.new(0, 0, 0.5, -2),
+		Parent = f,
+	})
 	UIKit.text({ Text = "Empty · equip from storage", Role = "Micro", Color = C.TextDim, AlignX = Enum.TextXAlignment.Center, Position = UDim2.new(0, 0, 0.5, 20), Parent = f })
 	return { frame = f }
 end
@@ -177,17 +288,39 @@ local function newCard(uid: string)
 	local ctl = { uid = uid }
 	local card = UIKit.panel({ Name = uid, Color = C.PanelRaised, Radius = UIStyle.Radius.M })
 	local stroke = card:FindFirstChildOfClass("UIStroke") :: UIStroke
-	local selectBtn = UIKit.make("TextButton", { Name = "Select", Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, -50), Parent = card }) :: TextButton
-	local stage = UIKit.make("Frame", { Name = "Stage", BackgroundColor3 = C.PanelDark, BorderSizePixel = 0, Size = UDim2.new(1, -12, 0, PREVIEW_H), Position = UDim2.fromOffset(6, 6), ClipsDescendants = true, Parent = card })
+	local selectBtn =
+		UIKit.make("TextButton", { Name = "Select", Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, -50), Parent = card }) :: TextButton
+	local stage = UIKit.make("Frame", {
+		Name = "Stage",
+		BackgroundColor3 = C.PanelDark,
+		BorderSizePixel = 0,
+		Size = UDim2.new(1, -12, 0, PREVIEW_H),
+		Position = UDim2.fromOffset(6, 6),
+		ClipsDescendants = true,
+		Parent = card,
+	})
 	UIStyle.corner(stage, UIStyle.Radius.M)
 	local backdrop = UIKit.make("UIGradient", { Rotation = 90, Parent = stage }) :: UIGradient
 	local modelHolder = UIKit.make("Frame", { Name = "Model", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = stage })
 	local _, tag = UIKit.rarityTag({ Height = 20, Position = UDim2.fromOffset(6, 6), Parent = stage })
 	local locChip, locLabel = UIKit.chip({ Height = 20, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -6), Parent = stage })
-	local name = UIKit.text({ Name = "WorkerName", Role = "Heading", TextSize = 15, Position = UDim2.fromOffset(10, PREVIEW_H + 12), Size = UDim2.new(1, -20, 0, 20), Parent = card })
+	local name =
+		UIKit.text({ Name = "WorkerName", Role = "Heading", TextSize = 15, Position = UDim2.fromOffset(10, PREVIEW_H + 12), Size = UDim2.new(1, -20, 0, 20), Parent = card })
 	local star = nil
 	if V1 then
-		star = UIKit.make("TextButton", { Name = "Favourite", Text = "☆", Font = UIStyle.Font, TextSize = 30, TextColor3 = C.TextMuted, BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -2, 0, 2), Size = UDim2.fromOffset(44, 44), ZIndex = 3, Parent = stage }) :: TextButton
+		star = UIKit.make("TextButton", {
+			Name = "Favourite",
+			Text = "☆",
+			Font = UIStyle.Font,
+			TextSize = 30,
+			TextColor3 = C.TextMuted,
+			BackgroundTransparency = 1,
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.new(1, -2, 0, 2),
+			Size = UDim2.fromOffset(44, 44),
+			ZIndex = 3,
+			Parent = stage,
+		}) :: TextButton
 		UIStyle.outline(star, C.Outline, 2)
 		star.Activated:Connect(function()
 			local on = not favs[uid]
@@ -203,8 +336,23 @@ local function newCard(uid: string)
 			ctl.frame:SetAttribute("Favourite", favs[uid] == true)
 		end
 	end
-	local income = UIKit.text({ Name = "Income", Role = "Small", Font = UIStyle.FontBold, Rich = true, Position = UDim2.fromOffset(10, PREVIEW_H + 33), Size = UDim2.new(1, -20, 0, 18), Parent = card })
-	local _, actionCtl = UIKit.button({ Name = "Action", Kind = "Primary", Text = "Equip", Size = UDim2.new(1, -12, 0, 40), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -6), Parent = card,
+	local income = UIKit.text({
+		Name = "Income",
+		Role = "Small",
+		Font = UIStyle.FontBold,
+		Rich = true,
+		Position = UDim2.fromOffset(10, PREVIEW_H + 33),
+		Size = UDim2.new(1, -20, 0, 18),
+		Parent = card,
+	})
+	local _, actionCtl = UIKit.button({
+		Name = "Action",
+		Kind = "Primary",
+		Text = "Equip",
+		Size = UDim2.new(1, -12, 0, 40),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -6),
+		Parent = card,
 		OnActivated = function()
 			requestAction(ctl)
 		end,
@@ -213,8 +361,14 @@ local function newCard(uid: string)
 	selectBtn.Activated:Connect(function()
 		selectWorker(uid)
 	end)
-	card.MouseEnter:Connect(function() if selectedUid ~= uid then stroke.Color = C.Gold:Lerp(C.Border, 0.4) end end)
-	card.MouseLeave:Connect(function() ctl.paintBorder() end)
+	card.MouseEnter:Connect(function()
+		if selectedUid ~= uid then
+			stroke.Color = C.Gold:Lerp(C.Border, 0.4)
+		end
+	end)
+	card.MouseLeave:Connect(function()
+		ctl.paintBorder()
+	end)
 
 	function ctl.paintBorder()
 		if selectedUid == uid then
@@ -234,7 +388,10 @@ local function newCard(uid: string)
 		backdrop.Color = ColorSequence.new(color:Lerp(C.PanelDark, 0.72), C.PanelDark)
 		local loc = LOC[entry.loc] or LOC.inventory
 		locLabel.Text, locLabel.TextColor3 = loc.text, loc.color
-		ctl.borderColor = if entry.loc == "station" then C.Cash:Lerp(C.PanelRaised, 0.5) elseif entry.loc == "carried" then C.Gold:Lerp(C.PanelRaised, 0.4) else color:Lerp(C.PanelRaised, 0.6)
+		ctl.borderColor = if entry.loc == "station"
+			then C.Cash:Lerp(C.PanelRaised, 0.5)
+			elseif entry.loc == "carried" then C.Gold:Lerp(C.PanelRaised, 0.4)
+			else color:Lerp(C.PanelRaised, 0.6)
 		ctl.paintBorder()
 		name.Text = worker and worker.name or entry.id
 		local rate = "+" .. CashFormat.format(worker and worker.income or 0) .. "/s"
@@ -332,8 +489,12 @@ end
 selectWorker = function(uid: string?)
 	local previous = selectedUid and cards[selectedUid]
 	selectedUid = uid
-	if previous then previous.paintBorder() end
-	if uid and cards[uid] then cards[uid].paintBorder() end
+	if previous then
+		previous.paintBorder()
+	end
+	if uid and cards[uid] then
+		cards[uid].paintBorder()
+	end
 	paintDetail()
 	showSheet(uid ~= nil)
 	queuePreviews() -- closing the phone sheet uncovers the grid again
@@ -353,7 +514,9 @@ requestAction = function(ctl)
 		if ctl.pending and os.clock() - ctl.pending >= PENDING_TIMEOUT - 0.05 then
 			ctl.pending = nil
 			ctl.refresh()
-			if selectedUid == ctl.uid then paintDetail() end
+			if selectedUid == ctl.uid then
+				paintDetail()
+			end
 		end
 	end)
 end
@@ -421,13 +584,21 @@ local function render()
 	local entries = table.clone(snap.workers)
 	table.sort(entries, function(a, b)
 		local fa, fb = favs[a.uid] == true, favs[b.uid] == true
-		if fa ~= fb then return fa end -- favourites first (only ever set in the V1 look)
+		if fa ~= fb then
+			return fa
+		end -- favourites first (only ever set in the V1 look)
 		local wa, wb = WorkerCatalogue.get(a.id), WorkerCatalogue.get(b.id)
 		local ra, rb = wa and rarityRank[wa.rarity] or 0, wb and rarityRank[wb.rarity] or 0
 		local ia, ib = wa and wa.income or 0, wb and wb.income or 0
-		if sortMode == "income" and ia ~= ib then return ia > ib end
-		if ra ~= rb then return ra > rb end
-		if ia ~= ib then return ia > ib end
+		if sortMode == "income" and ia ~= ib then
+			return ia > ib
+		end
+		if ra ~= rb then
+			return ra > rb
+		end
+		if ia ~= ib then
+			return ia > ib
+		end
 		return a.uid < b.uid
 	end)
 	local canStore, canEquip = stored < snap.slots, equipped < snap.stations
@@ -452,7 +623,9 @@ local function render()
 			ctl.showPreview(false)
 			ctl.frame:Destroy()
 			cards[uid] = nil
-			if selectedUid == uid then selectedUid = nil end
+			if selectedUid == uid then
+				selectedUid = nil
+			end
 		end
 	end
 	-- stations: always 6 cells, empty ones as placeholders
@@ -515,13 +688,17 @@ local function setOpen(open: boolean)
 	overlay.Visible = open
 	if open then
 		relayout(root.AbsoluteSize)
-		if dirty then render() end
+		if dirty then
+			render()
+		end
 		if wide and not selectedUid then
 			-- start with the best worker selected on wide screens
 			local best, bestRank = nil, -1
 			for uid, ctl in cards do
 				local r = ctl.worker and (rarityRank[ctl.worker.rarity] or 0) * 1e6 + ctl.worker.income or 0
-				if r > bestRank then best, bestRank = uid, r end
+				if r > bestRank then
+					best, bestRank = uid, r
+				end
 			end
 			selectWorker(best)
 		end
@@ -531,31 +708,54 @@ local function setOpen(open: boolean)
 		TweenService:Create(panelScale, TweenInfo.new(0.16, Enum.EasingStyle.Back), { Scale = 1 }):Play()
 		TweenService:Create(overlay, TweenInfo.new(0.16), { BackgroundTransparency = 0.5 }):Play()
 	else
-		for _, ctl in cards do ctl.showPreview(false) end
-		if detailPreview then detailPreview.release(); detailPreview = nil end
-		if not wide then selectWorker(nil) end
+		for _, ctl in cards do
+			ctl.showPreview(false)
+		end
+		if detailPreview then
+			detailPreview.release()
+			detailPreview = nil
+		end
+		if not wide then
+			selectWorker(nil)
+		end
 	end
 end
 
 UIKit.Signals.ToggleInventory.Event:Connect(function(open: boolean?)
-	if open == nil then setOpen(not isOpen) else setOpen(open) end
+	if open == nil then
+		setOpen(not isOpen)
+	else
+		setOpen(open)
+	end
 end)
-closeButton.Activated:Connect(function() setOpen(false) end)
-overlay.Activated:Connect(function() setOpen(false) end)
+closeButton.Activated:Connect(function()
+	setOpen(false)
+end)
+overlay.Activated:Connect(function()
+	setOpen(false)
+end)
 UserInputService.InputBegan:Connect(function(input, processed)
 	if not processed and input.KeyCode == Enum.KeyCode.Escape and isOpen then
-		if not wide and selectedUid then selectWorker(nil) else setOpen(false) end
+		if not wide and selectedUid then
+			selectWorker(nil)
+		else
+			setOpen(false)
+		end
 	end
 end)
 
 WorkerState.Changed:Connect(function()
 	dirty = true
-	if isOpen then render() end
+	if isOpen then
+		render()
+	end
 end)
 if V1 then
 	requestRender = function()
 		dirty = true
-		if isOpen then render() end
+		if isOpen then
+			render()
+		end
 	end
 	-- Favourites come from the server's rewards state (RewardsService keeps them in the save).
 	ReplicatedStorage:WaitForChild("RewardsState").OnClientEvent:Connect(function(state)
@@ -565,7 +765,9 @@ if V1 then
 				favs[uid] = v == true or nil
 			end
 			dirty = true
-			if isOpen then render() end
+			if isOpen then
+				render()
+			end
 		end
 	end)
 end
