@@ -9,6 +9,9 @@ _Use outside tools when they make the result clearly better, even for a simple s
 | **Krita / GIMP** (optional) | Textures, particle sprites (sparkles, coins, smoke) | Generate via scripts or owner draws | Upload as images |
 | **Audacity** (optional) | Trim/normalise CC0 sound effects | Owner, or `sox`/`ffmpeg` scripts | Upload as audio (Roblox moderation) |
 
+## UI icons (D14)
+Model in Blender (chunky shapes, thick dark outline via inverted-hull or Freestyle, soft studio light, slight tilt), render transparent 256×256 PNG, pack into a sprite sheet (≤1024×1024), slice in Studio with ImageRectOffset/ImageRectSize. One upload per sheet.
+
 ## Rules
 - Meshes: low poly, flat colours or one small texture atlas, CollisionFidelity Box for decoration.
 - One master per asset, cloned. Name masters clearly (`M_Stall`, `M_Tree_A`).
