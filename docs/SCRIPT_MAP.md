@@ -27,10 +27,14 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - Prompt gotcha (028): Roblox checks a ProximityPrompt's distance against the SERVER copy of its part. Client-moved parts (parade walkers) need a client-relayed remote instead of the server `Triggered`.
 - Save tests: ServerStorage `StudioMemoryStore` = true puts `PlayerData` on the in-memory store in Studio (use for every Play test)
 
+- Rising Lane (030): server `LaneServer` → `LaneService` (Home + zone teleports, validated: not carrying `CarryingNPC`/`CarryingStolen`, not hurt in the last 8 s, cooldown 3 s; portal prompts on parts tagged `LanePortal`; landing spots = parts tagged `LaneStart`; teammate zones land at `ZoneProgress.entryPoint`) · `ReplicatedStorage.LaneConfig` · client `LaneClient` (Zones window, answers) · HUD buttons Home/Zones in `HudV1` · ranks: `RankConfig` + server `RankServer` (player attrs NetWorth/Rank/RankIndex, head tag `RankTag`, `RankUp` event) + client `RankClient`; `TopBoard` shows the rank.
+- Studio caveat: `require` from an MCP script gets its own copy of a game module (state is not shared with the running game): test server modules through their remotes from the Client datamodel.
+
 ## Places in the world
 - `Workspace.Venues/Arena/*`, `Venues/Shops/*`, `Venues/NPCs/*` — venue anchors (names fixed)
 - `Workspace.World.SkyCity` — the 027 map: `Ground` (island slabs, paving, `ParadeLane.Lane` (attr ParadeLane), hedge, rocks, clouds, `SafeHubVolume` tagged PvPSafeZone), `LotBases`, `Hub` (spawn medallion, stalls, quest board, gantry, Zone 1 arch, `Vault` (persistent model), `Arena`, `GateLines`), `MainStreet`, `Dressing`, `ReservedPlots`
-- `Workspace.World.BillionaireCity` — only `Zone6Plaza` (Zone 6, frozen) and run-time `LotDecor` remain
+- `Workspace.World.SkyCity.Lane` (030) — the climb north from the spawn square along x = -157: ramps (24 wide), `Stop2..5_<Zone>` portal stops, `Stop6_Royale` landing, safe line + banner, `SafeLaneVolume`, clouds. Main Street (terrace 1, y +12, rotated to run north from z -164) and the whole Zone 6 strip (gate, bridge, island, Velocity Royale; terrace 6, y +72, gate at z -750) were moved there as blocks. Built by `tools/build027/B8_Lane` (`move()` once, `build()` re-runnable); numbers in `Kit.L.lane`.
+- `Workspace.World.BillionaireCity` — only `Zone6Plaza` (Zone 6, frozen; now on terrace 6) and run-time `LotDecor` remain
 - `Workspace.Hub.Floor` — invisible home anchor for `ZoneProgress` (avenue centre); `Workspace.Hub.Plots` — the 12 plot models
 - `Workspace.Zones.MainStreet` — NPC area 137 x 36 at x -318..-181 + 6 spawn points (catch spots)
 - `ServerStorage.CityKit_027` — prop masters (Blender meshes + part props); `CityKit_027_Imports` — the raw FBX imports
@@ -49,4 +53,4 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - Zone 1 NPCs: `Workspace.Zones.MainStreet` (`ZoneBoundary` + `SpawnPoints`, read by `ZoneArea`/`ZoneSpawner`/`NPCWanderer`); moving the folder moves them. Client `Notifications` reads the zone boundaries.
 - Carry/safe zones: `PvPBase` safe volumes by tag `PvPSafeZone` (`SafeHubVolume`, x -174..-139 only) + spawn radius from `SpawnLocation`; carry speed = walk x0.85 (13.6 studs/s) in `NPCCarry`.
 - Zone 6 circuit `World.VelocityRoyale` (928 parts), `World.BillionaireCity.Zone6Plaza`, `FutureZones.Zone6_BillionaireHills`, `Zones.BillionaireHills`: no script reads them (static).
-- Current extents (x/z): bases -138..106 / -60..52 · spawn (-157,-4) · Main Street -348..-179 / -54..48 · plaza centre (172,-4), ring r 44, bypass 128 · Zone 2 S (160..274, 55..216) · Zone 3 far S · Zone 4 E (224..431, 7..149) · Zone 5 E-N (224..415, -167..-15) · Zone 6 N (155..331, -297..-118).
+- Positions BEFORE 030 (Main Street and Zone 6 have moved, see Lane): x/z: bases -138..106 / -60..52 · spawn (-157,-4) · Main Street -348..-179 / -54..48 · plaza centre (172,-4), ring r 44, bypass 128 · Zone 2 S (160..274, 55..216) · Zone 3 far S · Zone 4 E (224..431, 7..149) · Zone 5 E-N (224..415, -167..-15) · Zone 6 N (155..331, -297..-118).

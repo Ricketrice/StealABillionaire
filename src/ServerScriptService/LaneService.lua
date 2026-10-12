@@ -29,7 +29,7 @@ local function notice(player: Player, ok: boolean, title: string, message: strin
 end
 
 -- Why this player can't teleport right now (kid-friendly text), or nil if they can.
-function LaneService.blocked(player: Player): string?
+function LaneService.blocked(player: Player, recheck: boolean?): string?
 	if not LaneConfig.ENABLED then
 		return "Teleports are off right now."
 	end
@@ -45,6 +45,9 @@ function LaneService.blocked(player: Player): string?
 	local hurt = lastHurt[player]
 	if (hurt and os.clock() - hurt < LaneConfig.COMBAT_SECONDS) or player:GetAttribute("BatCharging") == true then
 		return "No teleporting during a fight. Wait a few seconds."
+	end
+	if recheck then
+		return nil -- (the travel in progress is this one: busy and cooldown don't apply to it)
 	end
 	if busy[player] then
 		return "Hold on, you're already on your way!"
@@ -104,7 +107,7 @@ function LaneService.travel(player: Player, target: string, zoneId: string?): (b
 	lastTravel[player] = os.clock()
 	pcall(player.RequestStreamAroundAsync, player, cf.Position) -- the floor exists on their screen before they land
 	busy[player] = nil
-	local again = LaneService.blocked(player) -- (a worker may have been grabbed while streaming)
+	local again = LaneService.blocked(player, true) -- (a worker may have been grabbed while streaming)
 	if again then
 		return false, again
 	end

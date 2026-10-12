@@ -1,10 +1,11 @@
 # Project Status
 _Keep under ~60 lines. Replace sections at each milestone end; don't append history._
 
-**Current milestone:** 029 — UI kit + V1 screens (reviewed 2026-10-12; review changes built and tested). **Last finished:** 028 — Worker Parade + juice.
+**Current milestone:** 030 — The Rising Lane (built and tested, waiting for review). **Last finished:** 029 — UI kit + V1 screens.
 **Save schema:** 3 (029 adds optional `hub.daily/play/seen/offline/index/settings/favs`). **Map:** `Workspace.World.SkyCity`, built by `tools/build027`.
 
 ## Built
+- **030 Rising Lane** (D25/D27): from the spawn square a 24-wide lane climbs north, 12 studs per terrace: T1 Main Street (moved + rotated, y 12), T2-T5 short portal stops (Food Court, Beach Boardwalk, Toy Town, Neon Downtown; 40 long, sizes in `Kit.L.lane.stops`), T6 Velocity Royale (moved with its gate/bridge/island, y 72, gate open). Safe line + banner at z -112.5. Home + Zones HUD buttons; teleports server-validated (`LaneService`). Net-worth rank tags (`RankConfig`, proposed thresholds). Removed for the lane: reserved plot 2, the boss-vault plot, the Zone 1 gateway, and the plaza's Zone 6 bridge/gate (moved). Run-home measured (13.6 studs/s, real walk in Play): T1 far catch spot 14.9 s, T2 portal 23.0, T3 29.6, T4 36.2, T5 42.8, T6 gate 48.1. Parts 2,526 -> 2,645.
 - Mystery catch + rarity reveal; 16 workers as Roblox avatars. Worker Parade + juice + goal HUD + book (028, four `ParadeConfig` flags). Golden Parade odds 50/30/14.5/5/0.5 (D16, never worse than normal).
 - **029, four `V1Flags` switches (all OFF = old look and behaviour):**
   - `UI_V1_ENABLED`: Check-UI look (D18) through `UITheme` for every screen (older UIKit screens follow via `UIStyle`): slate windows, per-menu header colours (Store magenta, Daily lime, Gifts cyan, Settings silver, Index purple, popups amber), 3D bevelled buttons, square [X], GothamBlack. V1 HUD (cash pill only, D19 no gems; icon buttons), Index, Settings, inventory sort + favourites. 31 original icons on two uploaded sheets.
