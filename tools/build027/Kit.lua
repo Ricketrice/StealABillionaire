@@ -105,6 +105,30 @@ K.L = {
 	lotFloorTop = 1.0,
 }
 
+-- 030 The Rising Lane (north = -Z). Heights: base area 0, every terrace one `rise` higher. Terrace 1 is Main
+-- Street (moved as a whole, rotated to run north); terraces 2-5 are short portal stops (teammate zones
+-- keep their islands; the stop's gate sends you there); terrace 6 = Velocity Royale (moved as a whole).
+-- Stop sizes live here so a stop can grow to a full terrace when its teammate moves in.
+K.L.lane = {
+	x = -157, -- centre line
+	rampW = 24,
+	rise = 12,
+	rampLen = 48,
+	base = 0.3, -- paving top of the base area
+	safeLineZ = -112.5, -- gold line; the safe volume ends 2 studs north of it
+	rampAStartZ = -116, -- end of the base-area island
+	archZ = -164, -- Main Street's arch (street runs north from here)
+	streetLength = 179, -- paving, arch to far end
+	stops = {
+		{ id = "FoodCourt", label = "FOOD COURT", w = 56, len = 40, colour = K.C.Coral },
+		{ id = "BeachBoardwalk", label = "BEACH BOARDWALK", w = 56, len = 40, colour = K.C.Sky },
+		{ id = "ToyTown", label = "TOY TOWN", w = 56, len = 40, colour = K.LOT_COLOURS[5] },
+		{ id = "NeonDowntown", label = "NEON DOWNTOWN", w = 56, len = 40, colour = K.LOT_COLOURS[7] },
+	},
+	landing = { w = 56, len = 13 }, -- under the Velocity Royale gate
+	gateOffset = 7, -- gate centre this far north of the last ramp's top
+}
+
 function K.folder(parent: Instance, name: string, fresh: boolean?): Folder
 	local f = parent:FindFirstChild(name)
 	if f and fresh then
