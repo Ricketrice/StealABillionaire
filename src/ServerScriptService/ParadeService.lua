@@ -355,6 +355,38 @@ function ParadeService.isFree(player: Player): boolean
 	return total == 0
 end
 
+-- Catch credits (D20 rewards): hub.freeCatches = free catches at the current odds, hub.goldenCatches =
+-- Golden tickets (a free catch with Golden Parade odds, any time). Used before paying; given back if
+-- the catch is cancelled before the reveal.
+local MAX_CREDITS = 99
+local function credits(hub: any): (number, number)
+	local free = if type(hub.freeCatches) == "number" then math.max(0, math.floor(hub.freeCatches)) else 0
+	local golden = if type(hub.goldenCatches) == "number" then math.max(0, math.floor(hub.goldenCatches)) else 0
+	return free, golden
+end
+function ParadeService.credits(player: Player): (number, number)
+	local hub = hubOf(player)
+	if not hub then
+		return 0, 0
+	end
+	return credits(hub)
+end
+local function setCredit(hub: any, key: string, value: number)
+	hub[key] = if value > 0 then math.min(value, MAX_CREDITS) else nil
+end
+-- Adds free catches / Golden tickets (from a reward). Returns false if the data isn't loaded.
+function ParadeService.grantCatches(player: Player, free: number?, golden: number?): boolean
+	local hub = hubOf(player)
+	if not hub then
+		return false
+	end
+	local f, g = credits(hub)
+	setCredit(hub, "freeCatches", f + (free or 0))
+	setCredit(hub, "goldenCatches", g + (golden or 0))
+	task.defer(ParadeService.pushState, player)
+	return true
+end
+
 -- The book records catches while the 028 book or a 029 screen that reads it (Index, index bonus) is on.
 local function bookOn(): boolean
 	return ParadeService.flag("BOOK_ENABLED") or V1Flags.on("UI_V1_ENABLED") or V1Flags.on("INDEX_BONUS_ENABLED")
@@ -403,8 +435,11 @@ function ParadeService.pushState(player: Player)
 	if not (player.Parent and PlayerData.isLoaded(player)) then
 		return
 	end
+	local freeCatches, goldenCatches = ParadeService.credits(player)
 	clientEvent:FireClient(player, "State", {
 		free = ParadeService.flag("PARADE_ENABLED") and ParadeService.isFree(player),
+		freeCatches = freeCatches,
+		goldenCatches = goldenCatches,
 		book = if bookOn() then bookList(player) else {},
 	})
 end
@@ -443,8 +478,20 @@ function ParadeService.tryCatch(player: Player, npc: Model): (boolean, string?)
 	end
 	local golden = ParadeService.isGolden()
 	local free = ParadeService.isFree(player)
+	-- Which credit pays (if any): during a Golden Parade a plain free catch already gets Golden odds, so
+	-- it goes first; otherwise a Golden ticket goes first (better odds).
+	local credit: string? = nil
+	if not free then
+		local freeCatches, goldenCatches = ParadeService.credits(player)
+		if goldenCatches > 0 and not (golden and freeCatches > 0) then
+			credit = "goldenCatches"
+		elseif freeCatches > 0 then
+			credit = "freeCatches"
+		end
+	end
+	local goldenOdds = golden or credit == "goldenCatches"
 	local price = if golden then ParadeConfig.GOLDEN_PRICE else ParadeConfig.CATCH_PRICE
-	if not free and price > 0 and CashService.get(player) < price then
+	if not free and not credit and price > 0 and CashService.get(player) < price then
 		return false, ("You need %s to catch a parade worker. Your workers earn cash on your pads!"):format(CashFormat.format(price))
 	end
 	local playerRoot = livingRoot(player)
@@ -463,7 +510,7 @@ function ParadeService.tryCatch(player: Player, npc: Model): (boolean, string?)
 	local root = npc:FindFirstChild("HumanoidRootPart") :: BasePart
 	local l = lane :: Lane
 	root.CFrame = CFrame.lookAt(pos, pos + l.dir)
-	local ok, message = NPCClaim.tryReserve(player, npc, if golden then goldenZone else normalZone)
+	local ok, message = NPCClaim.tryReserve(player, npc, if goldenOdds then goldenZone else normalZone)
 	if not ok then
 		return false, message
 	end
@@ -473,10 +520,12 @@ function ParadeService.tryCatch(player: Player, npc: Model): (boolean, string?)
 	local hub = hubOf(player)
 	if free then
 		hub.paradeFree = true
+	elseif credit then
+		setCredit(hub, credit, (hub[credit] or 0) - 1)
 	elseif price > 0 and CashService.trySpend(player, price) then
 		paid = price
 	end
-	npc:SetAttribute("CaughtGolden", golden)
+	npc:SetAttribute("CaughtGolden", goldenOdds)
 	ParadeService.stats.caught += 1
 	-- Refund if the catch is cancelled before the reveal (the catcher died or left mid-spin).
 	npc.Destroying:Once(function()
@@ -486,10 +535,15 @@ function ParadeService.tryCatch(player: Player, npc: Model): (boolean, string?)
 				CashService.add(player, paid)
 			elseif free and hub then
 				hub.paradeFree = nil
+			elseif credit and hub then
+				setCredit(hub, credit, (if type(hub[credit]) == "number" then hub[credit] else 0) + 1)
 			end
 		end
 	end)
-	clientEvent:FireAllClients("Caught", { id = npc:GetAttribute("ParadeId"), by = player.UserId, pos = pos, golden = golden })
+	clientEvent:FireAllClients("Caught", { id = npc:GetAttribute("ParadeId"), by = player.UserId, pos = pos, golden = goldenOdds })
+	if credit then
+		task.defer(ParadeService.pushState, player)
+	end
 	return true
 end
 

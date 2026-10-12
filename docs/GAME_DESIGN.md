@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D20 | **Rewards are income-based** (owner, 2026-10-12), the 029 numbers are minimum floors: daily days 1–6 = 2/3/5/7/10/15 min of the player's income, day 7 = 30 min + one Golden catch ticket; playtime gifts at 5/10/20/30/45 min = 1/2/3/5/8 min of income, 60 min = one free parade catch; offline = 25% of income, max 3 h. Index bonus unchanged (D15). Values in `RewardsConfig`. | 2026-10 |
 | D19 | **Cash only, no gems** (owner, 2026-10-12): one currency. HUD shows a cash pill only; no gem pill, gem prices or gem products. | 2026-10 |
 | D18 | **UI style = Check-UI** (github.com/TemporaryLooker22/Check-UI-Clean-Roblox, MIT, commit 52ac1ed): adapt its theme/components/controller code; use only our own icons and textures, never its asset IDs. | 2026-10 |
 | D17 | **Hub layout A, "avenue into the plaza"**: straight strip from the spawn (west) to the fixed Billionaire Plaza (east, Golden Vault + Zone 2–6 gates); Zone 1 Main Street at the west end, 158 studs end to end (~10 s); 2 reserved hub plots + 1 boss-vault plot. | 2026-10 |

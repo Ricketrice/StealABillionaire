@@ -12,6 +12,7 @@ return function(ctx: any)
 	local A, B, expect, scenario, waitUntil = ctx.A, ctx.B, ctx.expect, ctx.scenario, ctx.waitUntil
 	local RewardsService = ctx.RewardsService
 	local PlayerData, CashService, WorkerInventory = ctx.mod("PlayerData"), ctx.mod("CashService"), ctx.mod("WorkerInventory")
+	local ParadeService = ctx.mod("ParadeService")
 	local RewardsConfig = require(ReplicatedStorage:WaitForChild("RewardsConfig")) :: any
 	local V1Flags = require(ReplicatedStorage:WaitForChild("V1Flags")) :: any
 	local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue")) :: any
@@ -60,6 +61,7 @@ return function(ctx: any)
 		end
 		ok = RewardsService.claimIndex(A, "MainStreet")
 		expect("A claims the Main Street half-page bonus", ok)
+		expect("A gets a free catch and a Golden ticket (D20 rewards)", ParadeService.grantCatches(A, 1, 1))
 		for _, id in { "crypto_carl", "security_sam" } do
 			give(B, id, nil)
 		end
@@ -121,6 +123,8 @@ return function(ctx: any)
 		expect("daily streak kept", h.daily and h.daily.streak == 1 and h.daily.day == math.floor(os.time() / 86400), HttpService:JSONEncode(h.daily or {}))
 		local ok = RewardsService.claimDaily(A)
 		expect("today's daily can't be claimed again", not ok)
+		local free, golden = ParadeService.credits(A)
+		expect("free catch and Golden ticket kept", free == 1 and golden == 1, ("%d/%d"):format(free, golden))
 		expect("playtime gift 1 still opened", h.play and h.play.got and h.play.got["1"] == true)
 		ok = RewardsService.claimPlaytime(A, 1)
 		expect("gift 1 can't be opened again", not ok)

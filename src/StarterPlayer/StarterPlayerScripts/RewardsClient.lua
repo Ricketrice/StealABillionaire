@@ -91,10 +91,22 @@ for day = 1, 7 do
 		ZIndex = 14,
 		Parent = card,
 	})
+	local extra = UITheme.text({ -- e.g. "+ Golden ticket" (day 7)
+		Name = "Extra",
+		Text = "",
+		Role = "Small",
+		TextSize = 12,
+		Color = T.Golden,
+		TextWrapped = true,
+		Size = UDim2.new(1, -4, 0, 30),
+		Position = UDim2.fromOffset(2, 116),
+		ZIndex = 14,
+		Parent = card,
+	})
 	local check =
 		UITheme.image({ Icon = "check", Size = UDim2.fromOffset(46, 46), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0, 62), ZIndex = 15, Parent = card })
 	local scale = UITheme.make("UIScale", { Parent = card })
-	dayCards[day] = { card = card, title = title, amount = amount, check = check, scale = scale, stroke = card:FindFirstChildOfClass("UIStroke") }
+	dayCards[day] = { card = card, title = title, amount = amount, extra = extra, check = check, scale = scale, stroke = card:FindFirstChildOfClass("UIStroke") }
 end
 local dailyButton = UITheme.button({
 	Name = "Claim",
@@ -119,7 +131,9 @@ local function paintDaily()
 	end
 	local today = d.nextDay -- the day card that is (or was) today's
 	for day, c in dayCards do
-		c.amount.Text = CashFormat.format(d.rewards[day] or 0)
+		local r = d.rewards[day] or {}
+		c.amount.Text = CashFormat.format(r.cash or 0)
+		c.extra.Text = if r.goldenCatches then "+ Golden ticket" elseif r.freeCatches then "+ free catch" else ""
 		local done = if d.claimedToday then day <= d.streak else (day < today and not d.restarted and d.streak > 0 and day <= d.streak)
 		c.check.Visible = done
 		c.card.BackgroundTransparency = if day > today and not done then 0.35 else 0
@@ -214,7 +228,7 @@ local function paintGifts()
 		local got = p.got[tostring(i)] == true
 		local need = gift.minutes * 60
 		c.mins.Text = gift.minutes .. " min"
-		c.amount.Text = CashFormat.format(gift.cash)
+		c.amount.Text = if (gift.cash or 0) > 0 then CashFormat.format(gift.cash) elseif gift.goldenCatches then "Golden ticket" elseif gift.freeCatches then "Free catch" else ""
 		c.setBar(math.clamp(played / need, 0, 1))
 		if got then
 			UITheme.setEnabled(c.button, false, "Opened")
@@ -375,6 +389,11 @@ clientEvent.OnClientEvent:Connect(function(kind, info)
 		UITheme.tween(s, 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
 	elseif info.kind == "offline" then
 		task.delay(0.6, offline.close)
+	end
+	if info.goldenCatches then
+		UITheme.toast("success", "Golden ticket!", "Your next parade catch is free, with Golden Parade odds.")
+	elseif info.freeCatches then
+		UITheme.toast("success", "Free catch!", "Your next parade catch is free.")
 	end
 	gui:SetAttribute("LastClaim", info.kind)
 end)

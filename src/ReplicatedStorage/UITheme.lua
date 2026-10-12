@@ -244,8 +244,9 @@ UITheme.Motion = { Fast = 0.15, Normal = 0.25, Slow = 0.45, Open = 0.32 }
 UITheme.ICON_SHEETS = { 83002965680168, 94606617314375 }
 UITheme.ICON_TILE = 256
 -- Our own Check-UI textures (tools/make_029_textures.py -> assets/export/ui): white on transparent, tinted
--- in code. 0 = not uploaded yet: the checkerboard and sunburst are simply left out.
-UITheme.TEXTURES = { Checker = 0, Sunburst = 0 }
+-- in code. 0 = not uploaded: the checkerboard and sunburst are simply left out. Image ids (the owner
+-- uploaded decals 131066832417520 / 75018256256341; these are the images inside them, both checked).
+UITheme.TEXTURES = { Checker = 81898318473915, Sunburst = 112848205345581 }
 -- name = { sheet, x, y } (from tools/blender/pack_029_icons.py)
 UITheme.ICONS = {
 	cash = { 1, 0, 0 },

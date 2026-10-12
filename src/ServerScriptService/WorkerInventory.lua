@@ -19,6 +19,10 @@
 -- validated here. Each runs to completion without yielding, so two requests can never interleave,
 -- and every one checks the worker's current location first, so repeating a request can't
 -- duplicate or lose a worker.
+-- Delivery (029): each request carries an id and is answered on InventoryAck. A client that hears
+-- nothing within a few seconds sends the same request again (WorkerState); a repeated id gets the
+-- first answer back without running again. "Place" (station index) is the client's backup for a
+-- Place prompt press that got no result.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -61,6 +65,11 @@ end
 local actionEvent = getOrCreateRemote("InventoryAction")
 -- Server -> owner: a snapshot { slots, stations, workers = { { uid, id, level, tier, loc, station? } } }
 local syncEvent = getOrCreateRemote("InventorySync")
+-- Server -> owner: (requestId, ok?, message?, retry?) the answer to a request that carried an id.
+local ackEvent = getOrCreateRemote("InventoryAck")
+local RECENT_KEPT = 24 -- answers remembered per player, for repeated ids
+local recent: { [Player]: { answers: { [number]: { any } }, order: { number } } } = {}
+local dropNext: { [Player]: number } = {} -- Studio tests: requests to ignore as if lost on the way
 
 local byUid: { [Player]: { [string]: WorkerRecord } } = {}
 local lastRequest: { [Player]: number } = {}
@@ -327,7 +336,30 @@ local function storeCarried(player: Player, data: Data): (boolean, string)
 	return true, workerName(record) .. " was stored."
 end
 
-local function onAction(player: Player, action: any, uid: any)
+-- The client's backup for a Place prompt press: the same checks as the prompt (NPCPlacement.tryPlace).
+local function placeRequest(player: Player, stationIndex: any): (boolean, string?)
+	local plot = PlotService.getPlot(player)
+	local station = plot and type(stationIndex) == "number" and stationIndex % 1 == 0 and findStation(plot, stationIndex)
+	if not station then
+		return false, "That isn't one of your stations."
+	end
+	return NPCPlacement.tryPlace(player, station)
+end
+
+local function remember(player: Player, id: number, answer: { any })
+	local r = recent[player]
+	if not r then
+		r = { answers = {}, order = {} }
+		recent[player] = r
+	end
+	r.answers[id] = answer
+	table.insert(r.order, id)
+	if #r.order > RECENT_KEPT then
+		r.answers[table.remove(r.order, 1)] = nil
+	end
+end
+
+local function onAction(player: Player, action: any, uid: any, requestId: any)
 	local now = os.clock()
 	if action == "Refresh" then
 		if now - (lastRefresh[player] or -math.huge) >= REFRESH_COOLDOWN then
@@ -336,7 +368,22 @@ local function onAction(player: Player, action: any, uid: any)
 		end
 		return
 	end
+	local id = if type(requestId) == "number" and requestId % 1 == 0 and requestId > 0 and requestId < 2 ^ 31 then requestId else nil
+	if (dropNext[player] or 0) > 0 then
+		dropNext[player] -= 1
+		return -- (Studio tests only: as if the message never arrived)
+	end
+	if id then
+		local seen = recent[player] and recent[player].answers[id]
+		if seen then
+			ackEvent:FireClient(player, id, seen[1], seen[2]) -- a repeat: same answer, nothing runs again
+			return
+		end
+	end
 	if now - (lastRequest[player] or -math.huge) < REQUEST_COOLDOWN then
+		if id then
+			ackEvent:FireClient(player, id, nil, nil, true) -- too fast: try again in a moment
+		end
 		return
 	end
 	lastRequest[player] = now
@@ -344,19 +391,38 @@ local function onAction(player: Player, action: any, uid: any)
 	local data = PlayerData.get(player)
 	local index = byUid[player]
 	if not (data and index) then
+		if id then
+			ackEvent:FireClient(player, id, nil, nil, true) -- still loading
+		end
 		return
 	end
+	local function answer(ok: boolean, message: string?)
+		if id then
+			remember(player, id, { ok, message })
+			ackEvent:FireClient(player, id, ok, message)
+		end
+	end
 	local ok, message
-	if action == "StoreCarried" then
+	if action == "Place" then
+		ok, message = placeRequest(player, uid)
+		if ok then
+			notify(player, true, ("Placed on station %d."):format(uid))
+			push(player)
+		end
+		answer(ok, message) -- (a refused backup stays quiet: the prompt press already said why)
+		return
+	elseif action == "StoreCarried" then
 		ok, message = storeCarried(player, data)
 	elseif action == "Store" or action == "Equip" then
 		local record = type(uid) == "string" and index[uid]
 		if not record then
+			answer(false, nil)
 			return -- not one of this player's workers
 		end
 		local busy = busyCheck and busyCheck(player, record)
 		if busy then
 			notify(player, false, busy)
+			answer(false, busy)
 			return
 		end
 		if action == "Store" then
@@ -368,6 +434,7 @@ local function onAction(player: Player, action: any, uid: any)
 		return
 	end
 	notify(player, ok, message)
+	answer(ok, message)
 	push(player)
 end
 
@@ -562,6 +629,15 @@ function WorkerInventory.putAway(player: Player, uid: string, preferredStation: 
 	return where
 end
 
+-- Studio tests only: ignore this player's next `count` requests, as if they were lost on the way.
+WorkerInventory._test = {
+	dropNext = function(player: Player, count: number)
+		if game:GetService("RunService"):IsStudio() then
+			dropNext[player] = count
+		end
+	end,
+}
+
 -- Hooks into placement, carrying and saving, then starts loading player data.
 function WorkerInventory.start()
 	NPCPlacement.setPlacedHandler(onPlaced)
@@ -575,6 +651,7 @@ function WorkerInventory.start()
 			byUid[player] = nil
 			lastRequest[player] = nil
 			lastRefresh[player] = nil
+			recent[player], dropNext[player] = nil, nil
 		end)
 	end)
 	PlayerData.start()

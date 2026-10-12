@@ -351,6 +351,46 @@ scenario("paying", function()
 	storeCarried(A)
 end)
 
+scenario("catch credits (D20 rewards)", function()
+	task.wait(ParadeConfig.CATCH_COOLDOWN + 0.1)
+	if ParadeService.isGolden() then
+		ParadeService.endGolden()
+	end
+	ParadeService.grantCatches(A, 1, 1)
+	local free, golden = ParadeService.credits(A)
+	expect("A holds a free catch and a Golden ticket", free == 1 and golden == 1, ("%d/%d"):format(free, golden))
+	local cash = CashService.get(A)
+	local w = freshWalker() :: Model
+	standBy(A, w)
+	local ok, message = ParadeService.tryCatch(A, w)
+	free, golden = ParadeService.credits(A)
+	expect(
+		"outside a Golden Parade the Golden ticket goes first: free, with Golden odds",
+		ok == true and CashService.get(A) == cash and golden == 0 and free == 1 and w:GetAttribute("CaughtGolden") == true,
+		("%s %s %d/%d"):format(tostring(ok), tostring(message), free, golden)
+	)
+	waitUntil(3, function()
+		return NPCCarry.getCarried(A) ~= nil
+	end)
+	storeCarried(A)
+	task.wait(ParadeConfig.CATCH_COOLDOWN + 0.1)
+	w = freshWalker() :: Model
+	standBy(A, w)
+	ok, message = ParadeService.tryCatch(A, w)
+	free, golden = ParadeService.credits(A)
+	expect(
+		"then the free catch: no cash, normal odds",
+		ok == true and CashService.get(A) == cash and free == 0 and w:GetAttribute("CaughtGolden") == false,
+		("%s %s %d/%d"):format(tostring(ok), tostring(message), free, golden)
+	)
+	waitUntil(3, function()
+		return NPCCarry.getCarried(A) ~= nil
+	end)
+	storeCarried(A)
+	local hubA = ParadeService._test.hubOf(A)
+	expect("used-up credits leave nothing in the save", hubA.freeCatches == nil and hubA.goldenCatches == nil)
+end)
+
 scenario("race: two players, one walker", function()
 	for round = 1, 3 do
 		task.wait(ParadeConfig.CATCH_COOLDOWN + 0.1)

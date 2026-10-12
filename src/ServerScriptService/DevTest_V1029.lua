@@ -90,7 +90,12 @@ end
 
 local CashService, PlayerData, PlotService, WorkerInventory = mod("CashService"), mod("PlayerData"), mod("PlotService"), mod("WorkerInventory")
 local PassiveIncome, RewardsService = mod("PassiveIncome"), mod("RewardsService")
+local NPCCarry, ParadeService = mod("NPCCarry"), mod("ParadeService")
 local RewardsConfig = require(ReplicatedStorage:WaitForChild("RewardsConfig")) :: any
+-- D20: what a daily/playtime reward pays this player now.
+local function rewardCash(p: Player, def: any): number
+	return RewardsConfig.cash(def, PassiveIncome.getIncome(p))
+end
 local V1Flags = require(ReplicatedStorage:WaitForChild("V1Flags")) :: any
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue")) :: any
 
@@ -227,7 +232,8 @@ if mode == "off" then
 		local cash = CashService.get(A)
 		act(A, "ClaimDaily")
 		local got = CashService.get(A) - cash
-		expect("day 1 pays " .. RewardsConfig.DAILY[1], got >= RewardsConfig.DAILY[1] and got < RewardsConfig.DAILY[1] + 200, got)
+		local want1 = rewardCash(A, RewardsConfig.DAILY[1])
+		expect("day 1 pays " .. want1, got >= want1 and got < want1 + 200, got)
 		expect("streak saved as day 1 today", hub(A).daily.streak == 1 and hub(A).daily.day == math.floor((base + offset) / DAY), HttpService:JSONEncode(hub(A).daily))
 		cash = CashService.get(A)
 		act(A, "ClaimDaily")
@@ -236,7 +242,8 @@ if mode == "off" then
 		cash = CashService.get(A)
 		act(A, "ClaimDaily")
 		got = CashService.get(A) - cash
-		expect("next day: day 2 pays " .. RewardsConfig.DAILY[2], got >= RewardsConfig.DAILY[2] and got < RewardsConfig.DAILY[2] + 200, got, true)
+		local want2 = rewardCash(A, RewardsConfig.DAILY[2])
+		expect("next day: day 2 pays " .. want2, got >= want2 and got < want2 + 200, got, true)
 		setDay(3) -- missed day 3
 		local state = RewardsService.stateOf(A).daily
 		expect("a missed day starts again at day 1, said kindly", state.nextDay == 1 and state.restarted == true and state.canClaim == true, HttpService:JSONEncode(state), true)
@@ -256,7 +263,8 @@ if mode == "off" then
 		local cash = CashService.get(A)
 		act(A, "ClaimPlaytime", 1)
 		local got = CashService.get(A) - cash
-		expect("gift 1 opens after its minutes", got >= RewardsConfig.PLAYTIME[1].cash and got < RewardsConfig.PLAYTIME[1].cash + 200, got, true)
+		local wantGift = rewardCash(A, RewardsConfig.PLAYTIME[1])
+		expect("gift 1 opens after its minutes", got >= wantGift and got < wantGift + 200, got, true)
 		cash = CashService.get(A)
 		act(A, "ClaimPlaytime", 1)
 		expect("gift 1 can't be opened twice", CashService.get(A) - cash < 200)
@@ -305,6 +313,133 @@ if mode == "off" then
 		expect("a minute away adds nothing", hub(B).offline == before, nil, true)
 		act(B, "ClaimOffline")
 		expect("seen is updated on load", hub(B).seen == base + offset, nil, true)
+	end)
+
+	scenario("income-based rewards (D20)", function()
+		setDay(20)
+		local income = PassiveIncome.getIncome(B)
+		expect("B earns from stations", income > 0, income)
+		local want = rewardCash(B, RewardsConfig.DAILY[1])
+		expect("day 1 = 2 minutes of income, above its floor", want == math.floor(income * 60 * 2) and want > RewardsConfig.DAILY[1].floor, want)
+		local state = RewardsService.stateOf(B)
+		expect("the screens get the same amounts", state.daily.rewards[1].cash == want and state.play.gifts[6].freeCatches == 1, HttpService:JSONEncode(state.daily.rewards[1]))
+		local cash = CashService.get(B)
+		act(B, "ClaimDaily")
+		local got = CashService.get(B) - cash
+		expect("B's day 1 pays 2 minutes of income", got >= want and got < want + income * 3, ("%d vs %d"):format(got, want))
+		-- day 7: 30 minutes of income + a Golden ticket
+		hub(B).daily.streak, hub(B).daily.day = 6, math.floor((base + offset) / DAY)
+		setDay(21)
+		local free0, golden0 = ParadeService.credits(B)
+		want = rewardCash(B, RewardsConfig.DAILY[7])
+		cash = CashService.get(B)
+		act(B, "ClaimDaily")
+		got = CashService.get(B) - cash
+		local free1, golden1 = ParadeService.credits(B)
+		expect("day 7 pays 30 minutes of income", got >= want and got < want + income * 3, ("%d vs %d"):format(got, want), true)
+		expect("day 7 adds one Golden ticket", golden1 == golden0 + 1 and free1 == free0, ("%d -> %d"):format(golden0, golden1), true)
+		-- the 60-minute gift: a free catch, no cash
+		RewardsService._test.setSince(B, base + offset)
+		RewardsService._test.playToday(B)
+		RewardsService._test.setSince(B, base + offset - 3605)
+		cash = CashService.get(B)
+		act(B, "ClaimPlaytime", 6)
+		local free2 = ParadeService.credits(B)
+		expect("the 60-minute gift adds a free catch and no cash", free2 == free1 + 1 and CashService.get(B) - cash < income * 3, ("%d -> %d"):format(free1, free2), true)
+		expect("the catches are kept in the save's hub", hub(B).freeCatches == free2 and hub(B).goldenCatches == golden1)
+		local floorOnly = RewardsConfig.cash(RewardsConfig.PLAYTIME[1], 0)
+		expect("no income: the floor is paid", floorOnly == RewardsConfig.PLAYTIME[1].floor, floorOnly)
+		hub(B).freeCatches, hub(B).goldenCatches = nil, nil
+	end)
+
+	-- Lost and repeated store/place messages (029 review item 3). SIM: the server is told to ignore a
+	-- message, as if it never arrived; the client re-sends on its own.
+	local function carryNew(p: Player, id: string): string?
+		local plot = PlotService.getPlot(p) :: Model
+		local free = nil
+		for _, station in (plot :: any).Stations:GetChildren() do
+			local i = station:GetAttribute("StationIndex")
+			if station:GetAttribute("Occupied") ~= true and type(i) == "number" and i <= 6 and (not free or i < free) then
+				free = i
+			end
+		end
+		if not free then
+			return nil
+		end
+		local uid = give(p, id, free)
+		local model = nil
+		for _, m in (plot :: any).PlacedNPCs:GetChildren() do
+			if m:GetAttribute("WorkerUid") == uid then
+				model = m
+			end
+		end
+		local rec = WorkerInventory.getRecord(p, uid) :: any
+		rec.loc, rec.station = "carried", nil
+		model.Parent = workspace
+		for _, station in (plot :: any).Stations:GetChildren() do
+			if station:GetAttribute("StationIndex") == free then
+				station:SetAttribute("Occupied", false)
+			end
+		end
+		NPCCarry.start(p, model)
+		return if waitUntil(2, function()
+				return NPCCarry.getCarried(p) == model
+			end)
+			then uid
+			else nil
+	end
+	scenario("lost and repeated store/place messages", function()
+		local uid = carryNew(A, "broke_bob")
+		expect("A carries a worker", uid ~= nil)
+		WorkerInventory._test.dropNext(A, 1)
+		ask(A, "inv", { action = "StoreCarried" })
+		task.wait(1)
+		expect("the first Store message is lost: still carrying", NPCCarry.getCarried(A) ~= nil, nil, true)
+		local stored = waitUntil(8, function()
+			return NPCCarry.getCarried(A) == nil
+		end)
+		expect("the client sends it again: stored", stored and WorkerInventory.getRecord(A, uid :: string).loc == "inventory", nil, true)
+		expect("the client has nothing left waiting", (ask(A, "inv", { action = "none" }).pending or -1) == 0)
+		-- a late duplicate never runs twice
+		ask(A, "invRaw", { action = "Equip", uid = uid, id = 900001 })
+		task.wait(0.6)
+		expect("Equip (id 900001) puts it on a station", WorkerInventory.getRecord(A, uid :: string).loc == "station")
+		ask(A, "invRaw", { action = "Store", uid = uid, id = 900002 })
+		task.wait(0.6)
+		expect("Store (id 900002) puts it back", WorkerInventory.getRecord(A, uid :: string).loc == "inventory")
+		ask(A, "invRaw", { action = "Equip", uid = uid, id = 900001 })
+		task.wait(0.6)
+		expect("a late copy of 900001 is answered, not run again", WorkerInventory.getRecord(A, uid :: string).loc == "inventory")
+		-- Place: the backup request, with its first message lost
+		local uid2 = carryNew(A, "delivery_dave")
+		expect("A carries another worker", uid2 ~= nil)
+		local plot = PlotService.getPlot(A) :: any
+		local target = nil
+		for _, station in plot.Stations:GetChildren() do
+			if station:GetAttribute("Occupied") ~= true and station:GetAttribute("StationIndex") == 1 then
+				target = station
+			end
+		end
+		if target then
+			(A.Character :: Model):PivotTo(target.CFrame * CFrame.new(0, 3.5, 2))
+			task.wait(0.3)
+			WorkerInventory._test.dropNext(A, 1)
+			ask(A, "inv", { action = "Place", uid = 1 })
+			local placed = waitUntil(8, function()
+				return NPCCarry.getCarried(A) == nil
+			end)
+			local rec = WorkerInventory.getRecord(A, uid2 :: string) :: any
+			expect("Place: lost once, sent again, placed once on station 1", placed and rec and rec.loc == "station" and rec.station == 1, rec and rec.loc, true)
+			ask(A, "inv", { action = "Place", uid = 1 })
+			task.wait(1)
+			local count = 0
+			for _, m in plot.PlacedNPCs:GetChildren() do
+				count += if m:GetAttribute("WorkerUid") == uid2 then 1 else 0
+			end
+			expect("another Place when not carrying changes nothing", count == 1 and rec.loc == "station", count)
+		else
+			expect("station 1 is free for the Place test", false)
+		end
 	end)
 
 	scenario("index bonus", function()
@@ -390,7 +525,8 @@ if mode == "off" then
 		ask(A, "spam", { action = "ClaimDaily", n = 60 })
 		task.wait(1)
 		local got = CashService.get(A) - cash
-		expect("60 claims in a burst pay once", got >= RewardsConfig.DAILY[1] and got < RewardsConfig.DAILY[1] + RewardsConfig.DAILY[2], got, true)
+		local one = rewardCash(A, RewardsConfig.DAILY[1])
+		expect("60 claims in a burst pay once", got >= one and got < one + rewardCash(A, RewardsConfig.DAILY[2]), got, true)
 		expect("the burst is rate limited", RewardsService.stats.dropped > dropped, RewardsService.stats.dropped - dropped)
 		RewardsService._test.setClock(nil)
 	end)
@@ -449,7 +585,7 @@ scenario("screens", function()
 	local cash = CashService.get(A)
 	ask(A, "act", { action = "ClaimDaily" })
 	task.wait(1)
-	expect("claiming from the screen pays", CashService.get(A) - cash >= RewardsConfig.DAILY[1])
+	expect("claiming from the screen pays", CashService.get(A) - cash >= rewardCash(A, RewardsConfig.DAILY[1]))
 	probe = ask(A, "probe")
 	expect("coins fly to the cash pill", (probe.coins or 0) > 0 or probe.lastClaim == "daily", probe.coins)
 	expect("button now shows the wait", tostring(probe.texts.dailyButton):find("Next") ~= nil, probe.texts.dailyButton)

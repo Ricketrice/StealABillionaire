@@ -9,11 +9,15 @@
 -- station's prompt, so placing failed and they stayed carrying.
 
 local Players = game:GetService("Players")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local WorkerState = require(ReplicatedStorage:WaitForChild("WorkerState"))
 
 local player = Players.LocalPlayer
 local plots = workspace:WaitForChild("Hub"):WaitForChild("Plots")
 
 local UPDATE_INTERVAL = 0.15 -- seconds between nearest-station checks
+local PLACE_BACKUP_AFTER = 3 -- seconds: still carrying after a Place press -> ask again by remote
 
 -- All station PlacePrompts in the hub (they are added by the server after this script starts).
 local placePrompts: { ProximityPrompt } = {}
@@ -67,6 +71,22 @@ local function update()
 		end
 	end
 end
+
+-- A Place press that got no result (the message was lost or the client stalled): if this player is
+-- still carrying a few seconds later and that station is still free, ask again through WorkerState
+-- (sent until answered; the server runs the same checks as the prompt and never places twice).
+ProximityPromptService.PromptTriggered:Connect(function(prompt)
+	local station = prompt.Name == "PlacePrompt" and prompt.Parent
+	if not (station and station:IsA("BasePart")) then
+		return
+	end
+	local index = station:GetAttribute("StationIndex")
+	task.delay(PLACE_BACKUP_AFTER, function()
+		if player:GetAttribute("CarryingNPC") == true and station.Parent and station:GetAttribute("Occupied") ~= true and type(index) == "number" then
+			WorkerState.request("Place", index)
+		end
+	end)
+end)
 
 while true do
 	update()

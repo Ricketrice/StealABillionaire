@@ -113,6 +113,14 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 		end
 	elseif kind == "probe" then
 		reply = probe()
+	elseif kind == "inv" then -- through WorkerState: an id, re-sent until answered
+		local WorkerState = require(ReplicatedStorage:WaitForChild("WorkerState")) :: any
+		if arg.action ~= "none" then
+			WorkerState.request(arg.action, arg.uid)
+		end
+		reply.pending = WorkerState.pending()
+	elseif kind == "invRaw" then -- one message with a chosen id, exactly as given
+		ReplicatedStorage:WaitForChild("InventoryAction"):FireServer(arg.action, arg.uid, arg.id)
 	elseif kind == "inventory" then
 		local UIKit = require(ReplicatedStorage:WaitForChild("UIKit")) :: any
 		UIKit.Signals.ToggleInventory:Fire(true)

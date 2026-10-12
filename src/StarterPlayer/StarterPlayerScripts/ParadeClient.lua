@@ -28,7 +28,7 @@ local actionEvent = ReplicatedStorage:WaitForChild("ParadeAction") :: RemoteEven
 local T = UITheme.Colors
 local TAU = math.pi * 2
 
-local state = { free = false, book = {} :: { string } }
+local state = { free = false, freeCatches = 0, goldenCatches = 0, book = {} :: { string } }
 
 local function paradeOn(): boolean
 	return ReplicatedStorage:GetAttribute("ParadeOn") == true
@@ -384,9 +384,16 @@ local function nearestWalker(): Model?
 end
 
 -- Prompts -------------------------------------------------------------------------------------------------
+-- The same order the server uses: first catch, then (outside a Golden Parade) a Golden ticket, then a
+-- free catch, then cash.
+local function usesTicket(golden: boolean): boolean
+	return not state.free and state.goldenCatches > 0 and not (golden and state.freeCatches > 0)
+end
 local function priceText(golden: boolean): string
-	if state.free then
+	if state.free or state.freeCatches > 0 and not usesTicket(golden) then
 		return "Catch FREE!"
+	elseif usesTicket(golden) then
+		return "Catch: Golden ticket!"
 	end
 	return "Catch " .. CashFormat.format(if golden then ParadeConfig.GOLDEN_PRICE else ParadeConfig.CATCH_PRICE)
 end
@@ -400,7 +407,7 @@ ProximityPromptService.PromptShown:Connect(function(prompt)
 	prompt.ActionText = priceText(golden)
 	prompt.ObjectText = if golden then "Golden Mystery Worker" else "Mystery Worker"
 	shownPrompt = prompt
-	fillOdds(golden)
+	fillOdds(golden or usesTicket(golden))
 	odds.Adornee = prompt.Parent
 	odds.Enabled = true
 end)
@@ -427,6 +434,10 @@ clientEvent.OnClientEvent:Connect(function(kind, info)
 	end
 	if kind == "State" then
 		state.free = info.free == true
+		state.freeCatches = if type(info.freeCatches) == "number" then info.freeCatches else 0
+		state.goldenCatches = if type(info.goldenCatches) == "number" then info.goldenCatches else 0
+		gui:SetAttribute("FreeCatches", state.freeCatches)
+		gui:SetAttribute("GoldenCatches", state.goldenCatches)
 		state.book = if type(info.book) == "table" then info.book else {}
 		gui:SetAttribute("Free", state.free)
 	elseif kind == "Caught" and typeof(info.pos) == "Vector3" then
@@ -568,7 +579,7 @@ while true do
 		end
 		if shownPrompt then
 			shownPrompt.ActionText = priceText(golden)
-			fillOdds(golden)
+			fillOdds(golden or usesTicket(golden))
 		end
 		local target = if state.free then nearestWalker() else nil
 		arrow.Adornee = if target then target:FindFirstChild("HumanoidRootPart") :: any else nil

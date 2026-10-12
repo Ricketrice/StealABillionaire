@@ -27,6 +27,7 @@ local RewardsConfig = require(ReplicatedStorage:WaitForChild("RewardsConfig"))
 local V1Flags = require(ReplicatedStorage:WaitForChild("V1Flags"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local HubBase = require(script.Parent:WaitForChild("HubBase"))
+local ParadeService = require(script.Parent:WaitForChild("ParadeService"))
 local PassiveIncome = require(script.Parent:WaitForChild("PassiveIncome"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 
@@ -234,6 +235,23 @@ local function playToday(player: Player): any?
 end
 
 -- State ---------------------------------------------------------------------------------------------------
+-- What a daily/playtime reward gives this player now (D20: cash from their current income, floored).
+local function rewardFor(player: Player, def: any): any
+	return {
+		minutes = def.minutes,
+		cash = RewardsConfig.cash(def, PassiveIncome.getIncome(player)),
+		goldenCatches = def.goldenCatches,
+		freeCatches = def.freeCatches,
+	}
+end
+local function rewardList(player: Player, defs: { any }): { any }
+	local list = {}
+	for i, def in defs do
+		list[i] = rewardFor(player, def)
+	end
+	return list
+end
+
 local function stateOf(player: Player): any
 	local hub = hubOf(player) or {}
 	local state: any = {
@@ -254,14 +272,14 @@ local function stateOf(player: Player): any
 			claimedToday = lastDay == d,
 			nextDay = if lastDay == d then streak elseif continues then (streak % 7) + 1 else 1,
 			restarted = lastDay ~= nil and lastDay < d - 1 and streak > 0, -- missed a day: kind message
-			rewards = RewardsConfig.DAILY,
+			rewards = rewardList(player, RewardsConfig.DAILY),
 			nextAt = (d + 1) * DAY,
 		}
 		local play = playToday(player)
 		state.play = {
 			secs = play and play.secs or 0,
 			got = play and play.got or {},
-			gifts = RewardsConfig.PLAYTIME,
+			gifts = rewardList(player, RewardsConfig.PLAYTIME),
 			dayEndsAt = (today() + 1) * DAY,
 		}
 		state.offline = {
@@ -307,9 +325,20 @@ end
 
 -- Claims ---------------------------------------------------------------------------------------------------
 local function pay(player: Player, amount: number, kind: string, info: any)
-	HubBase.giveCash(player, amount) -- (tracked so the "collect cash" quest doesn't count it)
+	if amount > 0 then
+		HubBase.giveCash(player, amount) -- (tracked so the "collect cash" quest doesn't count it)
+	end
 	info.kind, info.cash = kind, amount
 	clientEvent:FireClient(player, "Claimed", info)
+end
+-- Pays a daily/playtime reward: its cash plus any free catches / Golden tickets.
+local function payReward(player: Player, def: any, kind: string, info: any)
+	local reward = rewardFor(player, def)
+	if reward.freeCatches or reward.goldenCatches then
+		ParadeService.grantCatches(player, reward.freeCatches, reward.goldenCatches)
+		info.freeCatches, info.goldenCatches = reward.freeCatches, reward.goldenCatches
+	end
+	pay(player, reward.cash, kind, info)
 end
 local function saveSoon(player: Player)
 	task.delay(1, function()
@@ -335,7 +364,7 @@ function RewardsService.claimDaily(player: Player): (boolean, string)
 	local day = state.nextDay
 	local daily = section(hub, "daily")
 	daily.streak, daily.day = day, today()
-	pay(player, RewardsConfig.DAILY[day], "daily", { day = day })
+	payReward(player, RewardsConfig.DAILY[day], "daily", { day = day })
 	return true, ("Day %d reward collected!"):format(day)
 end
 
@@ -359,7 +388,7 @@ function RewardsService.claimPlaytime(player: Player, index: any): (boolean, str
 		return false, "Not ready yet. Keep playing!"
 	end
 	play.got[key] = true
-	pay(player, gift.cash, "playtime", { index = index })
+	payReward(player, gift, "playtime", { index = index })
 	return true, "Gift opened!"
 end
 
