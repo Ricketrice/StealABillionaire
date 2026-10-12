@@ -297,25 +297,55 @@ local function probe(p: Player): any
 end
 storeCarried = function(p: Player)
 	if NPCCarry.getCarried(p) then
-		bridge:FireClient(p, "inv", "StoreCarried")
-		waitUntil(3, function()
-			return NPCCarry.getCarried(p) == nil
-		end)
+		-- What the inventory answers this player (WorkerInventory reports through NPCClaim.notify).
+		local NPCClaim = mod("NPCClaim")
+		local original, answers = NPCClaim.notify, {}
+		NPCClaim.notify = function(who, ok, message, ...)
+			if who == p then
+				table.insert(answers, ("%s:%s"):format(tostring(ok), tostring(message)))
+			end
+			return original(who, ok, message, ...)
+		end
+		local tries = 0
+		repeat
+			tries += 1
+			bridge:FireClient(p, "inv", "StoreCarried")
+			waitUntil(3, function()
+				return NPCCarry.getCarried(p) == nil
+			end)
+		until NPCCarry.getCarried(p) == nil or tries >= 3
+		NPCClaim.notify = original
+		if tries > 1 then
+			note(
+				"INFO",
+				"storing the carried worker needed retries",
+				("tries=%d stored=%s answers=[%s] client answers=%s"):format(
+					tries,
+					tostring(NPCCarry.getCarried(p) == nil),
+					table.concat(answers, " | "),
+					tostring(probe(p).answered)
+				)
+			)
+		end
 		local npc = NPCCarry.getCarried(p)
 		if npc then -- still holding it: say why, so a later scenario's failures point here
 			local uid = npc:GetAttribute("WorkerUid")
 			local rec = uid and record(p, uid)
+			local indexed = uid and WorkerInventory.getRecord(p, uid)
 			local stored, onStations, carried = WorkerInventory.count(p)
 			note(
 				"INFO",
 				"could not store the carried worker",
-				("uid=%s rec=%s escrow=%s stored=%d stations=%d carried=%d"):format(
+				("uid=%s rec=%s indexed=%s same=%s stealing=%s stored=%d stations=%d carried=%d answers=[%s]"):format(
 					tostring(uid),
 					rec and tostring(rec.loc) or "none",
-					rec and tostring(rec.escrow) or "-",
+					indexed and tostring(indexed.loc) or "none",
+					tostring(rec ~= nil and rec == indexed),
+					tostring(PvPSteal.isStealing(p)),
 					stored,
 					onStations,
-					carried
+					carried,
+					table.concat(answers, " | ")
 				)
 			)
 		end
