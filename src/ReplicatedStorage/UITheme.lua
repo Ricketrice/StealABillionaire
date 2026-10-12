@@ -172,6 +172,8 @@ UITheme.StrokeThickness = if V1 then 3 else 2 -- panels and buttons
 UITheme.TextStrokeThickness = if V1 then 2.5 else 1.5
 UITheme.Padding = if V1 then 12 else 10
 UITheme.TouchTarget = 44 -- minimum on-screen size of anything tappable (after scaling)
+UITheme.WINDOW_MIN_TAP = 52 -- the smallest tappable side inside a window (authored px): windows never
+-- scale under TouchTarget / this
 
 -- Gradients (UIGradient multiplies the colour under it: top light, bottom shaded) ------------------------
 UITheme.Gradients = {
@@ -610,7 +612,7 @@ function UITheme.closeButton(props: { [string]: any }): TextButton
 			Kind = "Close",
 			Text = "X",
 			TextSize = 30,
-			Size = props.Size or UDim2.fromOffset(48, 48),
+			Size = props.Size or UDim2.fromOffset(54, 54), -- (fills the 60 px header above its divider)
 			Position = props.Position,
 			AnchorPoint = props.AnchorPoint,
 			ZIndex = props.ZIndex,
@@ -1062,23 +1064,6 @@ function UITheme.onHudLayout(root: GuiObject, fn: (any) -> ())
 	task.defer(run)
 end
 
--- Scales a fixed-size window so it fits `root` (with a margin) and never grows past maxScale.
--- Phone rule: windows are authored wide and short (about 800 x 350 at most) with touch targets of
--- 52+ px, so on the smallest landscape phone (705 x 338 safe area) they scale to ~0.85 and every
--- button stays at least 44 px.
-local function fitScale(scale: UIScale, size: Vector2, root: GuiObject, maxScale: number?)
-	local function update()
-		local avail = root.AbsoluteSize
-		if avail.X < 1 then
-			return
-		end
-		local s = math.min((avail.X - 16) / size.X, (avail.Y - 16) / size.Y, maxScale or 1.15)
-		scale.Scale = math.max(s, 0.4)
-	end
-	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(update)
-	task.defer(update)
-end
-
 -- V1 header (Check-UI): full width, menu colour, shine line, fading checkerboard, 2-tier shadow.
 local HEADER = 60
 local function v1Header(holder: Frame, props: { [string]: any }): TextLabel
@@ -1147,7 +1132,11 @@ end
 -- A window: dim overlay, a panel with its header (V1: full-width menu colour; Classic: gold ribbon)
 -- and a close button.
 -- props: Name, Title, Icon, Size (Vector2, authored px = the content area plus header), Parent (a
--- root frame), OnClose?, MaxScale?, Theme? (V1 header colour, UITheme.HeaderThemes)
+-- root frame), OnClose?, MaxScale?, Theme? (V1 header colour, UITheme.HeaderThemes), MinTap? (the
+-- smallest tappable side inside it, authored px; default WINDOW_MIN_TAP)
+-- Fitting: the window scales to fit the screen (with a margin, never past MaxScale), but never so far
+-- that a button drops under TouchTarget (44 px) on screen. Where that floor makes it too big for the
+-- screen, the window is cut to the screen and its content scrolls.
 function UITheme.window(props: { [string]: any }): any
 	local size: Vector2 = props.Size or Vector2.new(600, 400)
 	-- V1 draws the header inside the panel: grow it so the content area stays the authored one.
@@ -1176,7 +1165,7 @@ function UITheme.window(props: { [string]: any }): any
 		ZIndex = 11,
 		Parent = root,
 	})
-	fitScale(make("UIScale", { Name = "Fit", Parent = frame }), if V1 then frameSize else size + Vector2.new(0, 34), root, props.MaxScale)
+	local fit = make("UIScale", { Name = "Fit", Parent = frame })
 	local holder = UITheme.panel({ Name = "Panel", Size = UDim2.fromScale(1, 1), ZIndex = 11, Parent = frame })
 	if V1 then
 		local outline = holder:FindFirstChildOfClass("UIStroke")
@@ -1232,14 +1221,46 @@ function UITheme.window(props: { [string]: any }): any
 	end
 
 	local top = if V1 then HEADER + UITheme.Padding else 34
-	local content = make("Frame", {
-		Name = "Content",
+	-- the content keeps its authored size inside a scroller that only scrolls when the window is cut
+	local contentSize = Vector2.new(frameSize.X - UITheme.Padding * 2, frameSize.Y - top - UITheme.Padding)
+	local scroller = make("ScrollingFrame", {
+		Name = "Scroll",
 		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
 		Position = UDim2.fromOffset(UITheme.Padding, top),
 		Size = UDim2.new(1, -UITheme.Padding * 2, 1, -top - UITheme.Padding),
+		CanvasSize = UDim2.fromScale(1, 1),
+		ScrollingEnabled = false,
+		ScrollBarThickness = 10,
+		ScrollBarImageColor3 = UITheme.Colors.Border,
 		ZIndex = 12,
 		Parent = holder,
 	})
+	local content = make("Frame", {
+		Name = "Content",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(contentSize.X, contentSize.Y),
+		ZIndex = 12,
+		Parent = scroller,
+	})
+	local fitSize = if V1 then frameSize else size + Vector2.new(0, 34)
+	local minScale = (UITheme.TouchTarget + 0.5) / (props.MinTap or UITheme.WINDOW_MIN_TAP) -- (+0.5: rounding)
+	local function refit()
+		local room = root.AbsoluteSize - Vector2.new(16, 16)
+		if room.X < 1 then
+			return
+		end
+		local s = math.max(math.min(room.X / fitSize.X, room.Y / fitSize.Y, props.MaxScale or 1.15), minScale)
+		fit.Scale = s
+		local w, h = math.min(frameSize.X, math.floor(room.X / s)), math.min(frameSize.Y, math.floor(room.Y / s))
+		frame.Size = UDim2.fromOffset(w, h)
+		local cut = w < frameSize.X or h < frameSize.Y
+		scroller.ScrollingEnabled = cut
+		scroller.CanvasSize = if cut then UDim2.fromOffset(contentSize.X, contentSize.Y) else UDim2.fromScale(1, 1)
+		frame:SetAttribute("Scrolls", if cut then true else nil)
+	end
+	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
+	task.defer(refit)
 
 	local win: any = { frame = frame, content = content, title = title, overlay = overlay, holder = holder }
 	local isOpen = false

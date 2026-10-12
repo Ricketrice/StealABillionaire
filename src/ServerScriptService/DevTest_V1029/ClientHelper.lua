@@ -20,6 +20,19 @@ local function visibleChain(obj: GuiObject): boolean
 	return true
 end
 
+-- inside a scroller that scrolls (a window cut to a small screen): reachable by scrolling, so only the
+-- scroller itself has to be on screen
+local function scrolledInto(obj: Instance, stop: Instance): boolean
+	local o = obj.Parent
+	while o and o ~= stop do
+		if o:IsA("ScrollingFrame") and o.ScrollingEnabled then
+			return true
+		end
+		o = o.Parent
+	end
+	return false
+end
+
 local function probe(): any
 	local s: any = { answered = true, open = {}, openCount = 0, fits = {}, fitsDetail = {}, windowSmallest = {}, texts = {}, buttons = {}, badges = {} }
 	local hud = playerGui:FindFirstChild("Hud")
@@ -56,7 +69,7 @@ local function probe(): any
 			for _, d in frame:GetDescendants() do
 				if d:IsA("GuiObject") and visibleChain(d) and d.AbsoluteSize.X > 0 then
 					local p, q = d.AbsolutePosition, d.AbsolutePosition + d.AbsoluteSize
-					if p.X < lo.X - 1 or p.Y < lo.Y - 1 or q.X > hi.X + 1 or q.Y > hi.Y + 1 then
+					if (p.X < lo.X - 1 or p.Y < lo.Y - 1 or q.X > hi.X + 1 or q.Y > hi.Y + 1) and not scrolledInto(d, frame) then
 						ok = false
 						worst = d:GetFullName():sub(-60) .. (" %d,%d-%d,%d in %d,%d-%d,%d"):format(p.X, p.Y, q.X, q.Y, lo.X, lo.Y, hi.X, hi.Y)
 					end
