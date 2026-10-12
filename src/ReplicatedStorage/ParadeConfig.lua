@@ -9,8 +9,8 @@
 -- The server publishes what is on as ReplicatedStorage attributes ParadeOn / JuiceOn / GoalHudOn /
 -- BookOn, which is all clients read.
 --
--- !! PROPOSED VALUES, NOT APPROVED: every number marked PROPOSED is new (price, timings, Golden
--- Parade odds) and waits for the owner's approval. Change them here; nothing else needs editing.
+-- Numbers approved by the owner in D16 (GAME_DESIGN.md), with their changes: $75 catch, Golden odds
+-- 50/30/15/5/0. Change them here; nothing else needs editing.
 -- The normal parade uses the existing Main Street pool and odds (WorkerCatalogue), unchanged.
 
 local ParadeConfig = {}
@@ -27,10 +27,10 @@ ParadeConfig.PUBLISHED = { PARADE_ENABLED = "ParadeOn", JUICE_ENABLED = "JuiceOn
 -- The lane is the part with the ParadeLane attribute (Workspace.World.SkyCity.Ground.ParadeLane.Lane).
 -- Workers walk along its long axis from the spawn end (west, -X) to the plaza end (east, +X).
 ParadeConfig.ZONE = "MainStreet" -- roster and odds the parade rolls from (existing pool, unchanged)
-ParadeConfig.CATCH_PRICE = 25 -- PROPOSED: cash per catch
+ParadeConfig.CATCH_PRICE = 75 -- cash per catch (D16)
 ParadeConfig.FIRST_CATCH_FREE = true -- a player's first worker ever, caught at the parade, costs nothing
-ParadeConfig.WALK_SPEED = 4 -- PROPOSED: studs per second (lane ~310 studs -> ~78 s from end to end)
-ParadeConfig.SPAWN_INTERVAL = 9 -- PROPOSED: seconds between new parade workers (lane time / max)
+ParadeConfig.WALK_SPEED = 4 -- studs per second (lane ~310 studs -> ~78 s from end to end)
+ParadeConfig.SPAWN_INTERVAL = 9 -- seconds between new parade workers (lane time / max)
 ParadeConfig.MAX_ON_LANE = 8 -- at most this many on the lane at once
 ParadeConfig.START_INSET = 4 -- studs in from the lane's west end where workers appear
 ParadeConfig.END_INSET = 6 -- studs in from the east end where they leave
@@ -45,13 +45,13 @@ ParadeConfig.ANIMATE_RANGE = 140 -- studs from the camera within which limbs are
 -- Golden Parade: every GOLDEN_INTERVAL seconds, GOLDEN_LENGTH seconds of gold workers with better
 -- odds for everyone (shown on the prompt and the lane sign). Gold workers still on the lane when it
 -- ends leave in a sparkle, so it always ends cleanly.
-ParadeConfig.GOLDEN_FIRST = 300 -- PROPOSED: seconds after the server starts before the first one
-ParadeConfig.GOLDEN_INTERVAL = 900 -- PROPOSED: seconds from one start to the next (~15 min)
-ParadeConfig.GOLDEN_LENGTH = 60 -- PROPOSED: seconds
-ParadeConfig.GOLDEN_SPAWN_INTERVAL = 3 -- PROPOSED: seconds between gold workers while it runs
--- PROPOSED odds during a Golden Parade, per mille (must total 1000). Normal: 700/200/80/18/2.
-ParadeConfig.GOLDEN_PER_MILLE = { Common = 450, Rare = 300, Epic = 170, Legendary = 65, Secret = 15 }
-ParadeConfig.GOLDEN_PRICE = 25 -- PROPOSED: same as a normal catch, so the better odds are for everyone
+ParadeConfig.GOLDEN_FIRST = 300 -- seconds after the server starts before the first one
+ParadeConfig.GOLDEN_INTERVAL = 900 -- seconds from one start to the next (~15 min)
+ParadeConfig.GOLDEN_LENGTH = 60 -- seconds
+ParadeConfig.GOLDEN_SPAWN_INTERVAL = 3 -- seconds between gold workers while it runs
+-- Odds during a Golden Parade, per mille (must total 1000; D16: no Secret). Normal: 700/200/80/18/2.
+ParadeConfig.GOLDEN_PER_MILLE = { Common = 500, Rare = 300, Epic = 150, Legendary = 50, Secret = 0 }
+ParadeConfig.GOLDEN_PRICE = 75 -- same as a normal catch, so the better odds are for everyone (D16)
 
 -- Server-wide message when anyone catches one of these (parade or zone).
 ParadeConfig.ANNOUNCE = { Legendary = true, Secret = true }

@@ -301,6 +301,13 @@ storeCarried = function(p: Player)
 		waitUntil(3, function()
 			return NPCCarry.getCarried(p) == nil
 		end)
+		local npc = NPCCarry.getCarried(p)
+		if npc then -- still holding it: say why, so a later scenario's failures point here
+			local uid = npc:GetAttribute("WorkerUid")
+			local rec = uid and record(p, uid)
+			local stored, onStations, carried = WorkerInventory.count(p)
+			note("INFO", "could not store the carried worker", ("uid=%s rec=%s escrow=%s stored=%d stations=%d carried=%d"):format(tostring(uid), rec and tostring(rec.loc) or "none", rec and tostring(rec.escrow) or "-", stored, onStations, carried))
+		end
 	end
 end
 local function helper(p: Player)
