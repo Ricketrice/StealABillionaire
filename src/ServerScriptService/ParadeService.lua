@@ -29,6 +29,7 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local ParadeConfig = require(ReplicatedStorage:WaitForChild("ParadeConfig"))
+local V1Flags = require(ReplicatedStorage:WaitForChild("V1Flags"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local CashService = require(script.Parent:WaitForChild("CashService"))
 local NPCClaim = require(script.Parent:WaitForChild("NPCClaim"))
@@ -354,6 +355,11 @@ function ParadeService.isFree(player: Player): boolean
 	return total == 0
 end
 
+-- The book records catches while the 028 book or a 029 screen that reads it (Index, index bonus) is on.
+local function bookOn(): boolean
+	return ParadeService.flag("BOOK_ENABLED") or V1Flags.on("UI_V1_ENABLED") or V1Flags.on("INDEX_BONUS_ENABLED")
+end
+
 local function bookList(player: Player): { string }
 	local hub = hubOf(player)
 	local list = {}
@@ -369,7 +375,7 @@ local function bookList(player: Player): { string }
 end
 
 function ParadeService.addToBook(player: Player, workerId: string): boolean
-	if not ParadeService.flag("BOOK_ENABLED") or not WorkerCatalogue.get(workerId) then
+	if not bookOn() or not WorkerCatalogue.get(workerId) then
 		return false
 	end
 	local hub = hubOf(player)
@@ -399,7 +405,7 @@ function ParadeService.pushState(player: Player)
 	end
 	clientEvent:FireClient(player, "State", {
 		free = ParadeService.flag("PARADE_ENABLED") and ParadeService.isFree(player),
-		book = if ParadeService.flag("BOOK_ENABLED") then bookList(player) else {},
+		book = if bookOn() then bookList(player) else {},
 	})
 end
 
@@ -541,7 +547,7 @@ function ParadeService.start()
 		end)
 	end
 	PlayerData.onLoaded(function(player, data: any)
-		if ParadeService.flag("BOOK_ENABLED") and type(data.workers) == "table" then
+		if bookOn() and type(data.workers) == "table" then
 			for _, w in data.workers do -- workers owned before the book existed count as caught
 				if type(w.id) == "string" then
 					ParadeService.addToBook(player, w.id)

@@ -3,7 +3,8 @@
 -- Pays each player for the workers placed on their plot's stations: every placed worker adds its
 -- own catalogue income per second (WorkerService.getIncome) to its owner's cash, independently of
 -- the others, including duplicates. Only placed workers earn (carried NPCs don't), and only while
--- the owner is online: plots are released when their owner leaves, so there are no offline earnings.
+-- the owner is online: plots are released when their owner leaves. (Offline earnings, Milestone 029,
+-- are paid by RewardsService when the player comes back.)
 --
 -- One server loop pays everyone each EARN_INTERVAL; there is no per-station loop.
 -- Each player's current income per second is kept on their "Income" attribute for the HUD,
@@ -21,6 +22,12 @@ local PassiveIncome = {}
 
 local INCOME_ATTRIBUTE = "Income"
 
+-- Optional income multiplier per player (Milestone 029: the index completion bonus, D15). nil = 1.
+local multiplier: ((Player) -> number)? = nil
+function PassiveIncome.setMultiplier(fn: ((Player) -> number)?)
+	multiplier = fn
+end
+
 -- Whole dollars per second this player's placed workers earn.
 function PassiveIncome.getIncome(player: Player): number
 	local plot = PlotService.getPlot(player)
@@ -32,6 +39,10 @@ function PassiveIncome.getIncome(player: Player): number
 	for _, worker in placed:GetChildren() do
 		income += WorkerService.getIncome(worker)
 	end
+	local factor = if multiplier then multiplier(player) else 1
+	if factor ~= 1 then
+		income = math.floor(income * factor + 1e-9)
+	end
 	return income
 end
 
@@ -41,6 +52,11 @@ local function refreshIncome(player: Player): number
 		player:SetAttribute(INCOME_ATTRIBUTE, income)
 	end
 	return income
+end
+
+-- Recomputes a player's displayed income now (e.g. after their multiplier changed).
+function PassiveIncome.refresh(player: Player)
+	refreshIncome(player)
 end
 
 local function pay()

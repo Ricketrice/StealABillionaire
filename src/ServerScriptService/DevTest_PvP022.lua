@@ -306,7 +306,18 @@ storeCarried = function(p: Player)
 			local uid = npc:GetAttribute("WorkerUid")
 			local rec = uid and record(p, uid)
 			local stored, onStations, carried = WorkerInventory.count(p)
-			note("INFO", "could not store the carried worker", ("uid=%s rec=%s escrow=%s stored=%d stations=%d carried=%d"):format(tostring(uid), rec and tostring(rec.loc) or "none", rec and tostring(rec.escrow) or "-", stored, onStations, carried))
+			note(
+				"INFO",
+				"could not store the carried worker",
+				("uid=%s rec=%s escrow=%s stored=%d stations=%d carried=%d"):format(
+					tostring(uid),
+					rec and tostring(rec.loc) or "none",
+					rec and tostring(rec.escrow) or "-",
+					stored,
+					onStations,
+					carried
+				)
+			)
 		end
 	end
 end
