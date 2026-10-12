@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D21 | **Zone 6 = Royale Race** (kept simple): stand on pad → race every 3 min on the existing circuit → every finisher gets a capsule (Gold top 3, Silver others; 1–3 racers: only 1st Gold) → reveal → Zone 6 worker. Ordered invisible checkpoints, 90 s limit, one capsule per player per race, no collisions, no abilities. Odds in `RaceConfig`, approved by owner. | 2026-10 |
 | D18 | **UI style = Check-UI** (github.com/TemporaryLooker22/Check-UI-Clean-Roblox, MIT, commit 52ac1ed): adapt its theme/components/controller code; use only our own icons and textures, never its asset IDs. | 2026-10 |
 | D15 | **Index completion bonus: yes.** Per zone: collect 50% of its workers → +10% cash, 100% → +25% cash + badge. Bonuses add across zones and apply to all income. Numbers *(tune)* live in `RewardsConfig`. | 2026-10 |
 | D14 | **UI icons are AI-made**: Claude models simple glossy 3D icons in headless Blender, renders them to PNG (transparent, 256px), packs them into 1–2 sprite sheets, owner uploads in one batch. Panels/buttons/text are built in Studio code (UIStroke, UIGradient, UICorner, bold Roblox fonts). No icons copied from other games. | 2026-10 |
