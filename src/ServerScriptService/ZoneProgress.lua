@@ -46,6 +46,10 @@ local plazaCentre: Vector3? = nil
 local gateRadius = math.huge
 local anchors: { Region } = {}
 local returnPoints: { [string]: CFrame } = {}
+-- Gates that are not on the plaza ring but at the top of the Rising Lane (030, Gate attribute LaneGate): the
+-- district is everything north of the barrier (smaller Z) within LANE_GATE_HALF_WIDTH of it.
+local LANE_GATE_HALF_WIDTH = 110
+local laneGates: { [string]: BasePart } = {}
 
 local function flat(v: Vector3): Vector3
 	return Vector3.new(v.X, 0, v.Z)
@@ -58,6 +62,7 @@ function ZoneProgress.buildRegions()
 	plazaCentre = plaza.Position
 	table.clear(anchors)
 	table.clear(returnPoints)
+	table.clear(laneGates)
 	gateRadius = math.huge
 	table.insert(anchors, { id = nil, position = (workspace:WaitForChild("Hub"):WaitForChild("Floor") :: BasePart).Position })
 	for _, zone in ZoneConfig.ZONES do
@@ -65,13 +70,21 @@ function ZoneProgress.buildRegions()
 		if not folder then
 			continue
 		end
-		local area = folder:FindFirstChild("FutureNPCArea")
-		if area and area:IsA("BasePart") then
-			table.insert(anchors, { id = zone.id, position = area.Position })
-		end
 		local gate = folder:FindFirstChild("Gate")
 		local barrier = gate and gate:FindFirstChild("Barrier")
-		if barrier and barrier:IsA("BasePart") then
+		local onLane = gate ~= nil and gate:GetAttribute("LaneGate") == true
+		local area = folder:FindFirstChild("FutureNPCArea")
+		if area and area:IsA("BasePart") and not onLane then
+			table.insert(anchors, { id = zone.id, position = area.Position })
+		end
+		if onLane and barrier and barrier:IsA("BasePart") then
+			laneGates[zone.id] = barrier
+			-- where a turned-back player lands: just in front (south) of the barrier, on the landing
+			local front = barrier.Position + Vector3.new(0, 0, RETURN_DISTANCE)
+			local hit = workspace:Raycast(front + Vector3.new(0, 12, 0), Vector3.new(0, -40, 0))
+			local standAt = Vector3.new(front.X, (if hit then hit.Position.Y else barrier.Position.Y - 5) + 3, front.Z)
+			returnPoints[zone.id] = CFrame.lookAt(standAt, standAt + Vector3.new(0, 0, 1))
+		elseif barrier and barrier:IsA("BasePart") then
 			local offset = flat(barrier.Position - plaza.Position)
 			gateRadius = math.min(gateRadius, offset.Magnitude)
 			local outward = offset.Unit
@@ -90,6 +103,12 @@ end
 
 -- The district a world position is in, or nil (home island, Main Street, bridges home, plaza).
 function ZoneProgress.zoneAt(position: Vector3): string?
+	for id, barrier in laneGates do
+		local b = barrier.Position
+		if position.Z < b.Z - BOUNDARY_MARGIN and math.abs(position.X - b.X) < LANE_GATE_HALF_WIDTH and position.Y > b.Y - 30 then
+			return id
+		end
+	end
 	if not plazaCentre or (flat(position) - flat(plazaCentre)).Magnitude < gateRadius + BOUNDARY_MARGIN then
 		return nil
 	end
@@ -141,7 +160,7 @@ function ZoneProgress.purchase(player: Player, zoneId: any): (boolean, string, s
 	if not zone.purchasable then
 		return false, "unavailable", zone.name .. " can't be unlocked yet."
 	end
-	local previous = ZoneConfig.previous(zone.id)
+	local previous = ZoneConfig.prerequisite(zone.id)
 	if previous and not ZoneProgress.isUnlocked(player, previous.id) then
 		return false, "prerequisite", ("Unlock %s first. Districts open in order."):format(previous.name)
 	end

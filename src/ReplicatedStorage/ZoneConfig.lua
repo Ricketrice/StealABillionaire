@@ -25,6 +25,7 @@ export type Zone = {
 	folder: string?,
 	purchasable: boolean,
 	gate: boolean,
+	requires: string?, -- the zone that must be unlocked first (default: the one before it)
 }
 
 ZoneConfig.FREE_ZONE = "MainStreet"
@@ -35,7 +36,18 @@ ZoneConfig.ZONES = {
 	{ id = "BeachBoardwalk", number = 3, name = "Beach Boardwalk", price = 150000, folder = "Zone3_BeachBoardwalk", purchasable = false, gate = false },
 	{ id = "ToyTown", number = 4, name = "Toy Town", price = 500000, folder = "Zone4_ToyTown", purchasable = true, gate = true },
 	{ id = "NeonDowntown", number = 5, name = "Neon Downtown", price = 1500000, folder = "Zone5_NeonDowntown", purchasable = false, gate = false },
-	{ id = "BillionaireHills", number = 6, name = "Billionaire Hills", price = 5000000, folder = "Zone6_BillionaireHills", purchasable = false, gate = false },
+	-- Zone 6 is ours: its gate is the top of the Rising Lane (030). PROPOSED launch price 500,000 while Zones 2-5 are
+	-- closed (the old 5,000,000 ladder price returns once they open); it needs only Main Street.
+	{
+		id = "BillionaireHills",
+		number = 6,
+		name = "Billionaire Hills",
+		price = 500000,
+		folder = "Zone6_BillionaireHills",
+		purchasable = true,
+		gate = true,
+		requires = "MainStreet",
+	},
 } :: { Zone }
 
 -- Worker progression foundation. Each district names the WorkerCatalogue roster its NPCs roll from
@@ -65,6 +77,15 @@ function ZoneConfig.previous(zoneId: string): Zone?
 	return zone and byNumber[zone.number - 1]
 end
 
+-- The district that must be unlocked before this one: its `requires`, else the one before it (nil for Zone 1).
+function ZoneConfig.prerequisite(zoneId: string): Zone?
+	local zone = byId[zoneId]
+	if zone and zone.requires then
+		return byId[zone.requires]
+	end
+	return ZoneConfig.previous(zoneId)
+end
+
 -- Checks the configuration; errors describing the first problem found.
 function ZoneConfig.validate()
 	table.clear(byId)
@@ -76,6 +97,7 @@ function ZoneConfig.validate()
 		assert(type(zone.price) == "number" and zone.price >= 0 and zone.price % 1 == 0, zone.id .. " has a bad price")
 		assert(not zone.purchasable or zone.price > 0, zone.id .. " can't be bought for nothing")
 		assert(not zone.gate or zone.folder, zone.id .. " needs a folder for its gate")
+		assert(not zone.requires or zone.requires == ZoneConfig.FREE_ZONE or zone.requires ~= zone.id, zone.id .. " can't require itself")
 		assert(ZoneConfig.WORKERS[zone.id], zone.id .. " needs a worker progression entry")
 		byId[zone.id] = zone
 		byNumber[zone.number] = zone

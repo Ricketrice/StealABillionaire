@@ -1,12 +1,15 @@
 -- Studio location: ServerScriptService.RankServer (Script)
 -- RankServer  (Milestone 030, D25): net-worth rank per player (RankConfig), from the server-owned Cash and
--- Income attributes. Publishes player attributes NetWorth / Rank / RankIndex, puts a rank tag over every head
--- and tells a player when they rank up (RankUp event). Read-only: nothing is saved.
+-- Income attributes. The rank comes from the PEAK net worth, saved as the optional field hub.peak (whole
+-- number, schema stays 3), so it never goes down. Publishes player attributes NetWorth / Peak / Rank /
+-- RankIndex, puts a rank tag over every head and tells a player when they rank up (RankUp event).
+-- Nothing is published until the player's save has loaded.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RankConfig = require(ReplicatedStorage:WaitForChild("RankConfig"))
+local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 
 local rankUp = Instance.new("RemoteEvent")
 rankUp.Name = "RankUp"
@@ -56,12 +59,19 @@ local known: { [Player]: number } = {}
 
 local function update(player: Player)
 	local cash, income = player:GetAttribute("Cash"), player:GetAttribute("Income")
-	if type(cash) ~= "number" then
+	local data = PlayerData.get(player) :: any
+	if type(cash) ~= "number" or not data then
 		return -- data still loading
 	end
 	local worth = RankConfig.worth(cash, if type(income) == "number" then income else 0)
-	local index = RankConfig.indexFor(worth)
+	local saved = data.hub.peak
+	local peak = math.floor(math.max(worth, if type(saved) == "number" then saved else 0))
+	if peak ~= saved then
+		data.hub.peak = peak -- the autosave carries it
+	end
+	local index = RankConfig.indexFor(peak)
 	player:SetAttribute("NetWorth", worth)
+	player:SetAttribute("Peak", peak)
 	player:SetAttribute("Rank", RankConfig.RANKS[index].name)
 	player:SetAttribute("RankIndex", index)
 	local before = known[player]

@@ -38,9 +38,9 @@ local function pos(inst: Instance): Vector3
 	return if inst:IsA("BasePart") then inst.Position else (inst :: Model):GetPivot().Position
 end
 
-local function shift(items: { Instance }, T: CFrame): number
+local function shift(blocks: { Instance }, T: CFrame): number
 	local n = 0
-	for _, inst in items do
+	for _, inst in blocks do
 		local list = inst:GetDescendants()
 		table.insert(list, inst)
 		for _, d in list do
@@ -64,7 +64,18 @@ local function rail(parent: Instance, a: Vector3, b: Vector3, h: number, w: numb
 	})
 end
 
--- A cream wedge ramp rising toward -Z from (zStart, yStart) to (zEnd, yEnd), with rails and gold edges.
+-- Railing (ART_STYLE: posts, not single bars): a low kerb, a gold top rail and navy posts from a to b.
+local function railing(parent: Instance, a: Vector3, b: Vector3, posts: number)
+	rail(parent, a, b, 1.4, 0.9, C.Navy, "Kerb")
+	rail(parent, a + Vector3.new(0, 2.5, 0), b + Vector3.new(0, 2.5, 0), 0.6, 0.7, C.Trim, "TopRail")
+	for i = 0, posts - 1 do
+		local at = a:Lerp(b, i / math.max(posts - 1, 1))
+		K.part({ name = "Post", parent = parent, size = Vector3.new(1, 3.4, 1), pos = at + Vector3.new(0, 1.7, 0), color = C.Navy })
+	end
+end
+
+-- A warm-grey wedge ramp rising toward -Z from (zStart, yStart) to (zEnd, yEnd): cream tile bands, gold edges,
+-- railings with posts, a stone block under the high end.
 local function ramp(parent: Instance, zStart: number, yStart: number, zEnd: number, yEnd: number, rocks: Folder)
 	local x, w = LN.x, LN.rampW
 	local len, rise = zStart - zEnd, yEnd - yStart
@@ -76,17 +87,21 @@ local function ramp(parent: Instance, zStart: number, yStart: number, zEnd: numb
 		shape = "Wedge",
 		size = Vector3.new(w, rise, len),
 		cf = CFrame.new(x, yStart + rise / 2, (zStart + zEnd) / 2) * CFrame.Angles(0, math.pi, 0),
-		color = C.Paving,
+		color = C.Stone,
 	})
+	local dir = Vector3.new(0, rise, -len).Unit
+	for k = 1, 4 do -- cream tile bands across the slope (breaks the flat field)
+		local t = (k - 0.5) / 4
+		local at = Vector3.new(x, yStart + rise * t + 0.08, zStart - len * t)
+		K.part({ name = "Band", parent = m, deco = true, size = Vector3.new(w - 6, 0.12, 2), cf = CFrame.lookAt(at, at + dir), color = C.PavingWarm })
+	end
 	for _, side in { -1, 1 } do
 		local ex = x + side * (w / 2 - 0.5)
-		local a, b = Vector3.new(ex, yStart, zStart), Vector3.new(ex, yEnd, zEnd)
-		rail(m, a, b, 3, 1, C.Navy)
+		railing(m, Vector3.new(ex, yStart, zStart), Vector3.new(ex, yEnd, zEnd), 4)
 		local ox = x + side * (w / 2 - 2)
 		local stripe = rail(m, Vector3.new(ox, yStart + 0.05, zStart), Vector3.new(ox, yEnd + 0.05, zEnd), 0.2, 0.8, C.Trim, "Edge")
 		stripe.CanCollide, stripe.CanQuery, stripe.CanTouch = false, false, false
 	end
-	-- a stone block under the high end hides the hollow
 	K.place("M_Rock_A", CFrame.new(x, yEnd - 17, zEnd + 8) * CFrame.Angles(0, math.rad(37 * math.abs(zEnd) % 180), 0), rocks, 1.15)
 	m.Parent = parent
 	return m
@@ -96,10 +111,41 @@ local function stopRails(parent: Instance, y: number, zNorth: number, zSouth: nu
 	local x = LN.x
 	local half, lane = w / 2, LN.rampW / 2
 	for _, side in { -1, 1 } do
-		rail(parent, Vector3.new(x + side * (half - 0.5), y, zSouth), Vector3.new(x + side * (half - 0.5), y, zNorth), 3, 1, C.Navy)
+		railing(parent, Vector3.new(x + side * (half - 0.5), y, zSouth), Vector3.new(x + side * (half - 0.5), y, zNorth), 5)
 		for _, z in { zNorth, zSouth } do -- ends beside the ramp mouth
-			local a, b = Vector3.new(x + side * (half - 0.5), y, z), Vector3.new(x + side * (lane + 0.5), y, z)
-			rail(parent, a, b, 3, 1, C.Navy)
+			railing(parent, Vector3.new(x + side * (half - 0.5), y, z), Vector3.new(x + side * (lane + 0.5), y, z), 2)
+		end
+	end
+end
+
+-- Cream tile bands across a walkway (x0..x1), every `step` studs from zA toward zB: no flat fields.
+local function tiles(parent: Instance, x0: number, x1: number, zA: number, zB: number, top: number, step: number)
+	local dir = if zB < zA then -1 else 1
+	local z = zA + dir * step / 2
+	while (z - zB) * dir < -1 do
+		K.slab(parent, "Tile", x0 + 1, x1 - 1, z - 0.6, z + 0.6, top + 0.05, 0.1, C.PavingWarm).CanCollide = false
+		z += dir * step
+	end
+end
+
+-- Gold borders along both long edges of a walkway.
+local function borders(parent: Instance, x0: number, x1: number, zA: number, zB: number, top: number)
+	for _, e in { x0 + 0.5, x1 - 0.5 } do
+		K.slab(parent, "Border", e - 0.5, e + 0.5, zA, zB, top + 0.06, 0.12, C.Trim).CanCollide = false
+	end
+end
+
+-- Bushes and flower beds on the grass either side of a walkway (masters, 2 and 4 parts).
+local function garden(parent: Instance, zc: number, y: number, w: number, len: number)
+	local x = LN.x
+	local out = LN.rampW / 2 + (w / 2 - LN.rampW / 2) / 2 + 3 -- middle of the grass strip beside the lane
+	for i, side in { -1, 1 } do
+		for j, dz in { -len / 2 + 5, len / 2 - 5 } do
+			local at = CFrame.new(x + side * out, y, zc + dz) * CFrame.Angles(0, math.rad(40 * (i + j)), 0)
+			K.place("M_Bush", at, parent, 1.1)
+		end
+		if side > 0 then -- (the portal pad takes the middle of the west side)
+			K.place("M_Flowers", CFrame.new(x + side * (out + 0.5), y, zc) * CFrame.Angles(0, math.rad(25 * i), 0), parent, 1.1)
 		end
 	end
 end
@@ -211,17 +257,9 @@ local function moveBlocks(): string
 		end
 	end
 	table.insert(report, ("Royale block: %d parts"):format(shift(set6, T6)))
-	-- Zone 6 is ours and its gate is the top of the lane: open it
-	barrier.CanCollide, barrier.Transparency = false, 1
-	local plate = gate:FindFirstChild("LockPlate")
-	if plate and plate:IsA("BasePart") then
-		plate.CanCollide, plate.Transparency = false, 1
-		for _, d in plate:GetDescendants() do
-			if d:IsA("SurfaceGui") or d:IsA("BillboardGui") then
-				d.Enabled = false
-			end
-		end
-	end
+	-- Zone 6's gate is the top of the lane: it keeps its barrier (cash unlock, ZoneGates) and ZoneProgress
+	-- treats everything north of it as the district (attribute LaneGate)
+	gate:SetAttribute("LaneGate", true)
 	sky:SetAttribute("Moved030", true)
 	table.insert(report, ("removed %d old pieces"):format(gone))
 	return table.concat(report, "; ")
@@ -238,11 +276,16 @@ local function buildLane(): string
 
 	-- paving from the spawn square to the line, 24 wide, on a curb
 	K.slab(lane, "MouthCurb", x - rw / 2 - 1, x + rw / 2 + 1, LN.rampAStartZ, L.squareZ[1] - 0.5, L.curbTop, 0.4, C.Curb)
-	K.slab(lane, "MouthPaving", x - rw / 2, x + rw / 2, LN.rampAStartZ, L.squareZ[1] - 0.5, base, 0.6, C.Paving)
+	K.slab(lane, "MouthPaving", x - rw / 2, x + rw / 2, LN.rampAStartZ, L.squareZ[1] - 0.5, base, 0.6, C.Stone)
+	tiles(lane, x - rw / 2, x + rw / 2, L.squareZ[1] - 0.5, LN.rampAStartZ, base, 7)
+	borders(lane, x - rw / 2, x + rw / 2, LN.rampAStartZ, L.squareZ[1] - 0.5, base)
 
 	-- SAFE ZONE: gold line, banner, invisible volume (PvPSafeZone) from the spawn square to the line
 	local lineZ = LN.safeLineZ
-	K.slab(lane, "SafeLine", x - rw / 2 - 1, x + rw / 2 + 1, lineZ - 2, lineZ + 2, base + 0.1, 0.2, C.Trim)
+	for i = 0, 7 do -- gold / navy hazard blocks across the line
+		local x0 = x - rw / 2 - 1 + i * ((rw + 2) / 8)
+		K.slab(lane, "SafeLine", x0, x0 + (rw + 2) / 8, lineZ - 2, lineZ + 2, base + 0.1, 0.2, if i % 2 == 0 then C.Trim else C.Navy)
+	end
 	local line2 = K.slab(lane, "SafeLineWide", -180, -134, lineZ - 0.5, lineZ + 0.5, base + 0.05, 0.1, C.Trim)
 	line2.CanCollide = false
 	for _, side in { -1, 1 } do
@@ -315,8 +358,14 @@ local function buildLane(): string
 		sf.Parent = lane
 		local zc = (zN + zS) / 2
 		K.slab(sf, "Island", x - stop.w / 2, x + stop.w / 2, zN, zS, y - 0.3, 4, C.Grass, Enum.Material.Plastic)
-		K.slab(sf, "Paving", x - rw / 2, x + rw / 2, zN, zS, y, 0.6, C.Paving)
-		K.slab(sf, "Accent", x - rw / 2, x + rw / 2, zc - 2, zc + 2, y + 0.05, 0.2, stop.colour).CanCollide = false
+		K.slab(sf, "Paving", x - rw / 2, x + rw / 2, zN, zS, y, 0.6, C.Stone)
+		tiles(sf, x - rw / 2, x + rw / 2, zS, zN, y, 8)
+		borders(sf, x - rw / 2, x + rw / 2, zN, zS, y)
+		K.slab(sf, "Accent", x - rw / 2, x + rw / 2, zc - 2, zc + 2, y + 0.12, 0.2, stop.colour).CanCollide = false
+		for _, e in { { x - stop.w / 2, x + stop.w / 2, zN - 0.5, zN + 0.3 }, { x - stop.w / 2, x + stop.w / 2, zS - 0.3, zS + 0.5 } } do
+			K.slab(sf, "Curb", e[1], e[2], e[3], e[4], y - 0.3 + 0.25, 0.5, C.Curb).CanCollide = false
+		end
+		garden(sf, zc, y - 0.3, stop.w, stop.len)
 		stopRails(sf, y, zN, zS, stop.w)
 		K.place("M_Rock_B", CFrame.new(x, y - 20, zc) * CFrame.Angles(0, math.rad(53 * i), 0), rocks, 1.2)
 		K.place("M_Rock_A", CFrame.new(x + 10, y - 17, zc - 8) * CFrame.Angles(0, math.rad(97 * i), 0), rocks, 0.9)
@@ -382,7 +431,9 @@ local function buildLane(): string
 	landing.Parent = lane
 	local lw = LN.landing
 	K.slab(landing, "Island", x - lw.w / 2, x + lw.w / 2, z - lw.len, z, y - 0.3, 4, C.Grass, Enum.Material.Plastic)
-	K.slab(landing, "Paving", x - rw / 2, x + rw / 2, z - lw.len, z, y, 0.6, C.Paving)
+	K.slab(landing, "Paving", x - rw / 2, x + rw / 2, z - lw.len, z, y, 0.6, C.Stone)
+	tiles(landing, x - rw / 2, x + rw / 2, z, z - lw.len, y, 6)
+	borders(landing, x - rw / 2, x + rw / 2, z - lw.len, z, y)
 	K.place("M_Rock_B", CFrame.new(x, y - 20, z - 6), rocks, 1.2)
 	startMarks.BillionaireHills = CFrame.lookAt(Vector3.new(x, y + 3, z - 2), Vector3.new(x, y + 3, z - 30))
 

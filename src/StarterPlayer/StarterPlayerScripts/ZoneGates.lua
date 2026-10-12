@@ -120,7 +120,7 @@ function refresh()
 		return
 	end
 	local unlocked = unlockedSet()
-	local previous = ZoneConfig.previous(zone.id)
+	local previous = ZoneConfig.prerequisite(zone.id)
 	local cash = getCash()
 	header.Text = ("DISTRICT %d"):format(zone.number)
 	title.Text = string.upper(zone.name)

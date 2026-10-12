@@ -1,8 +1,8 @@
 -- Studio location: ReplicatedStorage.RankConfig (ModuleScript)
 -- RankConfig  (Milestone 030, D25): net-worth ranks over every player's head and on the Top Billionaires board.
--- Net worth is read from data that already exists (no save field, schema stays 3):
---   net worth = Cash + Income x INCOME_SECONDS   (a worker bought with cash keeps its value in income)
--- Thresholds are PROPOSED numbers (tune), waiting for the owner's approval.
+-- Net worth = Cash + Income x INCOME_SECONDS (a worker bought with cash keeps its value in income). The rank is
+-- never lowered: it comes from the PEAK net worth, saved in the optional field hub.peak (schema stays 3).
+-- Thresholds approved by the owner (2026-10-13).
 
 local RankConfig = {}
 
@@ -13,9 +13,9 @@ RankConfig.RANKS = {
 	{ name = "Broke", from = 0, color = Color3.fromRGB(190, 190, 200) },
 	{ name = "Intern", from = 1000, color = Color3.fromRGB(120, 205, 255) },
 	{ name = "Manager", from = 25000, color = Color3.fromRGB(110, 230, 140) },
-	{ name = "CEO", from = 500000, color = Color3.fromRGB(255, 170, 60) },
-	{ name = "Millionaire", from = 10000000, color = Color3.fromRGB(200, 120, 255) },
-	{ name = "Billionaire", from = 1000000000, color = Color3.fromRGB(255, 220, 60) },
+	{ name = "CEO", from = 250000, color = Color3.fromRGB(255, 170, 60) },
+	{ name = "Millionaire", from = 1000000, color = Color3.fromRGB(200, 120, 255) },
+	{ name = "Billionaire", from = 100000000, color = Color3.fromRGB(255, 220, 60) },
 } :: { { name: string, from: number, color: Color3 } }
 
 function RankConfig.worth(cash: number, income: number): number
