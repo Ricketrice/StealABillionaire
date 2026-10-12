@@ -1,7 +1,7 @@
 -- Studio location: ServerScriptService.TopBoard (Script)
 -- TopBoard  (Milestone 027): the "Top Billionaires" board over the parade lane
 -- (Workspace.Venues.Leaderboards.TopBillionaires, SurfaceGui "Board" with Row1..Row5) shows the five
--- richest players in this server by their current cash. Display only; it reads the server-owned
+-- richest players in this server by their current cash, with their net-worth rank (RankServer, 030). Display only; it reads the server-owned
 -- "Cash" attribute and writes the board only when the ranking text changes.
 
 local Players = game:GetService("Players")
@@ -39,7 +39,7 @@ while true do
 		for _, player in Players:GetPlayers() do
 			local cash = player:GetAttribute("Cash")
 			if type(cash) == "number" then
-				table.insert(ranking, { name = player.DisplayName, cash = cash })
+				table.insert(ranking, { name = player.DisplayName, cash = cash, rank = player:GetAttribute("Rank") })
 			end
 		end
 		table.sort(ranking, function(a, b)
@@ -47,7 +47,9 @@ while true do
 		end)
 		for i = 1, ROWS do
 			local entry = ranking[i]
-			local text = if entry then ("%d.  %s  %s"):format(i, entry.name, CashFormat.format(entry.cash)) else ("%d.  —"):format(i)
+			local text = if entry
+				then ("%d.  %s%s  %s"):format(i, entry.name, if entry.rank then " · " .. entry.rank else "", CashFormat.format(entry.cash))
+				else ("%d.  —"):format(i)
 			if text ~= last[i] then
 				labels[i].Text = text
 				last[i] = text

@@ -103,6 +103,11 @@ function ZoneProgress.zoneAt(position: Vector3): string?
 	return best and best.id
 end
 
+-- The spot just inside the plaza in front of a district's gate (where a turned-back player lands), if known.
+function ZoneProgress.entryPoint(zoneId: string): CFrame?
+	return returnPoints[zoneId]
+end
+
 function ZoneProgress.isUnlocked(player: Player, zoneId: string): boolean
 	if zoneId == ZoneConfig.FREE_ZONE then
 		return true

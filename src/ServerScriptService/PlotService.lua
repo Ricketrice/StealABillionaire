@@ -115,6 +115,15 @@ function PlotService.getPlot(player: Player): Model?
 	return plotByPlayer[player]
 end
 
+-- Where this player's character stands when sent home (their plot's spawn point), if they have a plot.
+function PlotService.homeCFrame(player: Player): CFrame?
+	local plot = plotByPlayer[player]
+	if plot and plot.PrimaryPart then
+		return plot.PrimaryPart.CFrame * SPAWN_OFFSET
+	end
+	return nil
+end
+
 -- Starts assigning plots from `folder` (Workspace.Hub.Plots) to joining players.
 function PlotService.start(folder: Instance)
 	plotsFolder = folder

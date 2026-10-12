@@ -30,6 +30,7 @@ local T = UITheme.Colors
 local CAPACITY = InventoryConfig.INVENTORY_SLOTS + InventoryConfig.STATION_SLOTS
 local rewardsState = ReplicatedStorage:WaitForChild("RewardsState") :: RemoteEvent
 local rewardsAction = ReplicatedStorage:WaitForChild("RewardsAction") :: RemoteEvent
+local laneRequest = ReplicatedStorage:WaitForChild("LaneTravel") :: RemoteEvent -- Home / Zones (030)
 
 local function on(attribute: string): boolean
 	return ReplicatedStorage:GetAttribute(attribute) == true
@@ -145,6 +146,12 @@ addButton("Gifts", "gift", "Gifts", 5, function()
 end)
 addButton("Settings", "settings", "Settings", 6, function()
 	UITheme.openScreen("Settings")
+end)
+addButton("Home", "base", "Home", 7, function()
+	laneRequest:FireServer("Home")
+end)
+addButton("Zones", "flag", "Zones", 8, function()
+	UITheme.openScreen("Zones")
 end)
 local giftsLabel = buttons.Gifts:FindFirstChild("Label") :: TextLabel
 
