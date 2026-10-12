@@ -23,7 +23,7 @@ ProductConfig.ITEMS = {
 	cash = {
 		{ key = "cash_s", kind = "product", id = 0, name = "Cash Stack", icon = "cash", text = "A stack of cash to spend in the city." },
 		{ key = "cash_m", kind = "product", id = 0, name = "Cash Bag", icon = "coin", text = "A bag of cash to spend in the city." },
-		{ key = "cash_l", kind = "product", id = 0, name = "Cash Vault", icon = "gem", text = "A vault of cash to spend in the city." },
+		{ key = "cash_l", kind = "product", id = 0, name = "Cash Vault", icon = "cash", text = "A vault of cash to spend in the city." },
 	},
 	starter = {
 		{ key = "starter", kind = "product", id = 0, name = "Starter Pack", icon = "gift", text = "A one-time bundle for new players: cash and a head start.", oneTime = true },

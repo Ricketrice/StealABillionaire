@@ -204,8 +204,9 @@ UITheme.Button = if V1
 UITheme.Motion = { Fast = 0.15, Normal = 0.25, Slow = 0.45, Open = 0.32 }
 
 -- Icons (D14: two 1024 px sprite sheets of 256 px tiles, assets/export/ui) ------------------------------
--- Image asset ids of the uploaded sheets. 0 = not uploaded yet: icons fall back to emoji/text.
-UITheme.ICON_SHEETS = { 0, 0 }
+-- Image asset ids of the uploaded sheets (owner's account, 2026-10-12; both checked as Image assets
+-- that load in an ImageLabel). 0 = not uploaded: icons fall back to emoji/text.
+UITheme.ICON_SHEETS = { 83002965680168, 94606617314375 }
 UITheme.ICON_TILE = 256
 -- name = { sheet, x, y } (from tools/blender/pack_029_icons.py)
 UITheme.ICONS = {

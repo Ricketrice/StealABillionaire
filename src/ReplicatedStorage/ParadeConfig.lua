@@ -10,8 +10,10 @@
 -- BookOn, which is all clients read.
 --
 -- Numbers approved by the owner in D16 (GAME_DESIGN.md), with their changes: $75 catch, Golden odds
--- 50/30/15/5/0. Change them here; nothing else needs editing.
+-- 50/30/14.5/5/0.5 (never worse than normal). Change them here; nothing else needs editing.
 -- The normal parade uses the existing Main Street pool and odds (WorkerCatalogue), unchanged.
+
+local WorkerCatalogue = require(script.Parent:WaitForChild("WorkerCatalogue"))
 
 local ParadeConfig = {}
 
@@ -49,8 +51,9 @@ ParadeConfig.GOLDEN_FIRST = 300 -- seconds after the server starts before the fi
 ParadeConfig.GOLDEN_INTERVAL = 900 -- seconds from one start to the next (~15 min)
 ParadeConfig.GOLDEN_LENGTH = 60 -- seconds
 ParadeConfig.GOLDEN_SPAWN_INTERVAL = 3 -- seconds between gold workers while it runs
--- Odds during a Golden Parade, per mille (must total 1000; D16: no Secret). Normal: 700/200/80/18/2.
-ParadeConfig.GOLDEN_PER_MILLE = { Common = 500, Rare = 300, Epic = 150, Legendary = 50, Secret = 0 }
+-- Odds during a Golden Parade, per mille (must total 1000; D16: Epic, Legendary and Secret never below
+-- the normal parade's 700/200/80/18/2).
+ParadeConfig.GOLDEN_PER_MILLE = { Common = 500, Rare = 300, Epic = 145, Legendary = 50, Secret = 5 }
 ParadeConfig.GOLDEN_PRICE = 75 -- same as a normal catch, so the better odds are for everyone (D16)
 
 -- Server-wide message when anyone catches one of these (parade or zone).
@@ -109,6 +112,10 @@ function ParadeConfig.validate()
 		total += value
 	end
 	assert(total == 1000, "Golden Parade odds must total 1000 per mille")
+	local normal = WorkerCatalogue.RARITY_PER_MILLE
+	for _, rarity in { "Epic", "Legendary", "Secret" } do
+		assert(ParadeConfig.GOLDEN_PER_MILLE[rarity] >= normal[rarity], "Golden Parade odds worse than normal: " .. rarity)
+	end
 	assert(ParadeConfig.CATCH_PRICE >= 0 and ParadeConfig.CATCH_PRICE % 1 == 0, "bad catch price")
 	assert(ParadeConfig.GOLDEN_PRICE >= 0 and ParadeConfig.GOLDEN_PRICE % 1 == 0, "bad golden price")
 end

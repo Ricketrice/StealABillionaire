@@ -7,8 +7,10 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D19 | **Cash only, no gems** (owner, 2026-10-12): one currency. HUD shows a cash pill only; no gem pill, gem prices or gem products. | 2026-10 |
+| D18 | **UI style = Check-UI** (github.com/TemporaryLooker22/Check-UI-Clean-Roblox, MIT, commit 52ac1ed): adapt its theme/components/controller code; use only our own icons and textures, never its asset IDs. | 2026-10 |
 | D17 | **Hub layout A, "avenue into the plaza"**: straight strip from the spawn (west) to the fixed Billionaire Plaza (east, Golden Vault + Zone 2–6 gates); Zone 1 Main Street at the west end, 158 studs end to end (~10 s); 2 reserved hub plots + 1 boss-vault plot. | 2026-10 |
-| D16 | **Parade numbers approved (028, owner changes):** catch $75 (first catch still free), Golden Parade odds Common 50 / Rare 30 / Epic 15 / Legendary 5 / Secret 0 % (no Secret from the Golden Parade), Golden price = catch price. Rest as proposed: 4 studs/s, new walker every 9 s, max 8, Golden 60 s every 15 min (first after 5 min). Values in `ParadeConfig`. | 2026-10 |
+| D16 | **Parade numbers approved (028, owner changes):** catch $75 (first catch still free), Golden Parade odds Common 50 / Rare 30 / Epic 14.5 / Legendary 5 / Secret 0.5 % (updated 2026-10-12: never worse than the normal parade, which keeps 70/20/8/1.8/0.2 % incl. 0.2 % Secret), Golden price = catch price. Rest as proposed: 4 studs/s, new walker every 9 s, max 8, Golden 60 s every 15 min (first after 5 min). Values in `ParadeConfig`. | 2026-10 |
 | D15 | **Index completion bonus: yes.** Per zone: collect 50% of its workers → +10% cash, 100% → +25% cash + badge. Bonuses add across zones and apply to all income. Numbers *(tune)* live in `RewardsConfig`. | 2026-10 |
 | D14 | **UI icons are AI-made**: Claude models simple glossy 3D icons in headless Blender, renders them to PNG (transparent, 256px), packs them into 1–2 sprite sheets, owner uploads in one batch. Panels/buttons/text are built in Studio code (UIStroke, UIGradient, UICorner, bold Roblox fonts). No icons copied from other games. | 2026-10 |
 | D13 | Strong Arms pass (carry 2) comes after V1. V1 passes: 2x Cash, Extra Slots, VIP. | 2026-10 |
