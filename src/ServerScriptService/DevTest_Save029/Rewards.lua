@@ -32,6 +32,13 @@ return function(ctx: any)
 		return uid
 	end
 
+	local function layout(p: Player): string
+		local t = {}
+		for _, w in (PlayerData.get(p) :: any).workers do
+			table.insert(t, ("%s@%s%s"):format(w.id, tostring(w.loc), if w.station then tostring(w.station) else ""))
+		end
+		return table.concat(t, ", ")
+	end
 	local favUid: string? = nil
 	local income = 0
 	scenario("rewards before the save", function()
@@ -57,28 +64,33 @@ return function(ctx: any)
 			give(B, id, nil)
 		end
 		-- B's workers go on stations 1 and 2 so they earn offline
-		local n = 0
+		local toPlace = {} -- collected first: take/give change the list being walked
 		for _, w in (PlayerData.get(B) :: any).workers do
-			if (w.id == "crypto_carl" or w.id == "security_sam") and w.loc == "inventory" and n < 2 then
-				n += 1
-				local rec = WorkerInventory.take(B, w.uid)
-				rec.loc, rec.station = "station", n
-				WorkerInventory.give(B, rec)
-				WorkerInventory.respawn(B, w.uid)
+			if (w.id == "crypto_carl" or w.id == "security_sam") and w.loc == "inventory" and #toPlace < 2 then
+				table.insert(toPlace, w.uid)
 			end
+		end
+		for n, uid in toPlace do
+			local rec = WorkerInventory.take(B, uid)
+			rec.loc, rec.station = "station", n
+			WorkerInventory.give(B, rec)
+			WorkerInventory.respawn(B, uid)
 		end
 		for _, w in (PlayerData.get(B) :: any).workers do
 			if w.loc == "station" then
 				income += WorkerCatalogue.get(w.id).income
 			end
 		end
-		expect("B has workers on stations", income > 0, income)
+		expect("B has two workers on stations", #toPlace == 2 and income > 0, layout(B))
+		ctx.note("INFO", "B before the save", layout(B))
 	end)
 
 	scenario("real save, an hour away, real load", function()
 		local cashA = CashService.get(A)
 		PlayerData._test.leave(A)
 		PlayerData._test.leave(B)
+		ctx.clearPlot(A)
+		ctx.clearPlot(B)
 		local stored = ctx.raw(-1)
 		expect(
 			"A's save has daily, play, settings, favs, index, seen",
@@ -132,10 +144,18 @@ return function(ctx: any)
 		)
 		local cash = CashService.get(B)
 		ok = RewardsService.claimOffline(B)
+		local back = 0
+		for _, w in (PlayerData.get(B) :: any).workers do
+			if w.loc == "station" then
+				back += 1
+			end
+		end
+		expect("B's two workers are back on their stations", back == 2, layout(B))
 		expect("B collects it", ok and CashService.get(B) - cash >= want - income)
 		ok = RewardsService.claimOffline(B)
 		expect("B can't collect it twice", not ok)
 		PlayerData._test.leave(B)
+		ctx.clearPlot(B)
 		task.spawn(PlayerData._test.load, B)
 		waitUntil(40, function()
 			return PlayerData.isLoaded(B) and WorkerInventory.isReady(B)

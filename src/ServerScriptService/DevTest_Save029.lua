@@ -122,9 +122,24 @@ local function storedWorker(data: any, uid: string): any
 	end
 	return nil
 end
+-- What PlotService does when a player really leaves: the plot's worker models go and every station is
+-- free again (PlayerData's leave alone keeps them, so a reload would find its stations taken).
+local function clearPlot(p: Player)
+	local plot = PlotService.getPlot(p)
+	if plot then
+		local placedFolder = plot:FindFirstChild("PlacedNPCs")
+		if placedFolder then
+			placedFolder:ClearAllChildren()
+		end
+		for _, station in (plot :: any).Stations:GetChildren() do
+			station:SetAttribute("Occupied", false)
+		end
+	end
+end
 -- A real final save (PlayerData's own leave), then a real load of the same user from the store.
 local function rejoin(p: Player): boolean
 	PlayerData._test.leave(p)
+	clearPlot(p)
 	task.spawn(PlayerData._test.load, p)
 	return waitUntil(40, function()
 		return PlayerData.isLoaded(p) and PlayerData.get(p) ~= nil and WorkerInventory.isReady(p)
@@ -248,6 +263,8 @@ if mode == "parade" then
 	scenario("real final save", function()
 		PlayerData._test.leave(A)
 		PlayerData._test.leave(B)
+		clearPlot(A)
+		clearPlot(B)
 		local sa, sb = raw(-1), raw(-2)
 		expect("A's save has the stored parade worker", storedWorker(sa, want.A.u1) ~= nil and storedWorker(sa, want.A.u1).loc == "inventory")
 		expect("A's save has the carried one, saved as stored", storedWorker(sa, want.A.u2) ~= nil and storedWorker(sa, want.A.u2).loc == "inventory")
@@ -273,7 +290,15 @@ if mode == "parade" then
 		local r1, r2, r3 = record(A, want.A.u1), record(A, want.A.u2), record(B, want.B.u3)
 		expect("A still owns both parade workers, same ids", r1 and r2 and r1.id == want.A.id1 and r2.id == want.A.id2)
 		expect("both are in A's storage", r1 and r2 and r1.loc == "inventory" and r2.loc == "inventory")
-		expect("B's worker is back on station 1", r3 and r3.loc == "station" and r3.station == 1 and r3.id == want.B.id3)
+		local listB = {}
+		for _, w in ((PlayerData.get(B) :: any) or { workers = {} }).workers do
+			table.insert(listB, ("%s:%s:%s:%s"):format(w.uid, w.id, tostring(w.loc), tostring(w.station)))
+		end
+		expect(
+			"B's worker is back on station 1",
+			r3 and r3.loc == "station" and r3.station == 1 and r3.id == want.B.id3,
+			("want %s | %s"):format(tostring(want.B.u3), table.concat(listB, ", "))
+		)
 		local placed = false
 		for _, m in PlotService.getPlot(B).PlacedNPCs:GetChildren() do
 			placed = placed or m:GetAttribute("WorkerUid") == want.B.u3
@@ -304,6 +329,7 @@ runRewards({
 	waitUntil = waitUntil,
 	note = note,
 	rejoin = rejoin,
+	clearPlot = clearPlot,
 	raw = raw,
 	record = record,
 	RewardsService = RewardsService,
