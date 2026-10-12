@@ -43,5 +43,10 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 ## Map builder
 `tools/build027/` (Kit = palette + layout numbers, Masters (+ `fromImports()`), B0_Clear … B7_Reserved). Push with `push_to_studio.py` into `ServerStorage.Build027`, run each step from a clone (`require(Build027:Clone().B1_Ground)()`); every step rebuilds its own folder. Hero meshes: `tools/blender/build_027_assets.py` → `assets/export/027`.
 
-## Hard-coded positions (update when the map moves)
-- None in game scripts (027 search). Lot-local only: `HubConfig.EXTRA_STATION_SPOTS` (0,7.5),(0,-1.5), `HubConfig.DECOR_SPOTS`, `PlotService.SPAWN_OFFSET`. All map coordinates live in `tools/build027/Kit.lua`.
+## Hard-coded positions / what finds what (030 audit, 2026-10-13)
+- No game script holds map coordinates. Everything is found by name or part; lot-local only: `HubConfig.EXTRA_STATION_SPOTS`, `DECOR_SPOTS`, `PlotService.SPAWN_OFFSET`. Map numbers live in `tools/build027/Kit.lua`.
+- District detection `ZoneProgress.buildRegions/zoneAt`: plaza centre = `World.FutureZones.BillionairePlaza.ArenaFloor`; gate ring = nearest `Zone*/Gate/Barrier`; anchors = `Hub.Floor` + each `FutureZones.<folder>.FutureNPCArea` (nearest anchor wins beyond the ring). Only Toy Town is enforced. A moved Zone 6 anchor is picked up automatically if `FutureNPCArea` moves with it. Client `ZoneGates` reads `FutureZones.<folder>.Gate`.
+- Zone 1 NPCs: `Workspace.Zones.MainStreet` (`ZoneBoundary` + `SpawnPoints`, read by `ZoneArea`/`ZoneSpawner`/`NPCWanderer`); moving the folder moves them. Client `Notifications` reads the zone boundaries.
+- Carry/safe zones: `PvPBase` safe volumes by tag `PvPSafeZone` (`SafeHubVolume`, x -174..-139 only) + spawn radius from `SpawnLocation`; carry speed = walk x0.85 (13.6 studs/s) in `NPCCarry`.
+- Zone 6 circuit `World.VelocityRoyale` (928 parts), `World.BillionaireCity.Zone6Plaza`, `FutureZones.Zone6_BillionaireHills`, `Zones.BillionaireHills`: no script reads them (static).
+- Current extents (x/z): bases -138..106 / -60..52 · spawn (-157,-4) · Main Street -348..-179 / -54..48 · plaza centre (172,-4), ring r 44, bypass 128 · Zone 2 S (160..274, 55..216) · Zone 3 far S · Zone 4 E (224..431, 7..149) · Zone 5 E-N (224..415, -167..-15) · Zone 6 N (155..331, -297..-118).
