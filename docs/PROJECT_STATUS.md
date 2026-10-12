@@ -18,7 +18,7 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
 - `DevTest_Save029` rewards rejoin 26/26 on the REAL Studio DataStore (2 SIM; catches kept); parade rejoin 24/24 (earlier today, unchanged code path).
 - `DevTest_Parade028` 76/76 (2 SIM; Golden ticket first outside a Golden Parade, then free catch). `DevTest_PvP022` main 330/330 (16 SIM). `DevTest_Hub026` 118/118 (12 SIM).
 - Textures: both load once their window opens (checked in Play). UI instances: 1,544 V1 on / 1,070 off (measured before the review changes).
-- HUD layout fix (2026-10-13): overlap/size check in Play at the Studio window + simulated iPhone 14, iPhone SE, iPad mini (touch) and 1080p: no overlaps, nothing on the thumbstick/jump corners, every button ≥ 56 px; 4 screenshots (window, phone sim, tablet sim, Store open). v1029:ui 39/39, parade 76/76 after it. Real-device emulator not used (the Studio device emulator can't be switched from MCP).
+- HUD layout (2026-10-13): left group (cash pill + menu) x1.25 on phones, x1.15 on tablet/PC (menu 70 px phone, 103 px 1080p); moves under the chat window while chat is open when it fits (PC/tablet; on phones the open chat covers it); portrait phones get the top piece on its own row and the carry bar above the touch controls. Overlap check at 7 sizes (window, iPhone 14 + SE landscape and portrait, iPad mini, 1080p) x chat closed/open/carrying: 0 issues. v1029:ui 39/39. Phone/tablet sizes and the phone chat window size are simulated.
 
 ## Not built
 Purchases (031), worker levels, merge, gear tiers, zone bosses, rebirth, base visual growth, Legendary/Secret keyframe animations (D12, later).

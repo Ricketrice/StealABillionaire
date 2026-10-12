@@ -50,7 +50,7 @@ local topLeft = UITheme.make("Frame", {
 })
 UITheme.make("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = topLeft })
 local topScale = UITheme.make("UIScale", { Parent = topLeft })
-local PILL_W, PILL_H = 260, 62
+local PILL_W, PILL_H, INCOME_H = 260, 62, 22
 
 local pill, cashLabel = UITheme.pill({
 	Name = "CashPill",
@@ -68,7 +68,7 @@ UITheme.make("UIScale", { Name = "Bump", Parent = pill })
 UITheme.setCashTarget(pill)
 local plus = pill:FindFirstChild("Plus") :: TextButton
 
-local incomeRow = UITheme.make("Frame", { Name = "IncomeRow", BackgroundTransparency = 1, Size = UDim2.fromOffset(PILL_W, 26), LayoutOrder = 2, Parent = topLeft })
+local incomeRow = UITheme.make("Frame", { Name = "IncomeRow", BackgroundTransparency = 1, Size = UDim2.fromOffset(PILL_W, INCOME_H), LayoutOrder = 2, Parent = topLeft })
 UITheme.make("UIListLayout", {
 	FillDirection = Enum.FillDirection.Horizontal,
 	VerticalAlignment = Enum.VerticalAlignment.Center,
@@ -84,7 +84,7 @@ local incomeLabel = UITheme.text({
 	TextSize = 19,
 	Color = T.Cash,
 	Align = "Left",
-	Size = UDim2.fromOffset(0, 26),
+	Size = UDim2.fromOffset(0, INCOME_H),
 	AutomaticSize = Enum.AutomaticSize.X,
 	LayoutOrder = 1,
 	Parent = incomeRow,
@@ -307,23 +307,102 @@ local function inAvoid(y0: number, y1: number, x0: number, x1: number): number?
 	end
 	return nil
 end
+-- Roblox's chat window while it is open, in root coordinates (nil when closed). Studio layout tests:
+-- PlayerGui attribute UITestChat = Rect (root coordinates) stands in for it.
+local chatWindow = game:GetService("TextChatService"):FindFirstChildOfClass("ChatWindowConfiguration")
+local function chatRect(): Rect?
+	local test = player.PlayerGui:GetAttribute("UITestChat")
+	if typeof(test) == "Rect" then
+		return test
+	elseif player.PlayerGui:GetAttribute("UITestViewport") ~= nil then
+		return nil -- (a simulated screen size: the real chat window's place doesn't apply)
+	end
+	if chatWindow and chatWindow.Enabled and chatWindow.AbsoluteSize.X > 1 then
+		local p = chatWindow.AbsolutePosition - root.AbsolutePosition
+		return Rect.new(p, p + chatWindow.AbsoluteSize)
+	end
+	return nil
+end
+
+local PLATE_Y = 16
 function relayout()
 	if not view then
 		return
 	end
 	local s, size = view.scale, view.size
 	local gap = HUD.GAP
-	-- top-left block (the pill's "+" is a button: at least TOUCH px)
-	local pillH = math.max(PILL_H, math.ceil(HUD.TOUCH / s) + 6) -- (its "+" is pillH - 6: >= TOUCH on screen)
-	local pillW = math.max(PILL_W, math.ceil(200 / s))
-	topScale.Scale = s
+	local small = math.min(size.X, size.Y) <= 500
+	-- the left group (cash pill + menu buttons) is bigger than the rest of the HUD: x1.25 on phones,
+	-- x1.15 on tablets and PCs
+	local factor = if small then 1.25 else 1.15
+	local sL = s * factor
+	local floor = HUD.TOUCH * factor -- its smallest tap size grows with it (70 px on phones)
+	-- top-left block (the pill's "+" is a button)
+	local pillH = math.max(PILL_H, math.ceil(floor / sL) + 6) -- (its "+" is pillH - 6)
+	local pillW = math.max(PILL_W, math.ceil(200 * factor / sL))
+	local cell = math.max(CELL, math.ceil(floor / sL))
+	local thumbTop = inAvoid(0, size.Y, HUD.MARGIN, HUD.MARGIN + 1)
+	local bottomLimit = if thumbTop then thumbTop - gap else size.Y - HUD.MARGIN
+	topScale.Scale = sL
 	topLeft.Size = UDim2.fromOffset(pillW, 0)
 	pill.Size = UDim2.fromOffset(pillW, pillH)
-	incomeRow.Size = UDim2.fromOffset(pillW, 26)
-	local topBottom = 8 + (pillH + 4 + 26) * s
-	-- menu grid: the most columns-first shape that fits between the top block and the bottom
-	local cell = UITheme.touchSize(CELL, s)
-	local labelSize = math.max(15, math.ceil(11 / s)) -- never under 11 px on screen
+	incomeRow.Size = UDim2.fromOffset(pillW, INCOME_H)
+	local pillRight = HUD.MARGIN + pillW * sL
+	-- below the chat window while it is open there (it draws over everything) - when the whole group
+	-- still fits under it; on short phone screens it can't, and the open chat covers it
+	local top = 8
+	local chat = chatRect()
+	if chat and chat.Min.X < pillRight and chat.Max.X > HUD.MARGIN then
+		local below = math.ceil(chat.Max.Y) + gap
+		local portraitPlate = if size.Y > size.X then 72 * s * 1.12 + gap else 0
+		local besideColumn = pillW * sL <= size.X - 2 * HUD.MARGIN - HUD.ACTION_W * s - gap
+		if besideColumn and below + (pillH + 4 + INCOME_H) * sL + gap + portraitPlate + cell * sL <= bottomLimit then
+			top = below
+		end
+	end
+	topLeft.Position = UDim2.fromOffset(HUD.MARGIN, top)
+	local topBottom = top + (pillH + 4 + INCOME_H) * sL
+
+	-- the shared top piece (Golden timer + goal): centred and a touch bigger, beside the cash pill
+	-- (narrowed to fit); on portrait screens, if it would lose more than 20%, on its own row under the pill
+	local plateBottom = 0
+	local fit = topBar:FindFirstChild("Fit") :: UIScale?
+	if fit and fit.Scale > 0 and topBar.AbsoluteSize.X > 0 then
+		local natural = topBar.AbsoluteSize / fit.Scale
+		local want = s * 1.12
+		local column = pvpColumn()
+		local function rightLimit(y0: number, y1: number): number
+			if column then
+				local cy = column.AbsolutePosition.Y - root.AbsolutePosition.Y
+				if cy < y1 + gap and cy + column.AbsoluteSize.Y > y0 then
+					return column.AbsolutePosition.X - root.AbsolutePosition.X
+				end
+			end
+			return size.X - HUD.MARGIN
+		end
+		local plateH = natural.Y * want
+		local plateLeft = if top < PLATE_Y + plateH then pillRight + gap else HUD.MARGIN
+		local right = rightLimit(PLATE_Y, PLATE_Y + plateH)
+		local y = PLATE_Y
+		if size.Y > size.X and right - gap - plateLeft < natural.X * want * 0.8 then -- portrait, no room: own row
+			y = math.ceil(topBottom) + gap
+			plateLeft = HUD.MARGIN
+			right = rightLimit(y, y + plateH)
+		end
+		local scale = math.min(want, (right - gap - plateLeft) / natural.X)
+		if math.abs(fit.Scale - scale) > 0.002 then
+			fit.Scale = scale
+		end
+		local w = natural.X * scale
+		local cx = math.clamp(size.X / 2, plateLeft + w / 2, math.max(plateLeft + w / 2, right - gap - w / 2))
+		topBar.AnchorPoint = Vector2.new(0.5, 0)
+		topBar.Position = UDim2.fromOffset(cx, y)
+		plateBottom = if y > PLATE_Y then y + natural.Y * scale else 0
+	end
+
+	-- menu grid: the most columns-first shape that fits between the top block and the bottom, and
+	-- leaves room for the right-hand column
+	local labelSize = math.max(15, math.ceil(11 / sL)) -- never under 11 px on screen
 	for _, b in buttons do
 		local label = b:FindFirstChild("Label") :: TextLabel?
 		if label then
@@ -340,58 +419,53 @@ function relayout()
 	for _, b in buttons do
 		n += if b.Visible then 1 else 0
 	end
-	local bandTop = topBottom + gap
-	local bandBottom = size.Y - HUD.MARGIN
-	local thumbTop = inAvoid(0, size.Y, HUD.MARGIN, HUD.MARGIN + 1)
-	if thumbTop then
-		bandBottom = math.min(bandBottom, thumbTop - gap)
-	end
-	local cols, rows, w, h = 2, 1, 0, 0
+	local bandTop = math.max(topBottom, plateBottom) + gap
+	local bandBottom = bottomLimit
+	local maxW = size.X - 2 * HUD.MARGIN - HUD.ACTION_W * s - gap
+	local cols, rows, h = 2, 1, 0
 	for _, c in { 2, 3, 6 } do
-		cols = math.min(c, math.max(n, 1))
+		local tryCols = math.min(c, math.max(n, 1))
+		if tryCols > 2 and (tryCols * cell + (tryCols - 1) * CELL_GAP) * sL > maxW then
+			break -- wider would run into the right-hand column
+		end
+		cols = tryCols
 		rows = math.ceil(n / cols)
-		w = (cols * cell + (cols - 1) * CELL_GAP) * s
-		h = (rows * cell + (rows - 1) * CELL_GAP) * s
+		h = (rows * cell + (rows - 1) * CELL_GAP) * sL
 		if h <= bandBottom - bandTop then
 			break
 		end
 	end
 	gridLayout.CellSize = UDim2.fromOffset(cell, cell)
-	gridScale.Scale = s
+	gridScale.Scale = sL
 	grid.Size = UDim2.fromOffset(cols * cell + (cols - 1) * CELL_GAP, rows * cell + (rows - 1) * CELL_GAP)
 	local y = math.clamp(size.Y / 2 - h / 2, bandTop, math.max(bandTop, bandBottom - h))
 	grid.Position = UDim2.fromOffset(HUD.MARGIN, y)
 	grid:SetAttribute("Columns", cols)
-	-- carry card
+
+	-- carry card (the rest of the HUD's size)
 	carryBase = s
 	carryHolder.Scale = s
 	local storeH = UITheme.touchSize(64, s)
 	storeButton.Size = UDim2.fromOffset(STORE_W, storeH)
 	carry.Size = UDim2.fromOffset(CARRY_W, math.max(CARRY_H, storeH + 20))
-	-- the shared top piece: centred and a touch bigger, but never on the cash pill or, when they share
-	-- the same height, on the right-hand column (then it is narrowed to fit between them)
-	local fit = topBar:FindFirstChild("Fit") :: UIScale?
-	if fit and fit.Scale > 0 then
-		local natural = topBar.AbsoluteSize.X / fit.Scale
-		local pillRight = HUD.MARGIN + pillW * s
-		local right = size.X - HUD.MARGIN
-		local column = pvpColumn()
-		local barBottom = topBar.Position.Y.Offset + topBar.AbsoluteSize.Y
-		if column and column.AbsolutePosition.Y - root.AbsolutePosition.Y < barBottom + gap then
-			right = column.AbsolutePosition.X - root.AbsolutePosition.X
+	-- bottom centre, lifted above the thumbstick / jump button where it would reach them (portrait)
+	local half = CARRY_W * s / 2
+	local bottom = size.Y - HUD.MARGIN
+	for _, r in view.avoid do
+		if size.X / 2 + half > r.min.X and size.X / 2 - half < r.max.X then
+			bottom = math.min(bottom, r.min.Y - gap)
 		end
-		local avail = right - gap - (pillRight + gap)
-		local want = s * 1.12
-		local scale = if natural > 0 then math.min(want, avail / natural) else want
-		if math.abs(fit.Scale - scale) > 0.002 then
-			fit.Scale = scale
-		end
-		local w = natural * scale
-		local cx = math.clamp(size.X / 2, pillRight + gap + w / 2, math.max(pillRight + gap + w / 2, right - gap - w / 2))
-		topBar.AnchorPoint = Vector2.new(0.5, 0)
-		topBar.Position = UDim2.new(0, cx, 0, topBar.Position.Y.Offset)
 	end
+	carry.Position = UDim2.new(0.5, 0, 0, bottom)
 end
+if chatWindow then
+	chatWindow:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		relayout()
+	end)
+end
+player.PlayerGui:GetAttributeChangedSignal("UITestChat"):Connect(function()
+	relayout()
+end)
 UITheme.onHudLayout(root, function(v)
 	view = v
 	relayout()

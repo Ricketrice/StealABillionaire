@@ -994,6 +994,13 @@ function UITheme.bannerTop(): number
 	if not V1 then
 		return 74
 	end
+	-- where the top piece really is (HudV1 may put it on a second row on portrait phones)
+	local topBarGui = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("TopBar028")
+	local root = topBarGui and topBarGui:FindFirstChild("Root")
+	local bar = root and root:FindFirstChild("Bar")
+	if bar and bar:IsA("GuiObject") and bar.AbsoluteSize.Y > 0 then
+		return math.ceil(bar.AbsolutePosition.Y - (root :: GuiObject).AbsolutePosition.Y + bar.AbsoluteSize.Y) + 10
+	end
 	return 16 + math.ceil(72 * UITheme.hudScale(UITheme.viewSize()) * 1.12) + 10
 end
 -- Calls fn(view) now and whenever the HUD area changes; view = { size, scale, avoid }.
