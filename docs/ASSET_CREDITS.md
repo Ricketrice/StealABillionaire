@@ -4,3 +4,5 @@
 | Tree_A/B/C, Stall, Vault, Rock_A/B, Lamp meshes (`assets/export/027`) | Original, generated from code by `tools/blender/build_027_assets.py` (Blender 5.2) | Project-owned | Sky-island props (027) |
 | Hair "Ye Olde Powdered Whig" (17981858) | Roblox (catalogue) | Roblox catalogue item | Margaret / mystery_millionaire (027) |
 | Check-UI design system code (theme, components, controller), adapted | TemporaryLooker22, github.com/TemporaryLooker22/Check-UI-Clean-Roblox @52ac1ed | MIT (stated in README; repo has no LICENSE file) | UI kit (029) |
+| UI icon sheets IconSheet1/2 (31 icons; image ids 83002965680168, 94606617314375) | Original, modelled and rendered in Blender by `tools/blender/build_029_icons.py`, packed by `pack_029_icons.py`; uploaded from the owner's account | Project-owned | UI icons (029) |
+| Checker.png, Sunburst.png (`assets/export/ui`) | Original, generated from code by `tools/make_029_textures.py` (PIL) | Project-owned | Check-UI checkerboard + rays (029) |

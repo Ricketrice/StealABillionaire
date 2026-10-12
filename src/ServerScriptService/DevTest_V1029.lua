@@ -211,7 +211,7 @@ if mode == "off" then
 		expect("no income bonus", A:GetAttribute("IncomeBonus") == nil)
 		local probe = ask(A, "probe")
 		expect("old HUD shown, no V1 HUD", probe.hud == true and probe.hudV1 == false, HttpService:JSONEncode(probe))
-		expect("no 029 window opens", probe.anyOpen == false)
+		expect("no 029 window opens", probe.openCount == 0, probe.openCount)
 		ask(A, "open", { gui = "Rewards029", name = "Daily" })
 		ask(A, "open", { gui = "Store029", name = "cash" })
 		task.wait(0.5)
@@ -249,6 +249,8 @@ if mode == "off" then
 
 	scenario("playtime gifts", function()
 		setDay(10)
+		-- A joins on this new day (a session running through midnight would count from midnight).
+		RewardsService._test.setSince(A, base + offset)
 		RewardsService._test.playToday(A) -- new day: resets
 		RewardsService._test.setSince(A, base + offset - (RewardsConfig.PLAYTIME[1].minutes * 60 + 5))
 		local cash = CashService.get(A)
@@ -265,6 +267,7 @@ if mode == "off" then
 		end
 		expect("bad gift numbers are refused", hub(A).play.got["99"] == nil and hub(A).play.got["0"] == nil)
 		setDay(11)
+		RewardsService._test.setSince(A, base + offset) -- joined again on day 11
 		RewardsService._test.playToday(A)
 		expect("a new day resets the gifts", next(hub(A).play.got) == nil and hub(A).play.secs < 60, HttpService:JSONEncode(hub(A).play), true)
 	end)

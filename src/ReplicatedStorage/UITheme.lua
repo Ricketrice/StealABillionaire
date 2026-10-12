@@ -4,8 +4,11 @@
 -- corner radius, gradients, button style, press squash and the open/close bounce, plus the components
 -- built from them. Two looks:
 --   Classic  the 028 look (dark navy panels, muted gold); used while the V1 look is off
---   V1       (V1Flags.UI_V1_ENABLED) chunky and bright: charcoal panels with thick dark outlines,
---            cream text, gold ribbon headers, bright gradient buttons, sprite-sheet icons
+--   V1       (V1Flags.UI_V1_ENABLED) the Check-UI style (D18, adapted from Check-UI @52ac1ed, MIT; see
+--            docs/ASSET_CREDITS.md): slate windows with a charcoal outline, a full-width coloured header
+--            per menu (2-tier shadow under it, fading checkerboard), 3D bevelled gradient buttons with a
+--            square crimson [X], GothamBlack text with thick black outlines, sprite-sheet icons.
+--            Only our own icons and textures (UITheme.ICON_SHEETS / UITheme.TEXTURES).
 -- The look is chosen once when the client starts (from the server's published switch). UIStyle and
 -- UIKit take their tokens from here too, so every older screen follows the same look.
 --
@@ -17,8 +20,12 @@
 --   UITheme.button{ ..., Kind = Primary|Secondary|Gold|Danger|Ghost, Icon? }  + UITheme.setEnabled(b, on, text?)
 --   UITheme.closeButton{ Parent, Position?, AnchorPoint?, OnActivated }
 --   UITheme.iconButton{ Icon, Label, Parent, LayoutOrder?, OnActivated }      HUD side button (+ .badge)
---   UITheme.window{ Name, Title, Icon, Size = Vector2, Parent = root, OnClose? } -> win
---       win.frame, win.content, win.open(), win.close(), win.isOpen()   (ribbon header, overlay, bounce)
+--   UITheme.window{ Name, Title, Icon, Size = Vector2, Parent = root, OnClose?, Theme? } -> win
+--       win.frame, win.content, win.open(), win.close(), win.isOpen()   (header, overlay, bounce)
+--       Theme = a UITheme.HeaderThemes name (V1): Shop, Daily, Settings, Codes, Index, Gold (default)
+--   UITheme.paint(button, kind)                                          recolour a UITheme button
+--   UITheme.sunburst{ Parent, Size?, Color?, ZIndex? } -> ImageLabel?     rays behind a featured item
+--   UITheme.damier(parent, color, tile?, transparency?) -> ImageLabel?    fading checkerboard
 --   UITheme.card{ Size, Parent, Rarity?, LayoutOrder?, Color? }           item card
 --   UITheme.pill{ Icon, Text, Parent, OnPlus?, LayoutOrder? } -> (frame, label, plus?)  currency pill
 --   UITheme.tabs{ Tabs = { {key, title, icon?} }, Parent, Size, Position?, OnSelect } -> (frame, select)
@@ -92,32 +99,33 @@ local CLASSIC = {
 	Disabled = rgb(50, 54, 68),
 	Overlay = rgb(8, 10, 16),
 }
-local BRIGHT = {
-	Panel = rgb(48, 43, 64), -- charcoal (a touch of plum)
-	PanelDark = rgb(31, 28, 42),
-	PanelRaised = rgb(66, 60, 86),
-	Stroke = rgb(17, 14, 24), -- the thick dark outline on everything
-	Border = rgb(17, 14, 24),
-	Text = rgb(255, 249, 234), -- cream
-	TextMuted = rgb(206, 198, 222),
-	TextDim = rgb(150, 142, 170),
-	Accent = rgb(255, 199, 44), -- gold
-	AccentDark = rgb(196, 118, 10),
+local BRIGHT = { -- Check-UI (D18)
+	Panel = rgb(59, 88, 102), -- slate window canvas
+	PanelDark = rgb(26, 44, 52), -- recessed containers
+	PanelRaised = rgb(36, 60, 71), -- cards
+	Stroke = rgb(12, 20, 26), -- the thick dark outline on buttons and text
+	Border = rgb(24, 30, 34), -- window outline
+	Highlight = rgb(75, 125, 145), -- thin inner line on recessed boxes
+	Text = rgb(255, 255, 255),
+	TextMuted = rgb(206, 226, 234),
+	TextDim = rgb(146, 172, 184),
+	Accent = rgb(255, 208, 0), -- gold
+	AccentDark = rgb(153, 76, 0),
 	AccentText = rgb(48, 30, 6),
 	Cream = rgb(255, 244, 214),
-	Cash = rgb(120, 236, 90),
-	CashDark = rgb(34, 110, 40),
-	Success = rgb(86, 214, 92),
-	Danger = rgb(244, 72, 72),
-	Info = rgb(74, 166, 255),
-	Golden = rgb(255, 212, 60),
-	GoldenDeep = rgb(176, 104, 10),
-	Secondary = rgb(74, 150, 255),
-	Track = rgb(24, 21, 32),
-	Fill = rgb(120, 236, 90),
+	Cash = rgb(150, 240, 20),
+	CashDark = rgb(15, 120, 15),
+	Success = rgb(105, 225, 0),
+	Danger = rgb(255, 32, 80),
+	Info = rgb(0, 170, 255),
+	Golden = rgb(255, 208, 0),
+	GoldenDeep = rgb(176, 96, 0),
+	Secondary = rgb(0, 150, 255),
+	Track = rgb(20, 30, 36),
+	Fill = rgb(255, 170, 0), -- progress: gold to orange
 	Silhouette = rgb(0, 0, 0),
-	Disabled = rgb(96, 92, 110),
-	Overlay = rgb(10, 8, 14),
+	Disabled = rgb(148, 160, 176),
+	Overlay = rgb(8, 12, 16),
 }
 UITheme.Colors = if V1 then BRIGHT else CLASSIC
 
@@ -141,10 +149,10 @@ UITheme.RarityGlyph = { Common = "●", Rare = "◆", Epic = "▲", Legendary = 
 
 -- Type ------------------------------------------------------------------------------------------------
 UITheme.Fonts = if V1
-	then {
-		Display = Enum.Font.FredokaOne, -- titles, big numbers, buttons
-		Ribbon = Enum.Font.LuckiestGuy, -- ribbon headers and banners
-		Body = Enum.Font.GothamBold,
+	then { -- Check-UI: GothamBlack everywhere, readable through thick outlines
+		Display = Enum.Font.GothamBlack,
+		Ribbon = Enum.Font.GothamBlack,
+		Body = Enum.Font.GothamBlack,
 		Bold = Enum.Font.GothamBlack,
 	}
 	else {
@@ -153,39 +161,46 @@ UITheme.Fonts = if V1
 		Body = Enum.Font.GothamMedium,
 		Bold = Enum.Font.GothamBold,
 	}
-UITheme.TextSize = if V1 then { Display = 32, Title = 24, Body = 17, Small = 14 } else { Display = 30, Title = 22, Body = 16, Small = 13 }
+UITheme.TextSize = if V1 then { Display = 30, Title = 24, Body = 16, Small = 13 } else { Display = 30, Title = 22, Body = 16, Small = 13 }
 local ROLE_FONT = { Display = "Display", Title = "Display", Body = "Body", Small = "Bold" }
 
 -- Shapes ----------------------------------------------------------------------------------------------
-UITheme.CornerRadius = UDim.new(0, if V1 then 16 else 12)
-UITheme.SmallRadius = UDim.new(0, if V1 then 12 else 8)
+UITheme.CornerRadius = UDim.new(0, if V1 then 8 else 12)
+UITheme.SmallRadius = UDim.new(0, if V1 then 6 else 8)
 UITheme.PillRadius = UDim.new(1, 0)
 UITheme.StrokeThickness = if V1 then 3 else 2 -- panels and buttons
-UITheme.TextStrokeThickness = if V1 then 2 else 1.5
+UITheme.TextStrokeThickness = if V1 then 2.5 else 1.5
 UITheme.Padding = if V1 then 12 else 10
 UITheme.TouchTarget = 44 -- minimum on-screen size of anything tappable (after scaling)
 
 -- Gradients (UIGradient multiplies the colour under it: top light, bottom shaded) ------------------------
 UITheme.Gradients = {
 	Button = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.78, 0.78, 0.78)),
-	Panel = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.86, 0.86, 0.86)),
+	Panel = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(if V1 then 0.94 else 0.86, if V1 then 0.94 else 0.86, if V1 then 0.94 else 0.86)),
 	Ribbon = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.82, 0.74, 0.6)),
 	Fill = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.72, 0.72, 0.72)),
 }
 
 -- Buttons ---------------------------------------------------------------------------------------------
+-- V1 (Check-UI): top/bottom = the face gradient, bevel = the 3D edge under it, light = the thin shine at
+-- the top. fill = one flat colour for the older UIKit screens.
+local function v1Button(top: Color3, bottom: Color3, bevel: Color3, light: Color3): { [string]: any }
+	return { top = top, bottom = bottom, bevel = bevel, light = light, fill = top:Lerp(bottom, 0.5), text = rgb(255, 255, 255), stroke = rgb(0, 0, 0) }
+end
 UITheme.Button = if V1
 	then {
-		Primary = { fill = rgb(86, 214, 76), text = rgb(255, 255, 255), stroke = rgb(17, 14, 24) }, -- green: claim, buy, place
-		Secondary = { fill = rgb(74, 150, 255), text = rgb(255, 255, 255), stroke = rgb(17, 14, 24) }, -- blue
-		Gold = { fill = rgb(255, 196, 40), text = rgb(255, 255, 255), stroke = rgb(17, 14, 24) },
-		Danger = { fill = rgb(244, 72, 72), text = rgb(255, 255, 255), stroke = rgb(17, 14, 24) },
-		Ghost = { fill = rgb(31, 28, 42), text = rgb(255, 249, 234), stroke = rgb(17, 14, 24) },
-		Disabled = { fill = rgb(96, 92, 110), text = rgb(200, 196, 212), stroke = rgb(17, 14, 24) },
+		Primary = v1Button(rgb(180, 255, 25), rgb(105, 225, 0), rgb(15, 120, 15), rgb(235, 255, 130)), -- lime: claim, buy, place
+		Secondary = v1Button(rgb(0, 210, 255), rgb(0, 120, 255), rgb(0, 60, 140), rgb(180, 240, 255)), -- cyan
+		Gold = v1Button(rgb(255, 208, 0), rgb(255, 140, 0), rgb(153, 76, 0), rgb(255, 240, 160)), -- amber: skip, selected tab
+		Danger = v1Button(rgb(255, 32, 80), rgb(208, 0, 32), rgb(112, 0, 16), rgb(255, 176, 200)), -- crimson: locked
+		Pink = v1Button(rgb(255, 20, 128), rgb(212, 0, 85), rgb(120, 10, 45), rgb(255, 176, 208)), -- toggle on
+		Ghost = v1Button(rgb(75, 125, 145), rgb(40, 66, 78), rgb(18, 30, 36), rgb(130, 180, 200)), -- slate: HUD, tabs
+		Close = v1Button(rgb(255, 125, 175), rgb(255, 20, 40), rgb(115, 0, 16), rgb(255, 210, 235)),
+		Disabled = v1Button(rgb(216, 222, 228), rgb(148, 160, 176), rgb(72, 82, 96), rgb(255, 255, 255)), -- silver: claimed / off
 		PressScale = 0.9, -- squash on press
 		Font = "Display",
 		TextSize = 20,
-		TextStroke = true, -- white text with a dark outline
+		TextStroke = true, -- white text with a black outline
 	}
 	else {
 		Primary = { fill = rgb(198, 160, 86), text = rgb(30, 28, 24), stroke = rgb(122, 96, 52) },
@@ -200,6 +215,26 @@ UITheme.Button = if V1
 		TextStroke = false,
 	}
 
+-- Check-UI's button state names: claim / claimed / locked / skip.
+UITheme.Button.Claim, UITheme.Button.Claimed = UITheme.Button.Primary, UITheme.Button.Disabled
+UITheme.Button.Locked, UITheme.Button.Skip = UITheme.Button.Danger, UITheme.Button.Gold
+UITheme.Button.Pink = UITheme.Button.Pink or UITheme.Button.Danger
+UITheme.Button.Close = UITheme.Button.Close or UITheme.Button.Danger
+
+-- Window headers (V1): one colour per menu, same shape everywhere (D18).
+local function header(top: Color3, bottom: Color3, light: Color3, damier: Color3, divider: Color3): { [string]: Color3 }
+	return { top = top, bottom = bottom, light = light, damier = damier, divider = divider }
+end
+UITheme.HeaderThemes = {
+	Shop = header(rgb(255, 20, 150), rgb(225, 0, 25), rgb(255, 200, 225), rgb(150, 0, 20), rgb(125, 0, 18)), -- magenta
+	Daily = header(rgb(152, 255, 0), rgb(80, 208, 0), rgb(224, 255, 176), rgb(53, 128, 0), rgb(37, 96, 0)), -- lime
+	Settings = header(rgb(255, 255, 255), rgb(215, 222, 232), rgb(255, 255, 255), rgb(110, 120, 135), rgb(90, 100, 112)), -- silver
+	Codes = header(rgb(0, 205, 255), rgb(0, 130, 245), rgb(180, 240, 255), rgb(0, 75, 150), rgb(0, 50, 110)), -- cyan
+	Index = header(rgb(160, 0, 255), rgb(96, 0, 200), rgb(224, 160, 255), rgb(96, 0, 144), rgb(80, 0, 120)), -- purple
+	Gold = header(rgb(255, 208, 0), rgb(255, 140, 0), rgb(255, 240, 160), rgb(176, 96, 0), rgb(153, 76, 0)), -- amber
+}
+-- Settings' silver header is light: its title keeps white text with the black outline like the rest.
+
 -- Motion ----------------------------------------------------------------------------------------------
 UITheme.Motion = { Fast = 0.15, Normal = 0.25, Slow = 0.45, Open = 0.32 }
 
@@ -208,6 +243,9 @@ UITheme.Motion = { Fast = 0.15, Normal = 0.25, Slow = 0.45, Open = 0.32 }
 -- that load in an ImageLabel). 0 = not uploaded: icons fall back to emoji/text.
 UITheme.ICON_SHEETS = { 83002965680168, 94606617314375 }
 UITheme.ICON_TILE = 256
+-- Our own Check-UI textures (tools/make_029_textures.py -> assets/export/ui): white on transparent, tinted
+-- in code. 0 = not uploaded yet: the checkerboard and sunburst are simply left out.
+UITheme.TEXTURES = { Checker = 0, Sunburst = 0 }
 -- name = { sheet, x, y } (from tools/blender/pack_029_icons.py)
 UITheme.ICONS = {
 	cash = { 1, 0, 0 },
@@ -403,6 +441,60 @@ function UITheme.squash(button: GuiButton)
 	button.MouseLeave:Connect(release)
 end
 
+-- The V1 face: shine at the top, the gradient, then a hard edge into the bevel colour at the bottom.
+local BEVEL_AT = 0.9 -- the bottom 10% of a button is its 3D edge
+local function face(style: { [string]: any }): ColorSequence
+	return ColorSequence.new({
+		ColorSequenceKeypoint.new(0, style.light),
+		ColorSequenceKeypoint.new(0.08, style.top),
+		ColorSequenceKeypoint.new(BEVEL_AT, style.bottom),
+		ColorSequenceKeypoint.new(BEVEL_AT + 0.005, style.bevel),
+		ColorSequenceKeypoint.new(1, style.bevel),
+	})
+end
+
+-- V1 buttons draw their text on a child label ("ButtonText") so the face gradient can't tint it. The
+-- button keeps its own Text (hidden) for layout and for scripts that read or change it; the label
+-- follows every change.
+local MIRRORED = { "Text", "TextSize", "Font", "TextColor3", "TextScaled", "TextWrapped", "TextXAlignment", "ZIndex" }
+local function textLabel(button: TextButton)
+	local label = make("TextLabel", {
+		Name = "ButtonText",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, BEVEL_AT),
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Parent = button,
+	})
+	make("UIStroke", {
+		Color = Color3.new(0, 0, 0),
+		Thickness = UITheme.TextStrokeThickness,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+		LineJoinMode = Enum.LineJoinMode.Round,
+		Parent = label,
+	})
+	for _, key in MIRRORED do
+		(label :: any)[key] = (button :: any)[key]
+		button:GetPropertyChangedSignal(key):Connect(function()
+			(label :: any)[key] = (button :: any)[key]
+		end)
+	end
+	button.TextTransparency = 1
+end
+
+-- Recolours a UITheme button to another Kind (tab selection, enabled/disabled).
+function UITheme.paint(button: GuiButton, kind: string)
+	local style = UITheme.Button[kind] or UITheme.Button.Primary
+	local gradient = button:FindFirstChild("Face")
+	if V1 and gradient and gradient:IsA("UIGradient") then
+		gradient.Color = face(style)
+	else
+		button.BackgroundColor3 = style.fill
+	end
+	if button:IsA("TextButton") then
+		button.TextColor3 = style.text
+	end
+end
+
 -- A button. props: the TextButton's own properties plus Kind, Icon and OnActivated.
 -- A disabled button (UITheme.setEnabled) ignores presses.
 function UITheme.button(props: { [string]: any }): TextButton
@@ -410,7 +502,7 @@ function UITheme.button(props: { [string]: any }): TextButton
 	local style = UITheme.Button[kind] or UITheme.Button.Primary
 	local onActivated, icon = props.OnActivated, props.Icon
 	props.Kind, props.OnActivated, props.Icon = nil, nil, nil
-	props.BackgroundColor3 = style.fill
+	props.BackgroundColor3 = if V1 then Color3.new(1, 1, 1) else style.fill
 	props.TextColor3 = style.text
 	props.Font = props.Font or UITheme.Fonts[UITheme.Button.Font]
 	props.TextSize = props.TextSize or UITheme.Button.TextSize
@@ -418,11 +510,18 @@ function UITheme.button(props: { [string]: any }): TextButton
 	props.BorderSizePixel = 0
 	local button = make("TextButton", props)
 	button:SetAttribute("Kind", kind)
-	UITheme.corner(button)
-	UITheme.stroke(button, style.stroke)
-	UITheme.shade(button, "Button")
-	if UITheme.Button.TextStroke then
-		make("UIStroke", { Color = UITheme.Colors.Stroke, Thickness = UITheme.TextStrokeThickness, ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual, Parent = button })
+	if V1 then
+		UITheme.corner(button, UITheme.SmallRadius)
+		UITheme.stroke(button, style.stroke, 2.8)
+		make("UIGradient", { Name = "Face", Color = face(style), Rotation = 90, Parent = button })
+		textLabel(button)
+	else
+		UITheme.corner(button)
+		UITheme.stroke(button, style.stroke)
+		UITheme.shade(button, "Button")
+		if UITheme.Button.TextStroke then
+			make("UIStroke", { Color = UITheme.Colors.Stroke, Thickness = UITheme.TextStrokeThickness, ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual, Parent = button })
+		end
 	end
 	if icon then
 		local h = (props.Size and props.Size.Y.Offset or 44) - 12
@@ -443,18 +542,30 @@ end
 -- Greys a UITheme button out (and back). text = what it says while disabled.
 function UITheme.setEnabled(button: TextButton, on: boolean, text: string?)
 	local kind = button:GetAttribute("Kind") or "Primary"
-	local style = if on then UITheme.Button[kind] or UITheme.Button.Primary else UITheme.Button.Disabled
 	button:SetAttribute("Disabled", if on then nil else true)
 	button.Active = on
-	button.BackgroundColor3 = style.fill
-	button.TextColor3 = style.text
+	UITheme.paint(button, if on then kind else "Disabled")
 	if text then
 		button.Text = text
 	end
 end
 
--- The round red close button.
+-- The close button: V1 a square crimson [X] with a 3D edge (Check-UI), Classic a round red one.
 function UITheme.closeButton(props: { [string]: any }): TextButton
+	if V1 then
+		return UITheme.button({
+			Name = props.Name or "Close",
+			Kind = "Close",
+			Text = "X",
+			TextSize = 30,
+			Size = props.Size or UDim2.fromOffset(48, 48),
+			Position = props.Position,
+			AnchorPoint = props.AnchorPoint,
+			ZIndex = props.ZIndex,
+			Parent = props.Parent,
+			OnActivated = props.OnActivated,
+		})
+	end
 	local size = props.Size or UDim2.fromOffset(52, 52)
 	local b = UITheme.button({
 		Name = props.Name or "Close",
@@ -480,6 +591,51 @@ function UITheme.closeButton(props: { [string]: any }): TextButton
 		})
 	end
 	return b
+end
+
+-- A tiled checkerboard that fades in towards the bottom (Check-UI "damier"). Nothing until uploaded.
+function UITheme.damier(parent: GuiObject, color: Color3, tile: number?, transparency: number?): ImageLabel?
+	if UITheme.TEXTURES.Checker <= 0 then
+		return nil
+	end
+	local image = make("ImageLabel", {
+		Name = "Damier",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Image = "rbxassetid://" .. UITheme.TEXTURES.Checker,
+		ImageColor3 = color,
+		ImageTransparency = transparency or 0.35,
+		ScaleType = Enum.ScaleType.Tile,
+		TileSize = UDim2.fromOffset(tile or 26, tile or 26),
+		ZIndex = parent.ZIndex,
+		Parent = parent,
+	})
+	make("UIGradient", {
+		Rotation = 90,
+		Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.28, 0.65), NumberSequenceKeypoint.new(1, 0.05) }),
+		Parent = image,
+	})
+	return image
+end
+
+-- Rays behind a featured item (Starter Pack, day 7). Static: no per-frame work. Nothing until uploaded.
+function UITheme.sunburst(props: { [string]: any }): ImageLabel?
+	if UITheme.TEXTURES.Sunburst <= 0 then
+		return nil
+	end
+	return make("ImageLabel", {
+		Name = "Sunburst",
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = props.Position or UDim2.fromScale(0.5, 0.5),
+		Size = props.Size or UDim2.fromScale(1.4, 1.4),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		Image = "rbxassetid://" .. UITheme.TEXTURES.Sunburst,
+		ImageColor3 = props.Color or UITheme.Colors.Accent,
+		ImageTransparency = props.Transparency or 0.25,
+		ZIndex = props.ZIndex or 1,
+		Parent = props.Parent,
+	})
 end
 
 -- A red notification dot (optionally with a number or "!"). set(nil) hides it.
@@ -665,8 +821,7 @@ function UITheme.tabs(props: { [string]: any }): (Frame, (string) -> ())
 	local function choose(key: string)
 		current = key
 		for k, b in buttons do
-			local style = if k == key then UITheme.Button.Gold else UITheme.Button.Ghost
-			b.BackgroundColor3, b.TextColor3 = style.fill, style.text
+			UITheme.paint(b, if k == key then "Gold" else "Ghost")
 			b:SetAttribute("Selected", k == key)
 		end
 		if props.OnSelect then
@@ -769,10 +924,80 @@ local function fitScale(scale: UIScale, size: Vector2, root: GuiObject, maxScale
 	task.defer(update)
 end
 
--- A window: dim overlay, panel with a gold ribbon header (icon + title) and a red close button.
--- props: Name, Title, Icon, Size (Vector2, authored px), Parent (a root frame), OnClose?, MaxScale?
+-- V1 header (Check-UI): full width, menu colour, shine line, fading checkerboard, 2-tier shadow.
+local HEADER = 60
+local function v1Header(holder: Frame, props: { [string]: any }): TextLabel
+	local theme = UITheme.HeaderThemes[props.Theme or "Gold"] or UITheme.HeaderThemes.Gold
+	local bar = make("Frame", {
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, HEADER),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+		ZIndex = 12,
+		Parent = holder,
+	})
+	UITheme.corner(bar, UITheme.CornerRadius)
+	make("UIGradient", { Color = ColorSequence.new(theme.top, theme.bottom), Rotation = 90, Parent = bar })
+	make("Frame", {
+		Name = "Shine",
+		Size = UDim2.new(1, -8, 0, 2),
+		Position = UDim2.fromOffset(4, 1),
+		BackgroundColor3 = theme.light,
+		BackgroundTransparency = 0.25,
+		BorderSizePixel = 0,
+		ZIndex = 13,
+		Parent = bar,
+	})
+	local damier = UITheme.damier(bar, theme.damier)
+	if damier then
+		damier.ZIndex = 13
+	end
+	-- square bottom edge (the corner rounding is for the top only), then the 2-tier shadow
+	make(
+		"Frame",
+		{ Name = "DivDark", Size = UDim2.new(1, 0, 0, 3), Position = UDim2.new(0, 0, 1, -6), BackgroundColor3 = theme.divider, BorderSizePixel = 0, ZIndex = 14, Parent = bar }
+	)
+	make("Frame", {
+		Name = "DivBlack",
+		Size = UDim2.new(1, 0, 0, 3),
+		Position = UDim2.new(0, 0, 1, -3),
+		BackgroundColor3 = Color3.new(0, 0, 0),
+		BorderSizePixel = 0,
+		ZIndex = 14,
+		Parent = bar,
+	})
+	local left = 16
+	if props.Icon then
+		UITheme.image({ Icon = props.Icon, Size = UDim2.fromOffset(50, 50), AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 8, 0.5, -3), ZIndex = 15, Parent = bar })
+		left = 62
+	end
+	local title = UITheme.text({
+		Name = "Title",
+		Text = props.Title or "",
+		Role = "Title",
+		Font = UITheme.Fonts.Ribbon,
+		TextSize = 30,
+		Color = Color3.new(1, 1, 1),
+		Align = "Left",
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, left, 0.5, -3),
+		Size = UDim2.new(1, -left - 64, 0, 40),
+		ZIndex = 15,
+		Parent = bar,
+	})
+	title:FindFirstChildOfClass("UIStroke").Thickness = 3
+	return title
+end
+
+-- A window: dim overlay, a panel with its header (V1: full-width menu colour; Classic: gold ribbon)
+-- and a close button.
+-- props: Name, Title, Icon, Size (Vector2, authored px = the content area plus header), Parent (a
+-- root frame), OnClose?, MaxScale?, Theme? (V1 header colour, UITheme.HeaderThemes)
 function UITheme.window(props: { [string]: any }): any
 	local size: Vector2 = props.Size or Vector2.new(600, 400)
+	-- V1 draws the header inside the panel: grow it so the content area stays the authored one.
+	local extra = if V1 then HEADER + UITheme.Padding - 34 else 0
+	local frameSize = size + Vector2.new(0, extra)
 	local root: GuiObject = props.Parent
 	local overlay = make("TextButton", {
 		Name = (props.Name or "Window") .. "Overlay",
@@ -789,65 +1014,74 @@ function UITheme.window(props: { [string]: any }): any
 	local frame = make("Frame", {
 		Name = props.Name or "Window",
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.new(0.5, 0, 0.5, 10),
-		Size = UDim2.fromOffset(size.X, size.Y),
+		Position = UDim2.new(0.5, 0, 0.5, if V1 then 0 else 10),
+		Size = UDim2.fromOffset(frameSize.X, frameSize.Y),
 		BackgroundTransparency = 1,
 		Visible = false,
 		ZIndex = 11,
 		Parent = root,
 	})
-	fitScale(make("UIScale", { Name = "Fit", Parent = frame }), size + Vector2.new(0, 34), root, props.MaxScale)
+	fitScale(make("UIScale", { Name = "Fit", Parent = frame }), if V1 then frameSize else size + Vector2.new(0, 34), root, props.MaxScale)
 	local holder = UITheme.panel({ Name = "Panel", Size = UDim2.fromScale(1, 1), ZIndex = 11, Parent = frame })
+	if V1 then
+		local outline = holder:FindFirstChildOfClass("UIStroke")
+		if outline then
+			outline.Color, outline.Thickness = UITheme.Colors.Border, 3.5
+		end
+	end
 	local scale = make("UIScale", { Name = "Bounce", Parent = holder })
 
-	-- ribbon header
-	local ribbon = make("Frame", {
-		Name = "Ribbon",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0),
-		Size = UDim2.fromOffset(0, 50),
-		AutomaticSize = Enum.AutomaticSize.X,
-		BackgroundColor3 = UITheme.Colors.Accent,
-		BorderSizePixel = 0,
-		ZIndex = 13,
-		Parent = holder,
-	})
-	UITheme.corner(ribbon, UITheme.SmallRadius)
-	UITheme.stroke(ribbon, UITheme.Colors.Stroke)
+	local title
 	if V1 then
-		make("UIGradient", { Color = UITheme.Gradients.Ribbon, Rotation = 90, Parent = ribbon })
+		title = v1Header(holder, props)
+	else
+		-- ribbon header
+		local ribbon = make("Frame", {
+			Name = "Ribbon",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0),
+			Size = UDim2.fromOffset(0, 50),
+			AutomaticSize = Enum.AutomaticSize.X,
+			BackgroundColor3 = UITheme.Colors.Accent,
+			BorderSizePixel = 0,
+			ZIndex = 13,
+			Parent = holder,
+		})
+		UITheme.corner(ribbon, UITheme.SmallRadius)
+		UITheme.stroke(ribbon, UITheme.Colors.Stroke)
+		make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Parent = ribbon,
+		})
+		make("UIPadding", { PaddingLeft = UDim.new(0, if props.Icon then 6 else 22), PaddingRight = UDim.new(0, 22), Parent = ribbon })
+		if props.Icon then
+			UITheme.image({ Icon = props.Icon, Size = UDim2.fromOffset(46, 46), LayoutOrder = 1, ZIndex = 14, Parent = ribbon })
+		end
+		title = UITheme.text({
+			Name = "Title",
+			Text = props.Title or "",
+			Role = "Title",
+			Font = UITheme.Fonts.Ribbon,
+			TextSize = 28,
+			Color = UITheme.Colors.AccentText,
+			Size = UDim2.fromOffset(0, 40),
+			AutomaticSize = Enum.AutomaticSize.X,
+			LayoutOrder = 2,
+			ZIndex = 14,
+			Parent = ribbon,
+		})
+		title.TextTruncate = Enum.TextTruncate.None
 	end
-	make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, 6),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Parent = ribbon,
-	})
-	make("UIPadding", { PaddingLeft = UDim.new(0, if props.Icon then 6 else 22), PaddingRight = UDim.new(0, 22), Parent = ribbon })
-	if props.Icon then
-		UITheme.image({ Icon = props.Icon, Size = UDim2.fromOffset(46, 46), LayoutOrder = 1, ZIndex = 14, Parent = ribbon })
-	end
-	local title = UITheme.text({
-		Name = "Title",
-		Text = props.Title or "",
-		Role = "Title",
-		Font = UITheme.Fonts.Ribbon,
-		TextSize = 28,
-		Color = if V1 then Color3.new(1, 1, 1) else UITheme.Colors.AccentText,
-		Size = UDim2.fromOffset(0, 40),
-		AutomaticSize = Enum.AutomaticSize.X,
-		LayoutOrder = 2,
-		ZIndex = 14,
-		Parent = ribbon,
-	})
-	title.TextTruncate = Enum.TextTruncate.None
 
+	local top = if V1 then HEADER + UITheme.Padding else 34
 	local content = make("Frame", {
 		Name = "Content",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(UITheme.Padding, 34),
-		Size = UDim2.new(1, -UITheme.Padding * 2, 1, -34 - UITheme.Padding),
+		Position = UDim2.fromOffset(UITheme.Padding, top),
+		Size = UDim2.new(1, -UITheme.Padding * 2, 1, -top - UITheme.Padding),
 		ZIndex = 12,
 		Parent = holder,
 	})
@@ -888,7 +1122,13 @@ function UITheme.window(props: { [string]: any }): any
 			props.OnClose()
 		end
 	end
-	win.closeButton = UITheme.closeButton({ AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(1, -8, 0, 8), ZIndex = 15, Parent = holder, OnActivated = win.close })
+	win.closeButton = UITheme.closeButton({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = if V1 then UDim2.new(1, -34, 0, HEADER / 2 - 3) else UDim2.new(1, -8, 0, 8),
+		ZIndex = 16,
+		Parent = holder,
+		OnActivated = win.close,
+	})
 	overlay.Activated:Connect(win.close)
 	return win
 end

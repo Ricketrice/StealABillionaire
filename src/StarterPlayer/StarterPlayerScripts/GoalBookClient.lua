@@ -262,9 +262,7 @@ local function showPage(index: number)
 	totalLabel.Text = ("%d of %d workers caught"):format(count(caught), TOTAL)
 	soon.Visible = #ids == 0
 	for i, button in tabButtons do
-		local style = if i == index then UITheme.Button.Primary else UITheme.Button.Ghost
-		button.BackgroundColor3 = style.fill
-		button.TextColor3 = style.text
+		UITheme.paint(button, if i == index then "Primary" else "Ghost")
 	end
 	for order, id in ids do
 		local worker = WorkerCatalogue.get(id)

@@ -13,7 +13,7 @@ local UITheme = require(ReplicatedStorage:WaitForChild("UITheme"))
 local T = UITheme.Colors
 local gui, root = UITheme.gui("Store029", 5)
 
-local win = UITheme.window({ Name = "Store", Title = "Store", Icon = "shop", Size = Vector2.new(800, 350), Parent = root })
+local win = UITheme.window({ Name = "Store", Title = "Store", Icon = "shop", Theme = "Shop", Size = Vector2.new(800, 350), Parent = root })
 local grid = UITheme.make("ScrollingFrame", {
 	Name = "Items",
 	BackgroundTransparency = 1,
@@ -33,6 +33,10 @@ UITheme.make("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingLeft = UDim.new(
 local function item(def: any, order: number)
 	local available = ProductConfig.available(def) and false -- (029: purchases are not wired yet)
 	local card = UITheme.card({ Name = def.key, LayoutOrder = order, ZIndex = 13, Parent = grid })
+	if def.oneTime then -- the featured one-time pack gets rays behind its icon (once the texture is uploaded)
+		card.ClipsDescendants = true
+		UITheme.sunburst({ Position = UDim2.fromOffset(45, 43), Size = UDim2.fromScale(0.75, 0.75), ZIndex = 13, Parent = card })
+	end
 	UITheme.image({ Icon = def.icon, Size = UDim2.fromOffset(74, 74), Position = UDim2.fromOffset(8, 6), ZIndex = 14, Parent = card })
 	UITheme.text({
 		Name = "ItemName",

@@ -22,7 +22,7 @@ local actionEvent = ReplicatedStorage:WaitForChild("RewardsAction") :: RemoteEve
 local clientEvent = ReplicatedStorage:WaitForChild("RewardsEvent") :: RemoteEvent
 
 local gui, root = UITheme.gui("Index029", 5)
-local win = UITheme.window({ Name = "Index", Title = "Index", Icon = "book", Size = Vector2.new(800, 340), Parent = root })
+local win = UITheme.window({ Name = "Index", Title = "Index", Icon = "book", Theme = "Index", Size = Vector2.new(800, 340), Parent = root })
 
 -- Pages: the book's zones that have workers in the catalogue, in the book's order.
 local pages = {}

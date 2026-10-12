@@ -38,7 +38,7 @@ local function ask(action: string, a: any?, b: any?)
 end
 
 -- Daily ------------------------------------------------------------------------------------------------------
-local daily = UITheme.window({ Name = "Daily", Title = "Daily Rewards", Icon = "calendar", Size = Vector2.new(700, 340), Parent = root })
+local daily = UITheme.window({ Name = "Daily", Title = "Daily Rewards", Icon = "calendar", Theme = "Daily", Size = Vector2.new(700, 340), Parent = root })
 local dailyNote = UITheme.text({
 	Name = "Note",
 	Text = "",
@@ -56,6 +56,10 @@ UITheme.make("UIGridLayout", { CellSize = UDim2.new(1 / 7, -6, 1, 0), CellPaddin
 local dayCards = {}
 for day = 1, 7 do
 	local card = UITheme.card({ Name = "Day" .. day, LayoutOrder = day, ZIndex = 13, Parent = dayRow })
+	if day == 7 then -- the big day: rays behind its gift (once the texture is uploaded)
+		card.ClipsDescendants = true
+		UITheme.sunburst({ Position = UDim2.new(0.5, 0, 0, 60), Size = UDim2.fromScale(0.9, 0.9), ZIndex = 13, Parent = card })
+	end
 	local title = UITheme.text({
 		Name = "Title",
 		Text = "Day " .. day,
@@ -136,7 +140,7 @@ local function paintDaily()
 end
 
 -- Gifts (playtime) -------------------------------------------------------------------------------------------
-local gifts = UITheme.window({ Name = "Gifts", Title = "Playtime Gifts", Icon = "gift", Size = Vector2.new(800, 340), Parent = root })
+local gifts = UITheme.window({ Name = "Gifts", Title = "Playtime Gifts", Icon = "gift", Theme = "Codes", Size = Vector2.new(800, 340), Parent = root })
 local giftNote = UITheme.text({
 	Name = "Note",
 	Text = "",
@@ -266,7 +270,7 @@ end
 UITheme.registerScreen("Offline", offline.open, offline.close)
 
 -- Settings ------------------------------------------------------------------------------------------------------
-local settingsWin = UITheme.window({ Name = "Settings", Title = "Settings", Icon = "settings", Size = Vector2.new(640, 310), Parent = root })
+local settingsWin = UITheme.window({ Name = "Settings", Title = "Settings", Icon = "settings", Theme = "Settings", Size = Vector2.new(640, 310), Parent = root })
 local settings = { music = true, sfx = true, lowfx = false, lowgfx = false }
 local SETTING_ROWS = {
 	{ key = "music", icon = "music", text = "Music" },
