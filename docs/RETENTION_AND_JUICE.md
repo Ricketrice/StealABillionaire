@@ -37,3 +37,16 @@ Every worker: wriggle when carried, celebrate when placed, shocked when stolen. 
 
 ## Rules for effects
 Built in Studio: ParticleEmitter, Beam, Trail, TweenService, Highlight, Animation Editor. One master per effect in `ReplicatedStorage`, cloned on client, auto-cleanup. Client-side only for visuals. Total particles on screen kept low for phones; a "Low effects" setting.
+
+## Feature reveal (D28) — never show everything at once
+| When | What appears |
+|---|---|
+| 0–10 s | Parade catch (free), reveal |
+| first minute | Carry home, place on pad, cash ticking up, goal bar |
+| after first place | Store, Index, Daily, Gifts buttons |
+| ~3 min / first unlock of Zone 1 | Zone teleports + Home button, stealing + bat + lock (with a 1-line intro) |
+| first Golden Parade | Golden Parade timer |
+| reaching end of Zone 1 | Vault/heist timer |
+| reaching Zone 6 | Royale Race |
+| later | Speed trails, ranks explained (Arena hidden in V1, D29) |
+Rules: hidden buttons don't exist yet (no greyed-out clutter); each new thing gets one short "NEW!" popup with an icon and one sentence; max 2 timers on the HUD.
