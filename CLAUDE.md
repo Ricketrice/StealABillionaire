@@ -17,8 +17,10 @@ Roblox, phone-first. ~80% kids. Work through Roblox Studio MCP (Studio runs thro
 5. `docs/RETENTION_AND_JUICE.md` — when touching the first minute, rewards, UI, VFX, sound.
 6. `docs/TOOLS.md` — when using Blender, Figma or other outside tools.
 
+7. `docs/PIVOT.md` — planned Steal a Boss reskin (034). Don't apply it before 034.
+
 ## Hard rules
-- **Zones 2, 3, 4, 5 are teammate-owned. Never modify anything inside them.** Bridges/paths may stop at their entrances.
+- **Teammate zones (today's zones 2–5; shown as zones 4–7 after milestone 034) are teammate-owned. Never modify anything inside them.** Bridges/paths/gates may stop at their entrances. Our new zones 2–3 (Sunken Kingdom, Ember Academy) are ours.
 - Never change worker IDs, rarities, odds, income, economy formulas, progression or zone IDs unless the milestone prompt says so.
 - Save schema = 3. Bumping it needs a migration + my approval.
 - Robux never buys arena gear or zone unlocks. Odds shown on anything random. No pressure tactics. Kid-safe, original (no real brands, logos, landmarks).
