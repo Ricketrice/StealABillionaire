@@ -243,13 +243,14 @@ UITheme.Motion = { Fast = 0.15, Normal = 0.25, Slow = 0.45, Open = 0.32 }
 -- Icons (D14: two 1024 px sprite sheets of 256 px tiles, assets/export/ui) ------------------------------
 -- Image asset ids of the uploaded sheets (owner's account, 2026-10-12; both checked as Image assets
 -- that load in an ImageLabel). 0 = not uploaded: icons fall back to emoji/text.
-UITheme.ICON_SHEETS = { 83002965680168, 94606617314375 }
+-- Sheet 3 (032: speed, trails, heist; uploaded as decal 96749657928190, this is the image inside it).
+UITheme.ICON_SHEETS = { 83002965680168, 94606617314375, 124312993462790 }
 UITheme.ICON_TILE = 256
 -- Our own Check-UI textures (tools/make_029_textures.py -> assets/export/ui): white on transparent, tinted
 -- in code. 0 = not uploaded: the checkerboard and sunburst are simply left out. Image ids (the owner
 -- uploaded decals 131066832417520 / 75018256256341; these are the images inside them, both checked).
 UITheme.TEXTURES = { Checker = 81898318473915, Sunburst = 112848205345581 }
--- name = { sheet, x, y } (from tools/blender/pack_029_icons.py)
+-- name = { sheet, x, y } (from tools/blender/pack_029_icons.py; sheet 3 from pack_032_icons.py)
 UITheme.ICONS = {
 	cash = { 1, 0, 0 },
 	coin = { 1, 256, 0 },
@@ -282,6 +283,17 @@ UITheme.ICONS = {
 	bolt = { 2, 0, 768 },
 	flag = { 2, 256, 768 },
 	heart = { 2, 512, 768 },
+	shoe = { 3, 0, 0 },
+	vault = { 3, 256, 0 },
+	robot = { 3, 512, 0 },
+	shield = { 3, 768, 0 },
+	capsule = { 3, 0, 256 },
+	trail_bubble = { 3, 256, 256 },
+	trail_leaf = { 3, 512, 256 },
+	trail_star = { 3, 768, 256 },
+	trail_comet = { 3, 0, 512 },
+	trail_rainbow = { 3, 256, 512 },
+	trail_gold = { 3, 512, 512 },
 }
 UITheme.ICON_FALLBACK = {
 	cash = "💵",
@@ -315,6 +327,17 @@ UITheme.ICON_FALLBACK = {
 	bolt = "⚡",
 	flag = "🚩",
 	heart = "❤️",
+	shoe = "👟",
+	vault = "🏦",
+	robot = "🤖",
+	shield = "🛡️",
+	capsule = "🎁",
+	trail_bubble = "🫧",
+	trail_leaf = "🍃",
+	trail_star = "⭐",
+	trail_comet = "☄️",
+	trail_rainbow = "🌈",
+	trail_gold = "💰",
 }
 
 -- Helpers ---------------------------------------------------------------------------------------------

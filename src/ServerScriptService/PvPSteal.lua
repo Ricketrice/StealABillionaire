@@ -180,11 +180,16 @@ local function abort(theft, reason: string, by: Player?)
 
 	if reason == "tagged" then
 		say(thief, false, ("You were hit and dropped %s! It went back to %s."):format(worker, owner.DisplayName))
-		say(owner, true, if by == owner then ("You got %s back!"):format(worker) else ("%s knocked %s loose. It's back on your station."):format(by and by.DisplayName or "Someone", worker))
+		say(
+			owner,
+			true,
+			if by == owner then ("You got %s back!"):format(worker) else ("%s knocked %s loose. It's back on your station."):format(by and by.DisplayName or "Someone", worker)
+		)
 	elseif reason == "owner left" then
 		say(thief, false, ("%s left the game, so the steal was cancelled."):format(owner.DisplayName))
 	else
-		local text = if reason == "teleported" then "No shortcuts with a stolen worker! %s went back to %s."
+		local text = if reason == "teleported"
+			then "No shortcuts with a stolen worker! %s went back to %s."
 			elseif reason == "safe zone" then "No hiding in the safe zone with a stolen worker! %s went back to %s."
 			elseif reason == "timeout" then "Too slow! %s went back to %s."
 			elseif reason == "dropped" then "You dropped %s. It went back to %s."
@@ -192,7 +197,18 @@ local function abort(theft, reason: string, by: Player?)
 		say(thief, false, text:format(worker, owner.DisplayName))
 		say(owner, true, ("%s is back on its station."):format(worker))
 	end
-	local info = { uid = theft.uid, worker = worker, outcome = reason, restored = restored, thief = thief.DisplayName, owner = owner.DisplayName, by = by and by.DisplayName, thiefId = thief.UserId, ownerId = theft.ownerId, byId = by and by.UserId }
+	local info = {
+		uid = theft.uid,
+		worker = worker,
+		outcome = reason,
+		restored = restored,
+		thief = thief.DisplayName,
+		owner = owner.DisplayName,
+		by = by and by.DisplayName,
+		thiefId = thief.UserId,
+		ownerId = theft.ownerId,
+		byId = by and by.UserId,
+	}
 	PvPBase.event(owner, "TheftEnded", info)
 	PvPBase.event(thief, "StealEnded", info)
 	if by and by ~= owner and by ~= thief then
@@ -406,6 +422,9 @@ function PvPSteal.tryBegin(thief: Player, npc: Model): (boolean, string?)
 	if theftByThief[thief] or NPCCarry.getCarried(thief) or NPCClaim.getReservation(thief) then
 		return false, "You already have a worker in hand. Place or store it first."
 	end
+	if thief:GetAttribute("HeistCarrying") == true then
+		return false, "Bring your Boss Capsule home first."
+	end
 	if theftByUid[uid] then
 		return false, "Someone else is already stealing this one!"
 	end
@@ -428,7 +447,8 @@ function PvPSteal.tryBegin(thief: Player, npc: Model): (boolean, string?)
 		PvPBase.endProtection(thief, "You started a steal, so your new-player protection is over.")
 	end
 	PvPBase.endSpawnSafe(thief)
-	local theft = { uid = uid, npc = npc, owner = owner, ownerId = owner.UserId, thief = thief, plot = plot, station = record.station, workerName = nameOf(record), startedAt = os.clock() }
+	local theft =
+		{ uid = uid, npc = npc, owner = owner, ownerId = owner.UserId, thief = thief, plot = plot, station = record.station, workerName = nameOf(record), startedAt = os.clock() }
 	theftByUid[uid], theftByThief[thief] = theft, theft
 	local prompt = npcRoot:FindFirstChild(PROMPT_NAME)
 	if prompt then
@@ -461,7 +481,8 @@ function PvPSteal.tryBegin(thief: Player, npc: Model): (boolean, string?)
 
 	say(thief, true, ("You grabbed %s! Carry it into your own base to keep it."):format(theft.workerName))
 	say(owner, false, ("%s is stealing %s! Hit them with your bat to get it back."):format(thief.DisplayName, theft.workerName))
-	local info = { uid = uid, worker = theft.workerName, thief = thief.DisplayName, owner = owner.DisplayName, station = theft.station, thiefId = thief.UserId, ownerId = theft.ownerId }
+	local info =
+		{ uid = uid, worker = theft.workerName, thief = thief.DisplayName, owner = owner.DisplayName, station = theft.station, thiefId = thief.UserId, ownerId = theft.ownerId }
 	PvPBase.event(owner, "TheftStarted", info)
 	PvPBase.event(thief, "StealStarted", info)
 	changed:Fire("started", info)

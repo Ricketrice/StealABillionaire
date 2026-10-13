@@ -120,7 +120,7 @@ function PvPCombat.equip(player: Player): (boolean, string?)
 	if not (root and character) then
 		return false, nil
 	end
-	if player:GetAttribute("CarryingNPC") == true then
+	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("HeistCarrying") == true then
 		return false, "You can't use your bat while carrying a worker."
 	end
 	if PvPCombat.isEquipped(player) then
@@ -220,7 +220,7 @@ local function canAttack(player: Player): (boolean, BasePart?, string?)
 	if not (root and PvPCombat.isEquipped(player)) then
 		return false, nil, nil
 	end
-	if player:GetAttribute("CarryingNPC") == true then
+	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("HeistCarrying") == true then
 		return false, nil, "You can't attack while carrying a worker."
 	end
 	if PvPBase.isSafe(root.Position) then
@@ -395,6 +395,11 @@ function PvPCombat.start()
 		player:GetAttributeChangedSignal("CarryingNPC"):Connect(function()
 			if player:GetAttribute("CarryingNPC") == true then
 				PvPCombat.unequip(player) -- hands full
+			end
+		end)
+		player:GetAttributeChangedSignal("HeistCarrying"):Connect(function()
+			if player:GetAttribute("HeistCarrying") == true then
+				PvPCombat.unequip(player) -- hands full (Boss Capsule, 032)
 			end
 		end)
 		player.CharacterRemoving:Connect(function()

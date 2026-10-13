@@ -224,6 +224,9 @@ function WorkerInventory.canClaim(player: Player): (boolean, string?)
 	if NPCCarry.getCarried(player) then
 		return false, "You already have a worker in hand. Place or store it first."
 	end
+	if player:GetAttribute("HeistCarrying") == true then
+		return false, "Bring your Boss Capsule home first."
+	end
 	local _, _, _, total = WorkerInventory.count(player)
 	local capacity = slotsFor(player) + stationsFor(player)
 	if total >= capacity then

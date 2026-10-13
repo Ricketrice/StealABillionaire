@@ -314,7 +314,7 @@ function RaceService.eligible(player: Player): (boolean, string?)
 	if not ZoneProgress.isUnlocked(player, RaceConfig.ZONE) then
 		return false, "Unlock Velocity Royale to race"
 	end
-	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true then
+	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true or player:GetAttribute("HeistCarrying") == true then
 		return false, "Drop your worker first"
 	end
 	if not WorkerInventory.hasRoom(player) then

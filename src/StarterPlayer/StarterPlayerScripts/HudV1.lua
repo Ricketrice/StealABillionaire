@@ -3,7 +3,8 @@
 -- Layout (029 layout fix), all sizes from the one HUD rule (UITheme.hudScale / touchSize):
 --   * left side, vertically centred, as one group (top-left stays free for Roblox's chat window):
 --     the cash pill (rolls up; the green "+" opens the Store's cash tab while the Store is on) with
---     the income per second under it (+ the index bonus chip), and directly below them the menu
+--     the income per second under it (+ the index bonus chip; 032: a shoe + "Speed 100" row under that
+--     while ReplicatedStorage.SpeedOn, green when a trail boosts it), and directly below them the menu
 --     buttons Store, Workers, Index, Daily, Gifts, Settings (each only while its feature is on) in 2
 --     columns; on short screens 3 columns (or one row) so the group stays clear of the thumbstick on
 --     touch screens; red "!" badges when ready
@@ -110,6 +111,33 @@ local bonusLabel = UITheme.text({
 	Parent = bonusChip,
 })
 bonusLabel.TextTruncate = Enum.TextTruncate.None
+
+-- Speed (032, D24): shoe icon + the Speed number (100 = normal), only while the Speed stat is on
+local SPEED_H = 26
+local speedRow =
+	UITheme.make("Frame", { Name = "SpeedRow", BackgroundTransparency = 1, Size = UDim2.fromOffset(PILL_W, SPEED_H), LayoutOrder = 3, Visible = false, Parent = topLeft })
+UITheme.make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	VerticalAlignment = Enum.VerticalAlignment.Center,
+	Padding = UDim.new(0, 4),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = speedRow,
+})
+UITheme.make("UIPadding", { PaddingLeft = UDim.new(0, 4), Parent = speedRow })
+UITheme.image({ Icon = "shoe", Name = "Shoe", Size = UDim2.fromOffset(SPEED_H + 6, SPEED_H + 6), LayoutOrder = 1, Parent = speedRow })
+local speedLabel = UITheme.text({
+	Name = "Speed",
+	Text = "Speed 100",
+	Role = "Display",
+	TextSize = 19,
+	Align = "Left",
+	Size = UDim2.fromOffset(0, SPEED_H),
+	AutomaticSize = Enum.AutomaticSize.X,
+	LayoutOrder = 2,
+	Parent = speedRow,
+})
+speedLabel.TextTruncate = Enum.TextTruncate.None
+local speedScale = UITheme.make("UIScale", { Parent = speedLabel })
 
 -- menu buttons: positioned and sized by layout() below
 local CELL, CELL_GAP = 88, 10
@@ -225,6 +253,28 @@ local function updateIncome()
 		bonusLabel.Text = ("+%d%% Index"):format(math.floor(bonus * 100 + 0.5))
 	end
 end
+local shownSpeed: number? = nil
+local function updateSpeed()
+	local visible = on("SpeedOn")
+	local n = player:GetAttribute("SpeedHud")
+	n = if type(n) == "number" then n else 100
+	speedLabel.Text = "Speed " .. n
+	speedLabel.TextColor3 = if n > 100 then T.Cash else T.Text
+	if shownSpeed and n > shownSpeed then
+		speedScale.Scale = 1.3
+		UITheme.tween(speedScale, 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
+	end
+	shownSpeed = n
+	if speedRow.Visible ~= visible then
+		speedRow.Visible = visible
+		if relayout then
+			relayout()
+		end
+	end
+end
+player:GetAttributeChangedSignal("SpeedHud"):Connect(updateSpeed)
+ReplicatedStorage:GetAttributeChangedSignal("SpeedOn"):Connect(updateSpeed)
+task.defer(updateSpeed)
 player:GetAttributeChangedSignal("Cash"):Connect(updateCash)
 player:GetAttributeChangedSignal("Income"):Connect(updateIncome)
 player:GetAttributeChangedSignal("IncomeBonus"):Connect(updateIncome)
@@ -381,8 +431,9 @@ function relayout()
 	topLeft.Size = UDim2.fromOffset(pillW, 0)
 	pill.Size = UDim2.fromOffset(pillW, pillH)
 	incomeRow.Size = UDim2.fromOffset(pillW, INCOME_H)
+	speedRow.Size = UDim2.fromOffset(pillW, SPEED_H)
 	local pillRight = HUD.MARGIN + pillW * sL
-	local pillBlock = (pillH + 4 + INCOME_H) * sL
+	local pillBlock = (pillH + 4 + INCOME_H + (if speedRow.Visible then 4 + SPEED_H else 0)) * sL
 
 	local labelSize = math.max(15, math.ceil(11 / sL)) -- never under 11 px on screen
 	for _, b in buttons do

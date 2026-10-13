@@ -42,6 +42,9 @@ function LaneService.blocked(player: Player, recheck: boolean?): string?
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true then
 		return "You're carrying a worker! Run it home first."
 	end
+	if player:GetAttribute("HeistCarrying") == true then
+		return "You're carrying a Boss Capsule! Run it home first."
+	end
 	local hurt = lastHurt[player]
 	if (hurt and os.clock() - hurt < LaneConfig.COMBAT_SECONDS) or player:GetAttribute("BatCharging") == true then
 		return "No teleporting during a fight. Wait a few seconds."
