@@ -24,7 +24,8 @@
 -- (ServerStorage.RaceCourse031) is cloned into Workspace.World.VelocityRoyale.RaceCourse, whose attributes
 -- the clients read: State (Waiting|Countdown|Racing|Podium), Ready (server time the next race may start),
 -- GoAt, EndsAt, Laps, Racers; its Route folder holds the gate positions (CFrameValues, attribute Order) for the
--- client's next-checkpoint arch. Player attributes while racing: Racing = true, RaceLap = 1..LAPS, RaceNext = the
+-- client's next-checkpoint arch. A racer can leave mid-race (RaceAction "Leave", the HUD button): no reward.
+-- Player attributes while racing: Racing = true, RaceLap = 1..LAPS, RaceNext = the
 -- next gate's Order (1..N, 0 = the line); RaceFrozen = true while frozen on the pad.
 
 local HttpService = game:GetService("HttpService")
@@ -303,7 +304,7 @@ type Race = {
 local serverId = HttpService:GenerateGUID(false)
 local raceCount = 0
 local race: Race? = nil
-RaceService.stats = { races = 0, finished = 0, capsules = 0, out = 0, duplicate = 0 }
+RaceService.stats = { races = 0, finished = 0, capsules = 0, out = 0, duplicate = 0, left = 0 }
 
 -- Can this player race right now? (ok, message for the player)
 function RaceService.eligible(player: Player): (boolean, string?)
@@ -662,7 +663,19 @@ function RaceService.start()
 
 	local lastState: { [Player]: number } = setmetatable({}, { __mode = "k" }) :: any
 	actionEvent.OnServerEvent:Connect(function(player, action)
-		-- The only request: the current round, for a client that just joined or opened the HUD.
+		-- "Leave" (032, the HUD's Leave race button): out of the race now, no reward; the walls stop applying to
+		-- them (their collision group is put back) and the race goes on for the others. Only a current racer can
+		-- leave, and only themselves.
+		if action == "Leave" then
+			local r = race
+			local racer = r and r.racers[player]
+			if r and racer then
+				RaceService.stats.left += 1
+				out(r, racer, "You left the race. Join the next one any time!")
+			end
+			return
+		end
+		-- Otherwise the only request: the current round, for a client that just joined or opened the HUD.
 		local t = os.clock()
 		if action == "State" and course and (not lastState[player] or t - lastState[player] > 1) then
 			lastState[player] = t

@@ -133,6 +133,7 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 			raceAction:FireServer("Lap", 3)
 			raceAction:FireServer("Capsule", "Gold")
 			raceAction:FireServer("State")
+			raceAction:FireServer("Leave") -- not racing: must do nothing
 		end
 		task.wait(1)
 	elseif kind == "hud" then
@@ -223,6 +224,16 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 			end
 			h:MoveTo(r.Position)
 			reply.start, reply.finish, reply.rise = start, r.Position, rise
+		end
+	elseif kind == "leave" then
+		-- the Leave race button: shown while racing; sends what its OnActivated sends (a script can't tap it)
+		local gui = playerGui:FindFirstChild("Race031")
+		local button = gui and gui:FindFirstChild("Root") and gui.Root:FindFirstChild("LeaveRace")
+		reply.visible = button ~= nil and (button :: GuiObject).Visible
+		reply.height = button and (button :: GuiObject).AbsoluteSize.Y
+		if arg and arg.press then
+			raceAction:FireServer("Leave")
+			task.wait(0.5)
 		end
 	elseif kind == "texts" then
 		local gui = playerGui:FindFirstChild("Race031")

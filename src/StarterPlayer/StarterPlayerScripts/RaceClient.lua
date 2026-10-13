@@ -3,7 +3,7 @@
 -- "Next race in 2:41", ...), the pad message for a player standing on the pad (big on screen + a billboard above
 -- the pad: the round's status, or why they can't race from the RaceBlock attribute, 032), the big 5-4-3-2-1-GO
 -- countdown in its last seconds (for players on the pad), the race HUD (big "LAP 2/3" + time left + an arrow to
--- the next checkpoint), a glowing arch over the next checkpoint (this client only, 032), the capsule pop at the
+-- the next checkpoint + a Leave race button), a glowing arch over the next checkpoint (this client only, 032), the capsule pop at the
 -- finish (the reveal card itself comes from WorkerRevealCard) and the top-3 banner after a race.
 -- Everything is read from Workspace.World.VelocityRoyale.RaceCourse attributes, the local player's
 -- Racing / RaceLap attributes and RaceEvent; RaceService decides everything. Nothing runs while RaceOn is off.
@@ -95,6 +95,24 @@ for _, side in { -1, 1 } do
 	bar.BorderSizePixel = 0
 	bar.Parent = arrow
 	UITheme.corner(bar, UDim.new(0, 5))
+end
+
+-- Leave race (032): small button under the race panel; the server checks the player is racing.
+local leaveButton = UITheme.button({
+	Name = "LeaveRace",
+	Kind = "Secondary",
+	Text = "Leave race",
+	TextSize = 18,
+	Size = UDim2.fromOffset(150, 44), -- not scaled: stays a 44 px tap on phones
+	AnchorPoint = Vector2.new(0.5, 0),
+	Visible = false,
+	Parent = root,
+	OnActivated = function()
+		actionEvent:FireServer("Leave")
+	end,
+})
+local function placeLeave()
+	leaveButton.Position = UDim2.fromOffset(root.AbsoluteSize.X / 2, panel.AbsolutePosition.Y - root.AbsolutePosition.Y + panel.AbsoluteSize.Y + 8)
 end
 
 -- Pad message (032): big, top centre, while this player stands on the pad and isn't racing.
@@ -207,6 +225,7 @@ UITheme.onHudLayout(root, function(view)
 	panel.Position = UDim2.fromOffset(view.size.X / 2, top)
 	podium.Position = UDim2.fromOffset(view.size.X / 2, top)
 	padPanel.Position = UDim2.fromOffset(view.size.X / 2, top)
+	placeLeave()
 end)
 
 -- Countdown ---------------------------------------------------------------------------------------------------
@@ -345,6 +364,7 @@ local endsAt = 0
 local function refreshPanel()
 	local racing = player:GetAttribute("Racing") == true
 	panel.Visible = racing
+	leaveButton.Visible = racing
 	refreshArch()
 	if racing then
 		local lap = player:GetAttribute("RaceLap") or 1
@@ -435,9 +455,11 @@ clientEvent.OnClientEvent:Connect(function(kind, info)
 		refreshPanel()
 	elseif kind == "Finish" and type(info) == "table" then
 		panel.Visible = false
+		leaveButton.Visible = false
 		showFinish(info)
 	elseif kind == "Out" and type(info) == "table" then
 		panel.Visible = false
+		leaveButton.Visible = false
 		UITheme.toast("error", "Royale Race", tostring(info.reason or "Out of the race."))
 	elseif kind == "End" and type(info) == "table" then
 		showPodium(info.podium)
@@ -545,6 +567,7 @@ task.spawn(function()
 				panel.Position = UDim2.fromOffset(root.AbsoluteSize.X / 2, top)
 				podium.Position = UDim2.fromOffset(root.AbsoluteSize.X / 2, top)
 				padPanel.Position = UDim2.fromOffset(root.AbsoluteSize.X / 2, top)
+				placeLeave()
 			end
 			if panel.Visible then
 				endsAt = folder:GetAttribute("EndsAt") or endsAt
@@ -555,6 +578,7 @@ task.spawn(function()
 		else
 			asked = false
 			panel.Visible = false
+			leaveButton.Visible = false
 			padPanel.Visible = false
 			billboard.Enabled = false
 			billboard.Adornee = nil
