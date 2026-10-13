@@ -240,6 +240,9 @@ function PurchaseService.buy(player: Player, key: any): (boolean, string?)
 		end
 		MarketplaceService:PromptGamePassPurchase(player, item.id)
 	else
+		if item.oneTime and player:GetAttribute("StarterOwned") == true then
+			return false, "You already have the Starter Pack."
+		end
 		if item.oneTime and not starterShown(player) then
 			return false, "The Starter Pack is for new players."
 		end

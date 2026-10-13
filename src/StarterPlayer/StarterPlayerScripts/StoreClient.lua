@@ -82,10 +82,10 @@ local function item(def: any, order: number)
 		card.ClipsDescendants = true
 		UITheme.sunburst({ Position = UDim2.fromOffset(45, 43), Size = UDim2.fromScale(0.75, 0.75), ZIndex = 13, Parent = card })
 	end
-	if def.image then -- its Creator Dashboard icon (033)
+	if def.image then -- its Creator Dashboard icon (033; a decal id, so through the thumbnail service)
 		UITheme.make("ImageLabel", {
 			Name = "Art",
-			Image = "rbxassetid://" .. def.image,
+			Image = ("rbxthumb://type=Asset&id=%d&w=150&h=150"):format(def.image),
 			BackgroundTransparency = 1,
 			ScaleType = Enum.ScaleType.Fit,
 			Size = UDim2.fromOffset(74, 74),

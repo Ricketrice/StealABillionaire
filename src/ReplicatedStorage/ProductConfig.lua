@@ -3,9 +3,8 @@
 -- What the Store screen shows and what each purchase gives. Until an item has a real id (gamepass id / developer
 -- product id from the Creator Dashboard), its card says "Coming soon" and can't be pressed.
 -- Perks, Robux prices, cash pack sizes and starter pack contents: D40 (033 Checkpoint 1). `robux` = the price set on the
--- Creator Dashboard (the Store shows the dashboard's real price). `id` / `image` = the dashboard's pass or product id and
--- its icon's IMAGE id (shown on the Store card; the same art as our icon sheet). Not the decal id: a decal id shows
--- nothing on an ImageLabel (the owner's decals, e.g. 2x Cash 75660006931436, resolved to their images in Studio).
+-- Creator Dashboard (the Store shows the dashboard's real price). `id` = the dashboard's pass or product id; `image` = the
+-- decal id of its icon (the Store card shows it through rbxthumb://type=Asset; the same art as our icon sheet).
 -- Rules (CLAUDE.md, RETENTION_AND_JUICE.md): Robux never buys arena gear, zone unlocks or a PvP advantage; no
 -- pressure wording, no fake timers, no "only X left"; packs speed up, never skip. Descriptions say plainly what you get.
 -- Switch PURCHASES_ENABLED (Studio ServerStorage StudioPurchases, published PurchasesOn): OFF = no receipts handled,
@@ -36,7 +35,7 @@ ProductConfig.ITEMS = {
 			key = "x2cash",
 			kind = "pass",
 			id = 2033726439,
-			image = 127119917266817,
+			image = 75660006931436,
 			robux = 349, -- (design range 300-500)
 			name = "2x Cash",
 			icon = "x2",
@@ -47,7 +46,7 @@ ProductConfig.ITEMS = {
 			key = "slots",
 			kind = "pass",
 			id = 2032784431,
-			image = 78461610662957,
+			image = 93729878260713,
 			robux = 249, -- (design range 250-400)
 			name = "Extra Slots",
 			icon = "slots",
@@ -58,7 +57,7 @@ ProductConfig.ITEMS = {
 			key = "vip",
 			kind = "pass",
 			id = 2032880454,
-			image = 94085601107802,
+			image = 116360806969519,
 			robux = 399, -- (design range 300-600)
 			name = "VIP",
 			icon = "vip",
@@ -68,16 +67,16 @@ ProductConfig.ITEMS = {
 	},
 	cash = {
 		-- Cash = this many minutes of the player's income right now (D20), never less than `min`.
-		{ key = "cash_s", kind = "product", id = 3718403577, image = 135172755442871, robux = 25, minutes = 10, min = 5000, name = "Cash Stack", icon = "cash" },
-		{ key = "cash_m", kind = "product", id = 3718403637, image = 73796793747790, robux = 75, minutes = 40, min = 20000, name = "Cash Bag", icon = "coin" },
-		{ key = "cash_l", kind = "product", id = 3718403689, image = 124355440961295, robux = 199, minutes = 120, min = 75000, name = "Cash Vault", icon = "cash" },
+		{ key = "cash_s", kind = "product", id = 3718403577, image = 99179613562978, robux = 25, minutes = 10, min = 5000, name = "Cash Stack", icon = "cash" },
+		{ key = "cash_m", kind = "product", id = 3718403637, image = 75217757280784, robux = 75, minutes = 40, min = 20000, name = "Cash Bag", icon = "coin" },
+		{ key = "cash_l", kind = "product", id = 3718403689, image = 86309227105014, robux = 199, minutes = 120, min = 75000, name = "Cash Vault", icon = "cash" },
 	},
 	starter = {
 		{
 			key = "starter",
 			kind = "product",
 			id = 3718403719,
-			image = 97190772594635,
+			image = 113568267549704,
 			robux = 49,
 			minutes = 30,
 			min = 15000,
