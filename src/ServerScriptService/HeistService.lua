@@ -268,6 +268,7 @@ type Carrier = {
 	conns: { RBXScriptConnection },
 	last: Vector3?, -- position at the last tick
 	warps: number,
+	airAt: number, -- last tick this carrier was off the ground (jumping / falling)
 }
 local carriers: { [Player]: Carrier } = {}
 
@@ -429,7 +430,8 @@ function HeistService.grab(player: Player): boolean
 	local now = serverNow()
 	grabbed[player.UserId] = o.id
 	local startRoot = livingRoot(player)
-	local c: Carrier = { player = player, openingId = o.id, at = now, hits = 0, grace = 0, capsule = nil, conns = {}, last = startRoot and startRoot.Position, warps = 0 }
+	local c: Carrier =
+		{ player = player, openingId = o.id, at = now, hits = 0, grace = 0, capsule = nil, conns = {}, last = startRoot and startRoot.Position, warps = 0, airAt = -math.huge }
 	carriers[player] = c
 	c.capsule = attachCapsule(player)
 	local _, humanoid = livingRoot(player)
@@ -540,6 +542,25 @@ local function feetHeight(player: Player): number?
 	return root.Position.Y - root.Size.Y / 2 - humanoid.HipHeight - result.Position.Y
 end
 
+-- Off the ground: feet above JUMP_FEET, or the Humanoid jumping / falling (the owner's client replicates it).
+local JUMP_FEET = 1.2
+local AIR_GRACE = 0.35 -- a jump counts this long after the server last saw it
+-- The server sees each player ~0.1-0.2 s after they moved: the wave is judged where it was WAVE_LAG s ago, so a jump
+-- timed right on the player's screen counts.
+local WAVE_LAG = 0.15
+local function airborne(player: Player): boolean
+	local _, humanoid = livingRoot(player)
+	if not humanoid then
+		return false
+	end
+	local state = humanoid:GetState()
+	if state == Enum.HumanoidStateType.Jumping or state == Enum.HumanoidStateType.Freefall then
+		return true
+	end
+	local feet = feetHeight(player)
+	return feet ~= nil and feet > JUMP_FEET
+end
+
 local function nearestCarrier(from: Vector3): (Player?, number)
 	local best, bestD = nil, math.huge
 	for player in carriers do
@@ -627,7 +648,7 @@ local function startAttack(kind: string, target: Player, targetRoot: BasePart, n
 	else -- Stomp
 		local y = groundAt(robot.pos, robot.pos.Y) or robot.pos.Y
 		a.centre = Vector3.new(robot.pos.X, y, robot.pos.Z)
-		a.endAt = a.hitAt + def.radius / def.waveSpeed + 0.3
+		a.endAt = a.hitAt + WAVE_LAG + (def.radius + def.band) / def.waveSpeed + 0.2
 		info.centre, info.hitAt, info.radius, info.waveSpeed, info.band = a.centre, a.hitAt, def.radius, def.waveSpeed, def.band
 		face(targetRoot.Position)
 	end
@@ -642,13 +663,13 @@ local function startAttack(kind: string, target: Player, targetRoot: BasePart, n
 	clientEvent:FireAllClients("Attack", info)
 end
 
-local function tryHit(a: Attack, c: Carrier, now: number)
+local function tryHit(a: Attack, c: Carrier, now: number, detail: string?)
 	if a.hitPlayers[c.player] then
 		return
 	end
 	if hit(c, a.kind, now) then
 		a.hitPlayers[c.player] = true
-		table.insert(a.log.hits, { userId = c.player.UserId, at = now })
+		table.insert(a.log.hits, { userId = c.player.UserId, at = now, detail = detail })
 	end
 end
 
@@ -697,19 +718,30 @@ local function stepAttack(a: Attack, now: number)
 			end
 		end
 	else -- Stomp: the wave front at radius waveSpeed * (now - hitAt); grounded players inside its band are hit
-		if now >= a.hitAt then
-			local r = def.waveSpeed * (now - a.hitAt)
+		if now >= a.hitAt + WAVE_LAG then
+			local r = def.waveSpeed * (now - WAVE_LAG - a.hitAt)
 			if r <= def.radius + def.band then
 				local centre = a.centre :: Vector3
 				for _, c in carriers do
 					local root = livingRoot(c.player)
 					if root and math.abs(root.Position.Y - centre.Y) < 8 then
 						local d = (flat(root.Position) - flat(centre)).Magnitude
-						if math.abs(d - r) <= def.band then
-							local feet = feetHeight(c.player)
-							if feet and feet <= def.jumpClear then
-								tryHit(a, c, now)
-							end
+						-- (lag-forgiving: a jump the server saw within AIR_GRACE s clears the wave)
+						if math.abs(d - r) <= def.band and not airborne(c.player) and now - c.airAt > AIR_GRACE then
+							local _, humanoid = livingRoot(c.player)
+							tryHit(
+								a,
+								c,
+								now,
+								("d %.1f r %.1f feet %.2f state %s lastAir %.2f s ago, %.2f s after hitAt"):format(
+									d,
+									r,
+									feetHeight(c.player) or -1,
+									if humanoid then humanoid:GetState().Name else "?",
+									now - c.airAt,
+									now - a.hitAt
+								)
+							)
 						end
 					end
 				end
@@ -789,6 +821,9 @@ local function stepCarriers(now: number)
 		if not root then
 			lose(c, "fell")
 			continue
+		end
+		if airborne(c.player) then
+			c.airAt = now
 		end
 		local pos = root.Position
 		local last = c.last or pos

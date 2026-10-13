@@ -2,7 +2,7 @@
 -- HeistClient  (Milestone 032, D22/D24) -- everything the Boss Heist shows; nothing here decides anything.
 --   * Vault: the door swings open (wheel spins first) while State = Open, siren beacons flash, a two-tone
 --     siren plays when it opens; both vault signs show "Opens in 3:20" / "OPEN! 0:42".
---   * HUD: a vault timer in the shared top bar ("Vault 3:20" / "VAULT OPEN 0:42"); while carrying, a panel
+--   * HUD: a vault timer in the shared top bar ("Vault 3:20" / "OPEN 0:42" on red); while carrying, a panel
 --     under the top bar (RUN TO THE SAFE ZONE!, shields left, time left, a bar from the vault to the safe line);
 --     big centre messages (shield popped, capsule lost, SAFE!) and short refusals ("One capsule per opening!").
 --   * Robot: moved here from the server's RobotPos/RobotYaw (smoothed), walk cycle, head turns to its target,
@@ -67,7 +67,7 @@ local pillText = UITheme.text({
 	Parent = pill,
 })
 pillText.TextScaled = true
-UITheme.make("UITextSizeConstraint", { MaxTextSize = 24, MinTextSize = 10, Parent = pillText })
+UITheme.make("UITextSizeConstraint", { MaxTextSize = 24, MinTextSize = 12, Parent = pillText })
 
 local gui, root = UITheme.gui("Heist032", 4)
 -- carrier panel (under the top bar)
@@ -677,7 +677,7 @@ local function slow()
 		local open = folder:GetAttribute("State") == "Open"
 		if open then
 			local left = (folder:GetAttribute("ClosesAt") or t) - t
-			pillText.Text = "VAULT OPEN " .. clock(left)
+			pillText.Text = "OPEN " .. clock(left) -- (short: stays >= 12 px on the smallest phones)
 			pillText.TextColor3 = GOLD
 			pill.BackgroundColor3 = Color3.fromRGB(150, 40, 60)
 			setSign(folder, "OPEN! Grab one: " .. clock(left), GOLD)

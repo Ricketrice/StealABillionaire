@@ -1,7 +1,7 @@
 -- Studio location: ServerScriptService.SpeedService (ModuleScript)
 -- SpeedService  (Milestone 032, D24): the Speed stat and the cash-only speed trails.
--- Walk speed = SpeedConfig.BASE_WALK x (1 + boost of the equipped trail, capped) x CARRY while carrying (a worker,
--- a stolen worker or a Boss Capsule). It is re-applied when the character spawns, a trail is equipped and any of
+-- Walk speed = SpeedConfig.BASE_WALK x (1 + boost of the equipped trail, capped) on foot, and
+-- BASE_WALK x (1 + boost x CARRY_BOOST_SHARE) x CARRY while carrying (a worker, a stolen worker or a Boss Capsule). It is re-applied when the character spawns, a trail is equipped and any of
 -- the carry attributes change. Racers are left alone: the Royale Race runs everyone at its fixed speed and puts
 -- the old speed back afterwards (attributes Racing / RaceFrozen).
 -- With SpeedEnabled off nothing changes for anyone, except that a Boss Capsule carrier (HeistCarrying) is slowed
@@ -112,7 +112,11 @@ function SpeedService.target(player: Player, force: boolean?): number?
 	if not (SpeedService.enabled() or force or player:GetAttribute("HeistCarrying") == true) then
 		return nil
 	end
-	return SpeedConfig.BASE_WALK * (1 + SpeedService.boost(player)) * (if carrying(player) then CARRY else 1)
+	local boost = SpeedService.boost(player)
+	if carrying(player) then
+		return SpeedConfig.BASE_WALK * (1 + boost * SpeedConfig.CARRY_BOOST_SHARE) * CARRY
+	end
+	return SpeedConfig.BASE_WALK * (1 + boost)
 end
 
 function SpeedService.apply(player: Player, force: boolean?)

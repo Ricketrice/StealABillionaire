@@ -1,6 +1,6 @@
 -- Studio location: ReplicatedStorage.SpeedConfig (ModuleScript)
 -- SpeedConfig  (Milestone 032, D24): the Speed stat and the cash-only speed trails, shared by server and
--- client. Prices and boosts are PROPOSED, waiting for the owner's approval (032 Checkpoint 1).
+-- client. Prices and boosts approved at 032 Checkpoint 1 (D38); carrying gets half the boost (D39).
 -- Switch: SpeedEnabled (SpeedConfig.ENABLED). OFF = everyone walks at the old speed, no Speed on the HUD,
 -- no Trails tab. In Studio, set the ServerStorage attribute StudioSpeed = true; the server publishes the
 -- ReplicatedStorage attribute SpeedOn for clients.
@@ -13,12 +13,14 @@ SpeedConfig.STUDIO_ATTRIBUTE = "StudioSpeed"
 SpeedConfig.PUBLISHED = "SpeedOn"
 
 SpeedConfig.BASE_WALK = 16 -- Roblox default; carrying = walk x 0.85 (NPCCarry)
-SpeedConfig.MAX_BOOST = 0.30 -- PROPOSED cap on the total boost (+30%), keeps the heist and stealing fair
--- HUD number: 100 = normal speed, 130 = +30% (PROPOSED: kids read "130" easier than "20.8 studs/s")
+SpeedConfig.MAX_BOOST = 0.30 -- cap on the total boost (+30%), keeps the heist and stealing fair
+-- While carrying (a worker, a stolen worker or a Boss Capsule) only this share of the boost applies (D39):
+-- the best trail carries at 16 x 1.15 x 0.85 = 15.6 studs/s, against the robot's 13.6.
+SpeedConfig.CARRY_BOOST_SHARE = 0.5
+-- HUD number: 100 = normal speed, 130 = +30% (kids read "130" easier than "20.8 studs/s")
 SpeedConfig.HUD_BASE = 100
 
 -- One trail equipped at a time. Effects are client-side; "Low effects" shows a thin plain trail instead.
--- PROPOSED prices (cash) and boosts.
 SpeedConfig.TRAILS = {
 	{ id = "bubble", name = "Bubble Trail", icon = "trail_bubble", boost = 0.05, price = 5000, colour = { 140, 210, 255 } },
 	{ id = "leaf", name = "Leaf Trail", icon = "trail_leaf", boost = 0.10, price = 20000, colour = { 90, 210, 90 } },

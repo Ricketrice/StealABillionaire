@@ -77,10 +77,22 @@ end
 local CASES = { { 1920, 1080 }, { 1280, 720 }, { 1024, 768 }, { 844, 390 }, { 812, 375 }, { 667, 375 }, { 570, 270 } }
 local function hudCheck(): any
 	local issues, runs, sizes = {}, 0, {}
+	-- the big centre message only shows for a moment: hold a typical one up while measuring
+	local heistGui = playerGui:FindFirstChild("Heist032")
+	local bigLabel = heistGui and heistGui:FindFirstChild("Big", true) :: TextLabel?
+	local bigText = bigLabel and bigLabel.Text
+	if bigLabel then
+		bigLabel.Text = "SHIELD POPPED! One more hit and the capsule flies back!"
+		bigLabel.Visible = true
+	end
 	for _, size in CASES do
 		playerGui:SetAttribute("UITestViewport", Vector2.new(size[1], size[2]))
 		playerGui:SetAttribute("UITestTouch", size[1] < 1100)
 		task.wait(0.7)
+		if bigLabel then
+			bigLabel.Visible = true -- (a message timer may have hidden it)
+		end
+		task.wait(0.1)
 		local heist = playerGui:FindFirstChild("Heist032")
 		local root = heist and heist:FindFirstChild("Root") :: GuiObject?
 		local top = playerGui:FindFirstChild("TopBar028")
@@ -128,6 +140,10 @@ local function hudCheck(): any
 	end
 	playerGui:SetAttribute("UITestViewport", nil)
 	playerGui:SetAttribute("UITestTouch", nil)
+	if bigLabel then
+		bigLabel.Visible = false
+		bigLabel.Text = bigText or ""
+	end
 	return { runs = runs, issues = issues, phone = sizes }
 end
 
@@ -163,11 +179,22 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 		while now() < arg.at do
 			task.wait()
 		end
-		local h = humanoid()
-		if h then
-			h.Jump = true
+		local h, r = humanoid(), rootPart()
+		reply.jumpedAt = now()
+		if h and r then
+			local y0, top, leftAt = r.Position.Y, 0, nil
+			-- (the default controls overwrite Humanoid.Jump every frame; the jump state is what a jump press does)
+			h:ChangeState(Enum.HumanoidStateType.Jumping)
+			local t0 = os.clock()
+			while os.clock() - t0 < 1.2 do
+				top = math.max(top, r.Position.Y - y0)
+				if not leftAt and h.FloorMaterial == Enum.Material.Air then
+					leftAt = now()
+				end
+				task.wait()
+			end
+			reply.rise, reply.leftAt, reply.jumpPower, reply.jumpHeight = top, leftAt, h.JumpPower, h.JumpHeight
 		end
-		task.wait(1.2)
 	elseif kind == "stepAt" then
 		-- at the shown moment, walk this far (studs, world offset)
 		while now() < arg.at do
