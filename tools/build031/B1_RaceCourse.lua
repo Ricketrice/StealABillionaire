@@ -3,8 +3,11 @@
 -- builds ServerStorage.RaceCourse031, the Royale Race course template read by RaceService.
 --   Visible (cloned into Workspace.World.VelocityRoyale.RaceCourse while the race is on):
 --     StartPad (glowing pad on the grid), Sign (two-sided board on top of the start gantry; RaceService
---     adds the text), Name1..3 (anchors above the podium steps for the top-3 names), SafeVolume
---     (invisible, tagged PvPSafeZone: no bats on the circuit while the race is on).
+--     adds the text), OddsBoard (two-sided capsule-odds board on the infield stand beside the pad, facing
+--     the start straight players walk up), Name1..3 (anchors above the podium steps for the top-3 names),
+--     SafeVolume (invisible, tagged PvPSafeZone: no bats on the circuit while the race is on), Walls
+--     (032: invisible walls along both track edges, following the circuit's inner/outer barrier chains
+--     and the pit wall; RaceService puts them in a collision group that only racers collide with).
 --   Server only (stay in ServerStorage): Gates.Finish + Gates.CP1..CP5, boxes across the track in
 --     race order. Track direction: from the grid (north) across the start line heading +Z.
 -- The centre line was measured from the circuit's inner/outer barriers (lap ~144 studs).
@@ -112,8 +115,8 @@ return function()
 	-- Sign: on top of the start gantry, readable from the pad and from the approach ------------------------
 	local sign = part({
 		Name = "Sign",
-		Size = Vector3.new(12, 6.5, 0.4),
-		CFrame = CFrame.new(-115.7, 88, -950.7),
+		Size = Vector3.new(14, 8, 0.4),
+		CFrame = CFrame.new(-115.7, 88.6, -950.7),
 		Color = NAVY,
 		CanCollide = false,
 		CanQuery = false,
@@ -122,7 +125,7 @@ return function()
 	sign.Parent = root
 	local trim = part({
 		Name = "SignTrim",
-		Size = Vector3.new(12.6, 7.1, 0.3),
+		Size = Vector3.new(14.6, 8.6, 0.3),
 		CFrame = sign.CFrame,
 		Color = GOLD,
 		Material = Enum.Material.Metal,
@@ -131,6 +134,91 @@ return function()
 		CanTouch = false,
 	})
 	trim.Parent = root
+
+	-- Odds board (032): on top of the infield stand just east of the pad, two-sided, facing the start
+	-- straight (players walk up it from the plaza heading -Z; racers on the pad see it to their left).
+	local oddsAt = CFrame.lookAt(Vector3.new(-104, 91.4, -962), Vector3.new(-112, 91.4, -930))
+	local odds = part({
+		Name = "OddsBoard",
+		Size = Vector3.new(16, 10, 0.4),
+		CFrame = oddsAt,
+		Color = NAVY,
+		CanCollide = false,
+		CanQuery = false,
+		CanTouch = false,
+	})
+	odds.Parent = root
+	local oddsTrim = part({
+		Name = "OddsTrim",
+		Size = Vector3.new(16.6, 10.6, 0.3),
+		CFrame = oddsAt,
+		Color = GOLD,
+		Material = Enum.Material.Metal,
+		CanCollide = false,
+		CanQuery = false,
+		CanTouch = false,
+	})
+	oddsTrim.Parent = root
+	for _, x in { -6.5, 6.5 } do
+		local post = part({
+			Name = "OddsPost",
+			Size = Vector3.new(0.6, 9.6, 0.6),
+			CFrame = oddsAt * CFrame.new(x, -9.8, 0), -- down to the stand's seating
+			Color = GOLD,
+			Material = Enum.Material.Metal,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+		})
+		post.Parent = root
+	end
+
+	-- Walls (032): along both track edges. The edges are the circuit's barrier chains (Barrier_Inner_01..20,
+	-- Barrier_Outer_02..26 in order round the track) and the pit wall on the start straight.
+	local circuit = workspace.World.VelocityRoyale.VelocityRoyale_016B.Circuit
+	local function chain(prefix: string): { Vector3 }
+		local found = {}
+		for _, b in circuit.Barriers:GetChildren() do
+			local n = tonumber(b.Name:match("^Barrier_" .. prefix .. "_(%d+)$"))
+			if n and b:IsA("BasePart") then
+				table.insert(found, { n = n, p = b.Position })
+			end
+		end
+		table.sort(found, function(a, b)
+			return a.n < b.n
+		end)
+		local pts = {}
+		for _, f in found do
+			table.insert(pts, Vector3.new(f.p.X, Y, f.p.Z))
+		end
+		return pts
+	end
+	local inner, outer = chain("Inner"), chain("Outer")
+	local pit = circuit.PitWall.Wall :: BasePart
+	-- the pit wall closes the outer edge between the last outer barrier (north-west) and the first (south-west)
+	table.insert(outer, Vector3.new(pit.Position.X, Y, pit.Position.Z - pit.Size.Z / 2))
+	table.insert(outer, Vector3.new(pit.Position.X, Y, pit.Position.Z + pit.Size.Z / 2))
+	local walls = Instance.new("Folder")
+	walls.Name = "Walls"
+	walls.Parent = root
+	local WALL_HEIGHT = 12
+	local wallSegments = {}
+	for _, ring in { { "I", inner }, { "O", outer } } do
+		local pts = ring[2]
+		for i, a in pts do
+			local b = pts[i % #pts + 1]
+			local mid = (a + b) / 2 + Vector3.new(0, WALL_HEIGHT / 2, 0)
+			local w = part({
+				Name = ("Wall_%s%02d"):format(ring[1], i),
+				Size = Vector3.new(1, WALL_HEIGHT, (b - a).Magnitude + 1),
+				CFrame = CFrame.lookAt(mid, mid + (b - a)),
+			})
+			w.Transparency = 1
+			w.CanCollide, w.CanTouch, w.CanQuery = true, false, false
+			w.Parent = walls
+			table.insert(wallSegments, { a, b })
+		end
+	end
 
 	-- Podium names: above the 1st / 2nd / 3rd steps of WinnersPodium -------------------------------------
 	local steps = { { -159.2, 80.4 }, { -163.4, 79.4 }, { -155.0, 78.6 } }
@@ -151,5 +239,28 @@ return function()
 	for i, point in LINE do
 		length += (LINE[i % #LINE + 1] - point).Magnitude
 	end
-	return ("RaceCourse031 built: %d gates, centre line %.1f studs"):format(#gates:GetChildren(), length)
+	-- closest the centre line comes to a wall (a racer is ~2 studs wide)
+	local function segDist(p: Vector3, a: Vector3, b: Vector3): number
+		local ab = (b - a) * Vector3.new(1, 0, 1)
+		local t = math.clamp(((p - a) * Vector3.new(1, 0, 1)):Dot(ab) / ab:Dot(ab), 0, 1)
+		return ((a + ab * t - p) * Vector3.new(1, 0, 1)).Magnitude
+	end
+	local closest = math.huge
+	for i, a in LINE do
+		local b = LINE[i % #LINE + 1]
+		for k = 0, 10 do
+			local p = a:Lerp(b, k / 10)
+			for _, seg in wallSegments do
+				closest = math.min(closest, segDist(p, seg[1], seg[2]))
+			end
+		end
+	end
+	return ("RaceCourse031 built: %d gates, centre line %.1f studs, %d walls (inner %d, outer %d), centre line >= %.1f studs from a wall"):format(
+		#gates:GetChildren(),
+		length,
+		#walls:GetChildren(),
+		#inner,
+		#outer,
+		closest
+	)
 end

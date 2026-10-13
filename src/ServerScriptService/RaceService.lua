@@ -2,10 +2,14 @@
 -- RaceService  (Milestone 031, D21 Royale Race)
 -- Stand on the pad -> race 3 laps of the Velocity Royale circuit -> finish -> a capsule opens -> a Zone 6 worker.
 --
--- Rounds: once RaceConfig.INTERVAL has passed since the last start, the next player who stands on the pad
--- starts a JOIN_WINDOW countdown ("Join the race!" on the sign, big numbers for the last COUNTDOWN s); whoever is on the pad at GO races (eligible = data loaded, Zone 6 unlocked, not
--- carrying, room for one more worker). Racers run at a fixed speed and don't collide with each other
--- (collision group). The server checks every racer's position against invisible gates (Gates.CP1..N in
+-- Rounds: the first race is open as soon as the course is built (032); after that, once RaceConfig.INTERVAL has
+-- passed since the last start, the next eligible player who stands on the pad starts a JOIN_WINDOW countdown
+-- ("Join the race!" on the sign, big numbers for the last COUNTDOWN s). Eligible players on the pad are frozen
+-- (no walking or jumping) for those last COUNTDOWN s and let go at GO; whoever is on the pad at GO races
+-- (eligible = data loaded, Zone 6 unlocked, not carrying, room for one more worker). A player on the pad who
+-- can't race gets the reason on the "RaceBlock" attribute (RaceClient shows it). Racers run at a fixed speed,
+-- don't collide with each other (collision group) and are kept on the track by invisible walls only they
+-- collide with (RaceConfig.WALL_GROUP). The server checks every racer's position against invisible gates (Gates.CP1..N in
 -- order, then Gates.Finish = one lap); a skipped checkpoint means the lap never counts. Nothing about
 -- progress comes from the client: there is no "finish" message to fake or re-send.
 --
@@ -19,7 +23,9 @@
 -- World: nothing is added unless the race is on (RaceConfig flag / Studio attribute StudioRace). The course
 -- (ServerStorage.RaceCourse031) is cloned into Workspace.World.VelocityRoyale.RaceCourse, whose attributes
 -- the clients read: State (Waiting|Countdown|Racing|Podium), Ready (server time the next race may start),
--- GoAt, EndsAt, Laps, Racers. Player attributes while racing: Racing = true, RaceLap = 1..LAPS.
+-- GoAt, EndsAt, Laps, Racers; its Route folder holds the gate positions (CFrameValues, attribute Order) for the
+-- client's next-checkpoint arch. Player attributes while racing: Racing = true, RaceLap = 1..LAPS, RaceNext = the
+-- next gate's Order (1..N, 0 = the line); RaceFrozen = true while frozen on the pad.
 
 local HttpService = game:GetService("HttpService")
 local PhysicsService = game:GetService("PhysicsService")
@@ -30,7 +36,6 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local RaceConfig = require(ReplicatedStorage:WaitForChild("RaceConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
-local NPCClaim = require(script.Parent:WaitForChild("NPCClaim"))
 local ParadeService = require(script.Parent:WaitForChild("ParadeService"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 local WorkerInventory = require(script.Parent:WaitForChild("WorkerInventory"))
@@ -109,8 +114,10 @@ local function label(parent: Instance, name: string, text: string, y: number, h:
 	return l
 end
 
--- The pad sign's text (both faces). Status is filled in by each client (time to the next race).
-local function dressSign(sign: BasePart)
+local GOLD_TEXT, SILVER_TEXT, WHITE = Color3.fromRGB(255, 214, 92), Color3.fromRGB(220, 226, 236), Color3.new(1, 1, 1)
+
+local function faces(part: BasePart): { SurfaceGui }
+	local list = {}
 	for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
 		local gui = Instance.new("SurfaceGui")
 		gui.Name = "Sign" .. face.Name
@@ -118,14 +125,42 @@ local function dressSign(sign: BasePart)
 		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 		gui.PixelsPerStud = 40
 		gui.LightInfluence = 0
-		gui.Parent = sign
-		local gold, white = Color3.fromRGB(255, 214, 92), Color3.new(1, 1, 1)
-		label(gui, "Title", "ROYALE RACE", 0.03, 0.2, gold, Enum.Font.FredokaOne)
-		label(gui, "Status", "Stand on the pad to race!", 0.25, 0.17, white, Enum.Font.GothamBlack)
-		label(gui, "Rule", ("%d laps · every finisher wins a capsule!"):format(RaceConfig.LAPS), 0.44, 0.1, white, Enum.Font.GothamBold)
-		label(gui, "Gold", "GOLD (top 3; under 4 racers: 1st): " .. RaceConfig.oddsText("Gold"), 0.58, 0.16, gold, Enum.Font.GothamBold)
-		label(gui, "Silver", "SILVER (everyone else): " .. RaceConfig.oddsText("Silver"), 0.77, 0.16, Color3.fromRGB(220, 226, 236), Enum.Font.GothamBold)
+		gui.Parent = part
+		table.insert(list, gui)
 	end
+	return list
+end
+
+-- The pad sign (both faces): title, one huge status line (filled in by each client: "Join the race! 12",
+-- "Next race in 2:41", ...) and one rule line. The odds are on the OddsBoard.
+local function dressSign(sign: BasePart)
+	for _, gui in faces(sign) do
+		label(gui, "Title", "ROYALE RACE", 0.04, 0.2, GOLD_TEXT, Enum.Font.FredokaOne)
+		label(gui, "Status", "Stand on the pad to race!", 0.27, 0.44, WHITE, Enum.Font.GothamBlack)
+		label(gui, "Rule", ("%d laps · every finisher wins a capsule"):format(RaceConfig.LAPS), 0.76, 0.17, WHITE, Enum.Font.GothamBold)
+	end
+end
+
+-- The odds board beside the pad (both faces): who gets which capsule, each with its odds.
+local function dressOdds(board: BasePart)
+	for _, gui in faces(board) do
+		local goldRule = ("GOLD: top %d (1st only if under %d racers)"):format(RaceConfig.GOLD_PLACES, RaceConfig.SMALL_RACE_MIN)
+		label(gui, "GoldTitle", goldRule, 0.04, 0.17, GOLD_TEXT, Enum.Font.GothamBlack)
+		label(gui, "Gold", RaceConfig.oddsText("Gold"), 0.22, 0.24, GOLD_TEXT, Enum.Font.GothamBold).TextWrapped = true
+		label(gui, "SilverTitle", "SILVER: everyone else who finishes", 0.52, 0.17, SILVER_TEXT, Enum.Font.GothamBlack)
+		label(gui, "Silver", RaceConfig.oddsText("Silver"), 0.7, 0.24, SILVER_TEXT, Enum.Font.GothamBold).TextWrapped = true
+	end
+end
+
+-- Walls collide with racers only: switched off against every other collision group (also ones registered
+-- after the race started, so this runs at each build).
+local function wallGroups()
+	for _, group in PhysicsService:GetRegisteredCollisionGroups() do
+		if group.name ~= RaceConfig.COLLISION_GROUP then
+			PhysicsService:CollisionGroupSetCollidable(RaceConfig.WALL_GROUP, group.name, false)
+		end
+	end
+	PhysicsService:CollisionGroupSetCollidable(RaceConfig.WALL_GROUP, RaceConfig.COLLISION_GROUP, true)
 end
 
 local function dressNames()
@@ -190,6 +225,33 @@ local function buildCourse(): boolean
 	if sign and sign:IsA("BasePart") then
 		dressSign(sign)
 	end
+	local odds = folder:FindFirstChild("OddsBoard")
+	if odds and odds:IsA("BasePart") then
+		dressOdds(odds)
+	end
+	local walls = template:FindFirstChild("Walls")
+	if walls then
+		wallGroups()
+		local copy = walls:Clone()
+		for _, wall in copy:GetChildren() do
+			if wall:IsA("BasePart") then
+				wall.CollisionGroup = RaceConfig.WALL_GROUP
+			end
+		end
+		copy.Parent = folder
+	end
+	-- gate positions for the client's next-checkpoint arch (progress is still only counted here)
+	local route = Instance.new("Folder")
+	route.Name = "Route"
+	for order, g in gates do
+		local value = Instance.new("CFrameValue")
+		value.Name = if order == 0 then "Finish" else "CP" .. order
+		value.Value = g.cf
+		value:SetAttribute("Order", order)
+		value:SetAttribute("Size", g.half * 2)
+		value.Parent = route
+	end
+	route.Parent = folder
 	folder:SetAttribute("Laps", RaceConfig.LAPS)
 	folder:SetAttribute("State", "Waiting")
 	folder.Parent = royale
@@ -246,16 +308,16 @@ RaceService.stats = { races = 0, finished = 0, capsules = 0, out = 0, duplicate 
 -- Can this player race right now? (ok, message for the player)
 function RaceService.eligible(player: Player): (boolean, string?)
 	if not PlayerData.isLoaded(player) then
-		return false, "Your data is still loading."
+		return false, "Loading your data, one moment"
 	end
 	if not ZoneProgress.isUnlocked(player, RaceConfig.ZONE) then
-		return false, "Unlock Velocity Royale to race."
+		return false, "Unlock Velocity Royale to race"
 	end
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true then
-		return false, "Put your worker down first, then race!"
+		return false, "Drop your worker first"
 	end
 	if not WorkerInventory.hasRoom(player) then
-		return false, "No room for a new worker! Free a pad or storage slot to race."
+		return false, "Your base is full"
 	end
 	return true, nil
 end
@@ -294,6 +356,7 @@ local function join(r: Race, player: Player)
 	r.racers[player] = racer
 	player:SetAttribute("Racing", true)
 	player:SetAttribute("RaceLap", 1)
+	player:SetAttribute("RaceNext", 1)
 end
 
 -- Takes a racer out of the race (finished, out or race over): collision group, speed, attributes back.
@@ -314,6 +377,7 @@ local function release(r: Race, racer: Racer)
 	if racer.player.Parent then
 		racer.player:SetAttribute("Racing", nil)
 		racer.player:SetAttribute("RaceLap", nil)
+		racer.player:SetAttribute("RaceNext", nil)
 	end
 end
 
@@ -425,6 +489,7 @@ local function step(r: Race, racer: Racer, dt: number)
 	end
 	if racer.nextCp <= checkpointCount then
 		racer.nextCp += 1
+		player:SetAttribute("RaceNext", if racer.nextCp > checkpointCount then 0 else racer.nextCp)
 		return
 	end
 	-- crossed the line after every checkpoint: a lap
@@ -435,36 +500,82 @@ local function step(r: Race, racer: Racer, dt: number)
 	racer.lap += 1
 	racer.nextCp = 1
 	player:SetAttribute("RaceLap", racer.lap)
+	player:SetAttribute("RaceNext", 1)
 	clientEvent:FireClient(player, "Lap", { lap = racer.lap, laps = RaceConfig.LAPS })
 end
 
 -- Rounds ------------------------------------------------------------------------------------------------
-local notified: { [Player]: number } = setmetatable({}, { __mode = "k" }) :: any
+local function setBlock(player: Player, text: string?)
+	if player:GetAttribute("RaceBlock") ~= text then
+		player:SetAttribute("RaceBlock", text)
+	end
+end
 
-local function padPlayers(): { Player }
+-- Eligible players on the pad (not already racing). Everyone on the pad who can't race gets the reason on
+-- their RaceBlock attribute (cleared off the pad); RaceClient shows it on screen and above the pad.
+local function eligibleOnPad(): { Player }
 	local list = {}
 	for _, player in Players:GetPlayers() do
+		local block = nil
 		if RaceService.onPad(player) and not (race and race.racers[player]) then
-			table.insert(list, player)
+			local ok, message = RaceService.eligible(player)
+			if ok then
+				table.insert(list, player)
+			else
+				block = message
+			end
 		end
+		setBlock(player, block)
 	end
 	return list
 end
 
--- Players on the pad who can't race are told why (at most every NOTIFY_EVERY seconds).
-local NOTIFY_EVERY = 8
-local function eligibleOnPad(): { Player }
+-- Freezing on the pad for the last COUNTDOWN seconds: walk speed and jump off, given back at GO (or as soon
+-- as the player is no longer an eligible player on the pad: teleported, died, left, became ineligible).
+type Frozen = { humanoid: Humanoid, speed: number, jumpPower: number, jumpHeight: number }
+local frozen: { [Player]: Frozen } = {}
+
+local function freeze(player: Player)
+	if frozen[player] then
+		return
+	end
+	local _, humanoid = livingRoot(player)
+	if not humanoid then
+		return
+	end
+	frozen[player] = { humanoid = humanoid, speed = humanoid.WalkSpeed, jumpPower = humanoid.JumpPower, jumpHeight = humanoid.JumpHeight }
+	humanoid.WalkSpeed = 0
+	humanoid.JumpPower = 0
+	humanoid.JumpHeight = 0
+	player:SetAttribute("RaceFrozen", true)
+end
+
+local function unfreeze(player: Player)
+	local f = frozen[player]
+	if not f then
+		return
+	end
+	frozen[player] = nil
+	if f.humanoid.Parent then
+		f.humanoid.WalkSpeed = f.speed
+		f.humanoid.JumpPower = f.jumpPower
+		f.humanoid.JumpHeight = f.jumpHeight
+	end
+	if player.Parent then
+		player:SetAttribute("RaceFrozen", nil)
+	end
+end
+
+local function unfreezeAll(except: { Player }?)
 	local list = {}
-	for _, player in padPlayers() do
-		local ok, message = RaceService.eligible(player)
-		if ok then
+	for player in frozen do
+		if not (except and table.find(except, player)) then
 			table.insert(list, player)
-		elseif message and os.clock() - (notified[player] or -math.huge) > NOTIFY_EVERY then
-			notified[player] = os.clock()
-			NPCClaim.notify(player, false, message, "Royale Race")
 		end
 	end
-	return list
+	for _, player in list do
+		unfreeze(player)
+	end
 end
 
 local function startRace(goAt: number, players: { Player })
@@ -478,6 +589,7 @@ local function startRace(goAt: number, players: { Player })
 		finishers = {},
 	}
 	race = r
+	unfreezeAll() -- GO: walking and jumping back before the race speed is set
 	for _, player in players do
 		join(r, player)
 	end
@@ -520,6 +632,9 @@ RaceService._test = {
 			release(r, r.racers[player])
 		end
 	end,
+	frozen = function(player: Player): boolean
+		return frozen[player] ~= nil
+	end,
 	-- Studio only: the next race may start now (skips the 3-minute wait).
 	readyNow = function()
 		if course then
@@ -538,6 +653,12 @@ function RaceService.start()
 		PhysicsService:RegisterCollisionGroup(RaceConfig.COLLISION_GROUP)
 	end
 	PhysicsService:CollisionGroupSetCollidable(RaceConfig.COLLISION_GROUP, RaceConfig.COLLISION_GROUP, false)
+	if not PhysicsService:IsCollisionGroupRegistered(RaceConfig.WALL_GROUP) then
+		PhysicsService:RegisterCollisionGroup(RaceConfig.WALL_GROUP)
+	end
+	Players.PlayerRemoving:Connect(function(player)
+		frozen[player] = nil
+	end)
 
 	local lastState: { [Player]: number } = setmetatable({}, { __mode = "k" }) :: any
 	actionEvent.OnServerEvent:Connect(function(player, action)
@@ -572,7 +693,7 @@ function RaceService.start()
 			if on and not running then
 				running = buildCourse()
 				if running then
-					setState("Waiting", { Ready = serverNow() + RaceConfig.INTERVAL })
+					setState("Waiting", { Ready = serverNow() }) -- the first race is open right away
 				else
 					on = false
 				end
@@ -580,6 +701,10 @@ function RaceService.start()
 				running = false
 				if race then
 					endRace(race, "stopped")
+				end
+				unfreezeAll()
+				for _, player in Players:GetPlayers() do
+					setBlock(player, nil)
 				end
 				if course then
 					course:Destroy()
@@ -592,17 +717,28 @@ function RaceService.start()
 			if running and folder then
 				local now = serverNow()
 				local state = folder:GetAttribute("State")
+				local onPad = eligibleOnPad()
 				if state == "Waiting" and now >= (folder:GetAttribute("Ready") or math.huge) then
-					if #eligibleOnPad() > 0 then
+					if #onPad > 0 then
 						setState("Countdown", { GoAt = now + RaceConfig.JOIN_WINDOW })
 						clientEvent:FireAllClients("Countdown", { goAt = now + RaceConfig.JOIN_WINDOW })
 					end
-				elseif state == "Countdown" and now >= (folder:GetAttribute("GoAt") or 0) then
-					local players = eligibleOnPad()
-					if #players > 0 then
-						startRace(folder:GetAttribute("GoAt"), players)
+				elseif state == "Countdown" then
+					local goAt = folder:GetAttribute("GoAt") or 0
+					if now >= goAt then
+						if #onPad > 0 then
+							startRace(goAt, onPad)
+						else
+							unfreezeAll()
+							setState("Waiting", nil, { "GoAt" }) -- everyone stepped off: the next one on the pad starts it
+						end
 					else
-						setState("Waiting", nil, { "GoAt" }) -- everyone stepped off: the next one on the pad starts it
+						if goAt - now <= RaceConfig.COUNTDOWN then
+							for _, player in onPad do
+								freeze(player)
+							end
+						end
+						unfreezeAll(onPad)
 					end
 				elseif state == "Racing" and race then
 					local r = race :: Race

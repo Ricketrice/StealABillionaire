@@ -1,12 +1,16 @@
 -- Studio location: StarterPlayer.StarterPlayerScripts.RaceClient (LocalScript)
--- RaceClient  (Milestone 031, D21 Royale Race): display only. The pad sign's status line ("Join the race!" during
--- the join window), the big 5-4-3-2-1-GO countdown in its last seconds (for players on the pad), the race HUD (big "LAP 2/3" + time left), the capsule pop at the finish
--- (the reveal card itself comes from WorkerRevealCard) and the top-3 banner after a race.
+-- RaceClient  (Milestone 031, D21 Royale Race): display only. The pad sign's status line ("Join the race! 12",
+-- "Next race in 2:41", ...), the pad message for a player standing on the pad (big on screen + a billboard above
+-- the pad: the round's status, or why they can't race from the RaceBlock attribute, 032), the big 5-4-3-2-1-GO
+-- countdown in its last seconds (for players on the pad), the race HUD (big "LAP 2/3" + time left + an arrow to
+-- the next checkpoint), a glowing arch over the next checkpoint (this client only, 032), the capsule pop at the
+-- finish (the reveal card itself comes from WorkerRevealCard) and the top-3 banner after a race.
 -- Everything is read from Workspace.World.VelocityRoyale.RaceCourse attributes, the local player's
 -- Racing / RaceLap attributes and RaceEvent; RaceService decides everything. Nothing runs while RaceOn is off.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 
 local RaceConfig = require(ReplicatedStorage:WaitForChild("RaceConfig"))
@@ -54,8 +58,8 @@ end
 -- HUD -------------------------------------------------------------------------------------------------------
 local _, root = UITheme.gui("Race031", 8)
 
--- Race panel: top centre under the shared top piece. Big LAP counter + time left.
-local panel = UITheme.panel({ Name = "RacePanel", Size = UDim2.fromOffset(250, 104), AnchorPoint = Vector2.new(0.5, 0), Visible = false, Parent = root })
+-- Race panel: top centre under the shared top piece. Big LAP counter + time left + arrow to the next checkpoint.
+local panel = UITheme.panel({ Name = "RacePanel", Size = UDim2.fromOffset(320, 104), AnchorPoint = Vector2.new(0.5, 0), Visible = false, Parent = root })
 local scale = Instance.new("UIScale")
 scale.Parent = panel
 local lapLabel = UITheme.text({
@@ -64,11 +68,50 @@ local lapLabel = UITheme.text({
 	Role = "Display",
 	TextSize = 44,
 	Color = GOLD,
-	Size = UDim2.new(1, -16, 0, 54),
+	Size = UDim2.new(1, -100, 0, 54),
 	Position = UDim2.fromOffset(8, 4),
 	Parent = panel,
 })
-local timeLabel = UITheme.text({ Name = "Time", Text = "1:00", Role = "Title", TextSize = 28, Size = UDim2.new(1, -16, 0, 36), Position = UDim2.fromOffset(8, 60), Parent = panel })
+local timeLabel =
+	UITheme.text({ Name = "Time", Text = "1:00", Role = "Title", TextSize = 28, Size = UDim2.new(1, -100, 0, 36), Position = UDim2.fromOffset(8, 60), Parent = panel })
+-- the arrow: a gold chevron in a dial that turns to point at the next checkpoint (up = straight ahead)
+local arrow = Instance.new("Frame")
+arrow.Name = "NextArrow"
+arrow.AnchorPoint = Vector2.new(0.5, 0.5)
+arrow.Size = UDim2.fromOffset(76, 76)
+arrow.Position = UDim2.new(1, -48, 0.5, 0)
+arrow.BackgroundColor3 = C.Stroke
+arrow.BackgroundTransparency = 0.35
+arrow.Parent = panel
+UITheme.corner(arrow, UDim.new(1, 0))
+for _, side in { -1, 1 } do
+	local bar = Instance.new("Frame")
+	bar.Name = "Bar"
+	bar.AnchorPoint = Vector2.new(0.5, 0.5)
+	bar.Size = UDim2.fromOffset(13, 42)
+	bar.Position = UDim2.fromScale(0.5 + side * 0.15, 0.52)
+	bar.Rotation = side * 38
+	bar.BackgroundColor3 = GOLD
+	bar.BorderSizePixel = 0
+	bar.Parent = arrow
+	UITheme.corner(bar, UDim.new(0, 5))
+end
+
+-- Pad message (032): big, top centre, while this player stands on the pad and isn't racing.
+local padPanel = UITheme.panel({ Name = "PadMessage", Size = UDim2.fromOffset(560, 116), AnchorPoint = Vector2.new(0.5, 0), Visible = false, Parent = root })
+local padScale = Instance.new("UIScale")
+padScale.Parent = padPanel
+local padBig = UITheme.text({
+	Name = "Big",
+	Text = "",
+	Role = "Display",
+	TextSize = 46,
+	Color = GOLD,
+	Size = UDim2.new(1, -20, 0, 62),
+	Position = UDim2.fromOffset(10, 6),
+	Parent = padPanel,
+})
+local padSmall = UITheme.text({ Name = "Small", Text = "", Role = "Title", TextSize = 24, Size = UDim2.new(1, -20, 0, 34), Position = UDim2.fromOffset(10, 72), Parent = padPanel })
 
 -- Countdown number, screen centre.
 local countLabel = UITheme.text({
@@ -157,12 +200,13 @@ local _ = podiumTitle
 
 UITheme.onHudLayout(root, function(view)
 	local s = math.clamp(view.scale, 0.62, 1.1)
-	scale.Scale, bannerScale.Scale, podiumScale.Scale = s, s, s
+	scale.Scale, bannerScale.Scale, podiumScale.Scale, padScale.Scale = s, s, s, s
 	countBase = math.clamp(view.size.Y / 720, 0.55, 1.2)
 	countScale.Scale = countBase
 	local top = UITheme.bannerTop()
 	panel.Position = UDim2.fromOffset(view.size.X / 2, top)
 	podium.Position = UDim2.fromOffset(view.size.X / 2, top)
+	padPanel.Position = UDim2.fromOffset(view.size.X / 2, top)
 end)
 
 -- Countdown ---------------------------------------------------------------------------------------------------
@@ -223,11 +267,85 @@ local function runCountdown(goAt: number)
 	end)
 end
 
+-- Next checkpoint (032): one glowing arch over the gate the server expects next (RaceNext), this client only.
+local routeFolder = Instance.new("Folder")
+routeFolder.Name = "RaceRouteLocal"
+routeFolder.Parent = workspace
+local archKey: string? = nil
+local archTarget: Vector3? = nil
+
+local function gateFor(order: number): CFrameValue?
+	local folder = course()
+	local route = folder and folder:FindFirstChild("Route")
+	for _, v in (route and route:GetChildren() or {}) do
+		if v:IsA("CFrameValue") and v:GetAttribute("Order") == order then
+			return v
+		end
+	end
+	return nil
+end
+
+local function buildArch(cf: CFrame, size: Vector3)
+	-- gate boxes start 1 stud below the track surface; the arch stands on the surface, across the track
+	local base = cf * CFrame.new(0, -(size.Y / 2 - 1), 0)
+	local radius, n = size.X / 2 - 0.5, 14
+	for i = 0, n - 1 do
+		local a0, a1 = math.pi * i / n, math.pi * (i + 1) / n
+		local p0 = Vector3.new(radius * math.cos(a0), radius * 1.1 * math.sin(a0), 0)
+		local p1 = Vector3.new(radius * math.cos(a1), radius * 1.1 * math.sin(a1), 0)
+		local mid = (p0 + p1) / 2
+		local seg = Instance.new("Part")
+		seg.Name = "Arch"
+		seg.Anchored = true
+		seg.CanCollide, seg.CanQuery, seg.CanTouch = false, false, false
+		seg.CastShadow = false
+		seg.Material = Enum.Material.Neon
+		seg.Color = GOLD
+		seg.Size = Vector3.new(0.8, 0.8, (p1 - p0).Magnitude + 0.3)
+		seg.CFrame = base * CFrame.lookAt(mid, mid + (p1 - p0))
+		seg.Parent = routeFolder
+	end
+end
+
+local function refreshArch()
+	local order = player:GetAttribute("RaceNext")
+	local key = if player:GetAttribute("Racing") == true and type(order) == "number" then tostring(order) .. "/" .. tostring(player:GetAttribute("RaceLap")) else nil
+	if key == archKey then
+		return
+	end
+	archKey = key
+	routeFolder:ClearAllChildren() -- passed gates disappear: only the next one is shown
+	archTarget = nil
+	local gate = key and gateFor(order)
+	if gate then
+		local size = gate:GetAttribute("Size")
+		buildArch(gate.Value, if typeof(size) == "Vector3" then size else Vector3.new(15, 16, 8))
+		archTarget = gate.Value.Position
+	end
+end
+player:GetAttributeChangedSignal("RaceNext"):Connect(refreshArch)
+
+RunService.RenderStepped:Connect(function()
+	if not archTarget then
+		return
+	end
+	local pulse = 0.1 + 0.25 * (0.5 + 0.5 * math.sin(os.clock() * 6))
+	for _, seg in routeFolder:GetChildren() do
+		(seg :: BasePart).Transparency = pulse
+	end
+	local camera = workspace.CurrentCamera
+	if panel.Visible and camera then
+		local rel = camera.CFrame:VectorToObjectSpace(archTarget - camera.CFrame.Position)
+		arrow.Rotation = math.deg(math.atan2(rel.X, -rel.Z))
+	end
+end)
+
 -- Race HUD ----------------------------------------------------------------------------------------------------
 local endsAt = 0
 local function refreshPanel()
 	local racing = player:GetAttribute("Racing") == true
 	panel.Visible = racing
+	refreshArch()
 	if racing then
 		local lap = player:GetAttribute("RaceLap") or 1
 		lapLabel.Text = ("LAP %d/%d"):format(lap, RaceConfig.LAPS)
@@ -334,13 +452,61 @@ local function signText(folder: Instance): string
 	if state == "Countdown" then
 		return ("Join the race! %d"):format(math.max(0, math.ceil((folder:GetAttribute("GoAt") or now) - now)))
 	elseif state == "Racing" then
-		local racers = tonumber(folder:GetAttribute("Racers")) or 0
-		return ("Race on! %d racer%s"):format(racers, if racers == 1 then "" else "s")
+		return "Race in progress"
 	elseif now < ready then
 		return "Next race in " .. clock(ready - now)
 	end
-	return "Step on the pad to start!"
+	return "Stand on the pad to race!"
 end
+
+-- The message for this player while on the pad: (big line, small line).
+local function padText(folder: Instance): (string, string)
+	local block = player:GetAttribute("RaceBlock")
+	local state = folder:GetAttribute("State")
+	local now = serverNow()
+	local ready = folder:GetAttribute("Ready") or now
+	local status
+	if state == "Countdown" then
+		status = signText(folder)
+	elseif state == "Racing" then
+		status = "Race in progress, wait for the next one"
+	elseif now < ready then
+		status = "Next race in " .. clock(ready - now)
+	else
+		status = "Join the race!"
+	end
+	if type(block) == "string" and block ~= "" then
+		return block, status
+	end
+	return status, ("%d laps · every finisher wins a capsule"):format(RaceConfig.LAPS)
+end
+
+-- Billboard above the pad (this client only): the pad message while on the pad, otherwise the sign's status.
+local billboard = Instance.new("BillboardGui")
+billboard.Name = "RacePadBillboard"
+billboard.Size = UDim2.fromScale(16, 4.2)
+billboard.StudsOffset = Vector3.new(0, 6, 0)
+billboard.MaxDistance = 140
+billboard.LightInfluence = 0
+billboard.ResetOnSpawn = false
+billboard.Enabled = false
+billboard.Parent = player:WaitForChild("PlayerGui")
+local function boardLabel(name: string, y: number, h: number, color: Color3): TextLabel
+	local l = Instance.new("TextLabel")
+	l.Name = name
+	l.BackgroundTransparency = 1
+	l.Position = UDim2.fromScale(0, y)
+	l.Size = UDim2.fromScale(1, h)
+	l.Font = Enum.Font.GothamBlack
+	l.TextScaled = true
+	l.TextColor3 = color
+	l.TextStrokeTransparency = 0
+	l.Text = ""
+	l.Parent = billboard
+	return l
+end
+local boardBig = boardLabel("Big", 0, 0.62, GOLD)
+local boardSmall = boardLabel("Small", 0.64, 0.36, Color3.new(1, 1, 1))
 
 task.spawn(function()
 	local asked = false
@@ -352,8 +518,8 @@ task.spawn(function()
 				actionEvent:FireServer("State")
 			end
 			local sign = folder:FindFirstChild("Sign")
+			local text = signText(folder)
 			if sign then
-				local text = signText(folder)
 				for _, gui in sign:GetChildren() do
 					local status = gui:IsA("SurfaceGui") and gui:FindFirstChild("Status")
 					if status and status:IsA("TextLabel") then
@@ -361,10 +527,24 @@ task.spawn(function()
 					end
 				end
 			end
-			if panel.Visible or podium.Visible then -- follow the shared top piece (it re-lays out after us)
+			local padPart = folder:FindFirstChild("StartPad")
+			local onPad = nearPad() and player:GetAttribute("Racing") ~= true
+			if onPad then
+				local big, small = padText(folder)
+				padBig.Text, padSmall.Text = big, small
+				padBig.TextColor3 = if player:GetAttribute("RaceBlock") then C.Text else GOLD
+				boardBig.Text, boardSmall.Text = big, small
+			else
+				boardBig.Text, boardSmall.Text = text, ("%d laps · every finisher wins a capsule"):format(RaceConfig.LAPS)
+			end
+			padPanel.Visible = onPad
+			billboard.Adornee = if padPart and padPart:IsA("BasePart") then padPart else nil
+			billboard.Enabled = billboard.Adornee ~= nil
+			if panel.Visible or podium.Visible or padPanel.Visible then -- follow the shared top piece (it re-lays out after us)
 				local top = UITheme.bannerTop()
 				panel.Position = UDim2.fromOffset(root.AbsoluteSize.X / 2, top)
 				podium.Position = UDim2.fromOffset(root.AbsoluteSize.X / 2, top)
+				padPanel.Position = UDim2.fromOffset(root.AbsoluteSize.X / 2, top)
 			end
 			if panel.Visible then
 				endsAt = folder:GetAttribute("EndsAt") or endsAt
@@ -375,6 +555,9 @@ task.spawn(function()
 		else
 			asked = false
 			panel.Visible = false
+			padPanel.Visible = false
+			billboard.Enabled = false
+			billboard.Adornee = nil
 		end
 		task.wait(0.2)
 	end

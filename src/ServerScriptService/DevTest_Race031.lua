@@ -1,10 +1,13 @@
 -- Studio location: ServerScriptService.DevTest_Race031 (Script)
 -- DevTest_Race031  (Milestone 031) -- STUDIO-ONLY two-player test of the Royale Race. Inert unless Studio started
 -- the session with StudioTestService and one of these arguments (2 clients):
---   "race031"       in-memory save (ServerStorage StudioMemoryStore = true): flag off/on, eligibility, race 1
---                   (both finish: small-race Gold/Silver, reveal, save marker, podium, re-sent messages, phone
---                   HUD), race 2 (back-and-forth skipping checkpoints + time limit = nothing), race 3 (teleport
---                   cut, leave + rejoin mid-race), flag off again.
+--   "race031"       in-memory save (ServerStorage StudioMemoryStore = true): flag off/on (first race open at once,
+--                   sign, odds board, walls, route, chevrons), eligibility + pad messages, race 1 (frozen on the
+--                   pad for the last 5 s, next-checkpoint arch + arrow, both finish: small-race Gold/Silver,
+--                   reveal, save marker, podium, re-sent messages, phone HUD), race 2 ("Next race in" on the
+--                   pad, a non-racer walks through the track wall and a racer can't, back-and-forth skipping
+--                   checkpoints + time limit = nothing), race 3 (teleport cut, "Race in progress" on the pad,
+--                   leave + rejoin mid-race), flag off again.
 --   "race031:save"  REAL Studio DataStore (StudioMemoryStore not set; players are test users -1 / -2): A races
 --                   solo, finishes, real final save + real load: the race worker and hub.race are back and a
 --                   second capsule for that race is refused. Test keys removed at the end.
@@ -223,6 +226,10 @@ local function eventsOf(p: Player, kind: string): { any }
 	end
 	return found
 end
+-- across the inner barrier from the start straight into the infield (no pylons or gantry posts in the way)
+local TRACK_SIDE = Vector3.new(-115.5, 75.3, -948)
+local INFIELD = Vector3.new(-104, 75.3, -948)
+local INNER_EDGE_X = -110.3
 local function startNow()
 	ServerStorage:SetAttribute("StudioRaceNow", true)
 end
@@ -324,12 +331,7 @@ if mode == "save" then
 end
 
 -- In-memory mode ------------------------------------------------------------------------------------------------
-local vrParts = 0
-for _, d in workspace.World.VelocityRoyale:GetDescendants() do
-	if d:IsA("BasePart") then
-		vrParts += 1
-	end
-end
+local vrParts = 0 -- counted once the flag is off (the place may start with StudioRace on)
 
 scenario("flag off: Zone 6 as before", function()
 	ServerStorage:SetAttribute(RaceConfig.STUDIO_ATTRIBUTE, nil)
@@ -340,39 +342,105 @@ scenario("flag off: Zone 6 as before", function()
 	put(A, PAD + Vector3.new(0, 3, 0))
 	task.wait(1)
 	expect("standing on the grid does nothing", A:GetAttribute("Racing") == nil and course() == nil)
+	for _, d in workspace.World.VelocityRoyale:GetDescendants() do
+		if d:IsA("BasePart") then
+			vrParts += 1
+		end
+	end
 end)
 
-scenario("flag on: course, sign with odds", function()
+scenario("flag on: course, sign, odds board, walls, route", function()
 	ServerStorage:SetAttribute(RaceConfig.STUDIO_ATTRIBUTE, true)
 	expect("course built", waitUntil(5, course) ~= nil)
 	local c = course() :: Instance
 	expect("RaceOn published", ReplicatedStorage:GetAttribute(RaceConfig.PUBLISHED) == true)
-	for _, name in { "StartPad", "Sign", "Name1", "Name2", "Name3", "SafeVolume" } do
+	expect("first race open right away (no wait after start)", (c:GetAttribute("Ready") or math.huge) <= workspace:GetServerTimeNow(), c:GetAttribute("Ready"))
+	for _, name in { "StartPad", "Sign", "OddsBoard", "Name1", "Name2", "Name3", "SafeVolume", "Walls", "Route" } do
 		expect(name .. " in the world", c:FindFirstChild(name) ~= nil)
 	end
-	expect("gates stay on the server", c:FindFirstChild("Gates") == nil and c:FindFirstChild("CP1") == nil)
-	local sign = c:FindFirstChild("Sign") :: Instance
-	local front = sign:FindFirstChild("SignFront") :: Instance
-	local gold, silver = front and front:FindFirstChild("Gold") :: TextLabel, front and front:FindFirstChild("Silver") :: TextLabel
-	expect(
-		"sign shows Gold = Golden Parade odds",
-		gold and gold.Text:find("Common 50%%") and gold.Text:find("Legendary 5%%") and gold.Text:find("Secret 0.5%%"),
-		gold and gold.Text
-	)
-	expect(
-		"sign shows Silver = normal odds",
-		silver and silver.Text:find("Common 70%%") and silver.Text:find("Legendary 1.8%%") and silver.Text:find("Secret 0.2%%"),
-		silver and silver.Text
-	)
+	expect("server gates stay on the server", c:FindFirstChild("Gates") == nil and c:FindFirstChild("CP1") == nil)
+	local route = c:FindFirstChild("Route") :: Instance
+	expect("route = every gate's position", route and #route:GetChildren() == #template.Gates:GetChildren(), route and #route:GetChildren())
+	-- pad sign: title, one huge status line, one rule line; both faces
+	for _, faceName in { "SignFront", "SignBack" } do
+		local face = (c :: any).Sign:FindFirstChild(faceName)
+		local rule = face and face:FindFirstChild("Rule") :: TextLabel?
+		local status = face and face:FindFirstChild("Status") :: TextLabel?
+		expect(
+			faceName .. ": ROYALE RACE + status + one rule line",
+			face and face:FindFirstChild("Title") and status and rule and rule.Text == "3 laps · every finisher wins a capsule",
+			rule and rule.Text
+		)
+		expect(faceName .. ": status is the big line", status and status.Size.Y.Scale >= 0.4, status and status.Size.Y.Scale)
+		expect(faceName .. ": no odds on the pad sign", face and face:FindFirstChild("Gold") == nil and face:FindFirstChild("Silver") == nil)
+	end
+	-- odds board beside the pad: both faces, large, readable rules + odds
+	local board = c:FindFirstChild("OddsBoard") :: BasePart
+	for _, faceName in { "SignFront", "SignBack" } do
+		local face = board and board:FindFirstChild(faceName)
+		local gt, g = face and face:FindFirstChild("GoldTitle") :: TextLabel?, face and face:FindFirstChild("Gold") :: TextLabel?
+		local st, sv = face and face:FindFirstChild("SilverTitle") :: TextLabel?, face and face:FindFirstChild("Silver") :: TextLabel?
+		expect(faceName .. ": GOLD rule", gt and gt.Text == "GOLD: top 3 (1st only if under 4 racers)", gt and gt.Text)
+		expect(faceName .. ": SILVER rule", st and st.Text == "SILVER: everyone else who finishes", st and st.Text)
+		expect(faceName .. ": Gold = Golden Parade odds", g and g.Text:find("Common 50%%") and g.Text:find("Legendary 5%%") and g.Text:find("Secret 0.5%%"), g and g.Text)
+		expect(faceName .. ": Silver = normal odds", sv and sv.Text:find("Common 70%%") and sv.Text:find("Legendary 1.8%%") and sv.Text:find("Secret 0.2%%"), sv and sv.Text)
+	end
+	local toPad = PAD - (board :: BasePart).Position
+	expect("odds board is beside the pad", board and (toPad * Vector3.new(1, 0, 1)).Magnitude < 18, board and ("%.1f studs"):format((toPad * Vector3.new(1, 0, 1)).Magnitude))
+	expect("odds board text is large (board >= 14 x 9 studs)", board and board.Size.X >= 14 and board.Size.Y >= 9, board and board.Size)
+	-- players walk up the start straight from the plaza (heading -Z): one face of each board looks at them
+	local approach = Vector3.new(-115.5, 76, -925)
+	for _, part in { (c :: any).Sign :: BasePart, board } do
+		local toViewer = (approach - part.Position).Unit
+		local facing = math.max(part.CFrame.LookVector:Dot(toViewer), -part.CFrame.LookVector:Dot(toViewer))
+		expect(part.Name .. " faces the approach", facing > 0.6, ("%.2f"):format(facing))
+	end
+	-- walls: racers only
+	local walls = c:FindFirstChild("Walls") :: Instance
+	local okWalls, n = true, 0
+	for _, w in (walls and walls:GetChildren() or {}) do
+		n += 1
+		local part = w :: BasePart
+		okWalls = okWalls and part.CollisionGroup == RaceConfig.WALL_GROUP and part.CanCollide and part.Transparency == 1 and not part.CanQuery
+	end
+	expect("track walls: invisible, in the wall group", n >= 30 and okWalls, n)
+	expect("walls collide with racers", PhysicsService:CollisionGroupsAreCollidable(RaceConfig.WALL_GROUP, RaceConfig.COLLISION_GROUP))
+	expect("walls don't collide with anyone else", PhysicsService:CollisionGroupsAreCollidable(RaceConfig.WALL_GROUP, "Default") == false)
+	-- painted chevrons point the race direction
+	local function dirAt(pos: Vector3): Vector3
+		local best, bd = Vector3.zero, math.huge
+		for i, a in LINE do
+			local b = LINE[i % #LINE + 1]
+			local ab = (b - a) * Vector3.new(1, 0, 1)
+			local t = math.clamp(((pos - a) * Vector3.new(1, 0, 1)):Dot(ab) / ab:Dot(ab), 0, 1)
+			local d = ((a + ab * t - pos) * Vector3.new(1, 0, 1)).Magnitude
+			if d < bd then
+				bd, best = d, ab.Unit
+			end
+		end
+		return best
+	end
+	local arrows = workspace.World.VelocityRoyale.VelocityRoyale_016B.Circuit.RouteArrows
+	local wrong, bars = {}, 0
+	for _, bar in arrows:GetChildren() do
+		bars += 1
+		-- each chevron arm runs from the tip backwards: pointing forward means its look vector is against the race
+		if ((bar :: BasePart).CFrame.LookVector * Vector3.new(1, 0, 1)).Unit:Dot(dirAt((bar :: BasePart).Position)) > -0.2 then
+			table.insert(wrong, bar.Name)
+		end
+	end
+	expect("every chevron points the race direction", bars >= 10 and #wrong == 0, table.concat(wrong, ","))
 	expect("racers never collide", PhysicsService:CollisionGroupsAreCollidable(RaceConfig.COLLISION_GROUP, RaceConfig.COLLISION_GROUP) == false)
 	expect("Zone 6 catch odds untouched", WorkerCatalogue.RARITY_PER_MILLE.Common == 700 and WorkerCatalogue.RARITY_PER_MILLE.Secret == 2)
 	expect("state Waiting", state() == "Waiting")
 end)
 
-scenario("eligibility: locked zone, full inventory", function()
-	-- (a locked player can't even stand on the pad: the Zone 6 gate turns them back)
+scenario("eligibility: locked zone, full inventory, carrying", function()
+	-- (a locked player can't normally stand on the pad: the Zone 6 gate turns them back)
 	local ok, why = RaceService.eligible(A)
 	expect("Zone 6 locked: not eligible", ok == false and tostring(why):find("Unlock Velocity Royale") ~= nil, why)
+	put(A, PAD + Vector3.new(4, 3, 40)) -- off the pad first: the first race is open, an eligible A would start it
+	put(B, PAD + Vector3.new(0, 3, 40))
 	unlock(A)
 	unlock(B)
 	-- fill A up to capacity, stand on the pad: no race, told why
@@ -383,14 +451,23 @@ scenario("eligibility: locked zone, full inventory", function()
 		table.insert(fillers, uid)
 	end
 	ask(A, "clear")
-	put(B, PAD + Vector3.new(0, 3, 40))
 	onPads({ A })
-	startNow()
 	task.wait(1.5)
 	expect("no countdown for a full player", state() == "Waiting", state())
-	local fb = eventsOf(A, "Feedback")
-	expect("told there is no room", fb[1] and tostring(fb[1].message):find("No room") ~= nil, fb[1] and fb[1].message)
+	expect("full: reason attribute", A:GetAttribute("RaceBlock") == "Your base is full", A:GetAttribute("RaceBlock"))
+	local pad = ask(A, "pad")
+	expect("full: big message on screen", pad.visible and pad.big == "Your base is full", pad.big)
+	expect("full: billboard above the pad", pad.board == "Your base is full", pad.board)
+	A:SetAttribute("CarryingNPC", true) -- (SIM: the carry flag without a real worker in hand)
+	task.wait(0.6)
+	pad = ask(A, "pad")
+	expect("carrying: Drop your worker first", A:GetAttribute("RaceBlock") == "Drop your worker first" and pad.big == "Drop your worker first", pad.big, true)
+	A:SetAttribute("CarryingNPC", nil)
 	put(A, PAD + Vector3.new(4, 3, 40)) -- off the pad first: with room again A alone would start a race
+	task.wait(0.6)
+	pad = ask(A, "pad")
+	expect("off the pad: reason cleared, no pad message", A:GetAttribute("RaceBlock") == nil and pad.visible == false, A:GetAttribute("RaceBlock"))
+	expect("off the pad: billboard shows the sign status", pad.board == "Stand on the pad to race!", pad.board)
 	for _, uid in fillers do
 		WorkerInventory.take(A, uid)
 	end
@@ -412,19 +489,46 @@ scenario("race 1: two racers, 3 laps, small-race rule", function()
 	local early = ask(B, "visible", { piece = "Count" })
 	expect("no big number early in the join window", early.visible == false, early.visible)
 	expect("sign says Join the race!", tostring(early.sign):find("Join the race!") ~= nil, early.sign)
+	local padB = ask(B, "pad")
+	expect("pad message: Join the race! + seconds", padB.visible and tostring(padB.big):match("^Join the race! %d+$") ~= nil, padB.big)
+	expect("billboard: Join the race! + seconds", tostring(padB.board):match("^Join the race! %d+$") ~= nil, padB.board)
+	expect("not frozen early in the join window", RaceService._test.frozen(A) == false)
+	local hA = (A.Character :: Model):FindFirstChildOfClass("Humanoid") :: Humanoid
+	local jumpBefore = { power = hA.JumpPower, height = hA.JumpHeight }
 	waitUntil(RaceConfig.JOIN_WINDOW, function()
 		local goAt = (course() :: Instance):GetAttribute("GoAt")
 		return goAt and goAt - workspace:GetServerTimeNow() <= RaceConfig.COUNTDOWN - 0.4
 	end)
+	expect("frozen for the last 5 s", RaceService._test.frozen(A) and A:GetAttribute("RaceFrozen") == true and hA.WalkSpeed == 0 and hA.JumpPower == 0 and hA.JumpHeight == 0)
+	local pushA
+	task.spawn(function()
+		pushA = ask(A, "push", { to = PAD + Vector3.new(0, 3, 14), seconds = 1.5, jump = true }, 6)
+	end)
 	local hudCount = ask(B, "hud", { pieces = { "Count" }, settle = 0.35 }, 10)
 	expect("countdown fits phone screens", hudCount.hud and #hudCount.hud.issues == 0, hudCount.hud and table.concat(hudCount.hud.issues, "; "))
+	waitUntil(4, function()
+		return pushA ~= nil
+	end)
+	local moved = pushA and pushA.start and ((pushA.finish - pushA.start) * Vector3.new(1, 0, 1)).Magnitude
+	expect("frozen: walking + jumping does nothing", moved and moved < 1 and pushA.rise < 0.5, pushA and ("moved %.2f rise %.2f"):format(moved or -1, pushA.rise or -1))
 	expect("GO", waitState("Racing", RaceConfig.JOIN_WINDOW + 2))
+	expect(
+		"let go at GO (jump back)",
+		not RaceService._test.frozen(A) and A:GetAttribute("RaceFrozen") == nil and hA.JumpPower == jumpBefore.power and hA.JumpHeight == jumpBefore.height
+	)
 	local c = course() :: Instance
 	expect("2 racers", c:GetAttribute("Racers") == 2, c:GetAttribute("Racers"))
 	expect("A racing, lap 1", A:GetAttribute("Racing") == true and A:GetAttribute("RaceLap") == 1)
 	expect("racer collision group", root(A).CollisionGroup == RaceConfig.COLLISION_GROUP, root(A).CollisionGroup)
 	local h = (A.Character :: Model):FindFirstChildOfClass("Humanoid") :: Humanoid
 	expect("fixed race speed", h.WalkSpeed == RaceConfig.WALK_SPEED, h.WalkSpeed)
+	local cp1 = (c :: any).Route.CP1.Value.Position
+	expect("next gate = CP1", A:GetAttribute("RaceNext") == 1, A:GetAttribute("RaceNext"))
+	local routeA = ask(A, "route")
+	expect("one glowing arch, over CP1", routeA.count == 14 and routeA.centre and ((routeA.centre - cp1) * Vector3.new(1, 0, 1)).Magnitude < 2, routeA.count)
+	expect("HUD arrow showing", routeA.arrow == true)
+	local routeB0 = ask(B, "route")
+	expect("B sees only B's own arch", routeB0.count == 14)
 	local runA
 	task.spawn(function()
 		runA = ask(A, "walk", { points = lapPoints(RaceConfig.LAPS) }, RaceConfig.TIME_LIMIT + 10)
@@ -433,11 +537,23 @@ scenario("race 1: two racers, 3 laps, small-race rule", function()
 	expect("race HUD (LAP + timer) fits phone screens", hudRace.hud and #hudRace.hud.issues == 0, hudRace.hud and table.concat(hudRace.hud.issues, "; "))
 	local texts = ask(B, "texts")
 	expect("big LAP counter shows LAP 1/3", texts.lap == "LAP 1/3" and texts.panel == true, texts.lap)
-	local runB = ask(B, "walk", { points = lapPoints(RaceConfig.LAPS) }, RaceConfig.TIME_LIMIT + 10)
+	local runB
+	task.spawn(function()
+		runB = ask(B, "walk", { points = lapPoints(RaceConfig.LAPS) }, RaceConfig.TIME_LIMIT + 10)
+	end)
+	waitUntil(30, function()
+		return A:GetAttribute("RaceNext") == 3
+	end)
+	local cp3 = (c :: any).Route.CP3.Value.Position
+	local routeA3 = ask(A, "route")
+	expect("passed gates hidden: the arch moved to CP3", routeA3.count == 14 and routeA3.centre and ((routeA3.centre - cp3) * Vector3.new(1, 0, 1)).Magnitude < 2, routeA3.count)
+	waitUntil(RaceConfig.TIME_LIMIT, function()
+		return runB ~= nil
+	end)
 	waitUntil(RaceConfig.TIME_LIMIT, function()
 		return runA ~= nil
 	end)
-	expect("both walked", runA and runA.answered and runB.answered, ("stuck A %s B %s"):format(tostring(runA and runA.stuck), tostring(runB.stuck)))
+	expect("both walked", runA and runA.answered and runB and runB.answered, ("stuck A %s B %s"):format(tostring(runA and runA.stuck), tostring(runB and runB.stuck)))
 	expect(
 		"race over",
 		waitUntil(5, function()
@@ -452,6 +568,8 @@ scenario("race 1: two racers, 3 laps, small-race rule", function()
 	expect("A 1st = Gold", f[1] and f[1].userId == A.UserId and f[1].capsule == "Gold", f[1] and f[1].capsule)
 	expect("B 2nd = Silver (under 4 racers only 1st is Gold)", f[2] and f[2].userId == B.UserId and f[2].capsule == "Silver", f[2] and f[2].capsule)
 	note("INFO", "3-lap times", ("A %.1f s, B %.1f s (B started ~5 s late for the HUD check)"):format(f[1] and f[1].time or -1, f[2] and f[2].time or -1))
+	local routeDone = ask(A, "route")
+	expect("arch gone after the finish", routeDone.count == 0, routeDone.count)
 	local gotA, gotB = newWorkers(A, beforeA), newWorkers(B, beforeB)
 	expect("A got exactly one worker", #gotA == 1, #gotA)
 	expect("B got exactly one worker", #gotB == 1, #gotB)
@@ -488,13 +606,22 @@ scenario("re-sent messages and repeated grants give nothing", function()
 	expect("duplicates counted", RaceService.stats.duplicate >= 1)
 end)
 
-scenario("race 2: skipping checkpoints + time limit", function()
+scenario("race 2: walls, skipping checkpoints + time limit", function()
 	expect("podium ends after 20 s", waitState("Waiting", RaceConfig.PODIUM_SECONDS + 3))
 	local beforeA, beforeB = workers(A), workers(B)
 	local markB = hubRace(B) and hubRace(B).id
 	ask(A, "clear")
 	ask(B, "clear")
+	-- not racing: B walks + jumps over the inner barrier into the infield (the walls are not there for B)
+	put(B, TRACK_SIDE, INFIELD)
+	local free = ask(B, "push", { to = INFIELD, seconds = 3, jump = true }, 8)
+	expect("non-racer walks through the track wall", free.finish and free.finish.X > INNER_EDGE_X + 1.5, free.finish and ("x %.1f"):format(free.finish.X))
 	onPads({ A, B })
+	task.wait(0.6)
+	local padA = ask(A, "pad")
+	expect("cooldown: Next race in m:ss on screen", padA.visible and tostring(padA.big):match("^Next race in %d:%d%d$") ~= nil, padA.big)
+	expect("cooldown: same above the pad", tostring(padA.board):match("^Next race in %d:%d%d$") ~= nil, padA.board)
+	expect("cooldown: no countdown", state() == "Waiting", state())
 	startNow()
 	expect("GO", waitState("Racing", RaceConfig.JOIN_WINDOW + 4))
 	local runA
@@ -509,6 +636,14 @@ scenario("race 2: skipping checkpoints + time limit", function()
 	end
 	ask(B, "walk", { points = back }, 40)
 	expect("B still on lap 1 after crossing the line 12 times", B:GetAttribute("RaceLap") == 1, B:GetAttribute("RaceLap"))
+	-- racing: the same walk + jump into the infield is stopped by the track wall
+	put(B, TRACK_SIDE, INFIELD)
+	local blocked = ask(B, "push", { to = INFIELD, seconds = 3, jump = true }, 8)
+	expect(
+		"racer can't cut across the infield",
+		blocked.finish and blocked.finish.X < INNER_EDGE_X - 0.3 and B:GetAttribute("Racing") == true,
+		blocked.finish and ("x %.1f"):format(blocked.finish.X)
+	)
 	expect(
 		"race ends at the time limit",
 		waitUntil(RaceConfig.TIME_LIMIT + 5, function()
@@ -544,6 +679,11 @@ scenario("race 3: teleport cut (SIM) and leave + rejoin mid-race (SIM)", functio
 	expect("A out for teleporting", A:GetAttribute("Racing") == nil, nil, true)
 	local out = eventsOf(A, "Out")
 	expect("A told no shortcuts", out[1] and tostring(out[1].reason):find("shortcut") ~= nil, out[1] and out[1].reason, true)
+	put(A, PAD + Vector3.new(0, 3, 0))
+	task.wait(0.6)
+	local padA = ask(A, "pad")
+	expect("race on: Race in progress, wait for the next one", padA.visible and padA.big == "Race in progress, wait for the next one", padA.big)
+	expect("race on: billboard says so too", padA.board == "Race in progress, wait for the next one", padA.board)
 	-- B leaves mid-race (what PlayerRemoving does), then rejoins: a fresh load is not a racer
 	RaceService._test.drop(B)
 	PlayerData._test.leave(B)

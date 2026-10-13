@@ -20,16 +20,19 @@ RaceConfig.TEMPLATE = "RaceCourse031" -- ServerStorage
 RaceConfig.FOLDER = "RaceCourse" -- Workspace.World.VelocityRoyale
 
 -- Timing (seconds)
-RaceConfig.INTERVAL = 180 -- a race every 3 minutes if at least 1 player is on the pad
+RaceConfig.INTERVAL = 180 -- a race every 3 minutes if at least 1 player is on the pad (the first one is open right away, 032)
 RaceConfig.JOIN_WINDOW = 15 -- the first player on the pad starts this "Join the race!" countdown (D36)
-RaceConfig.COUNTDOWN = 5 -- big numbers + sound in the last seconds of the join window; off the pad at GO = not racing
-RaceConfig.TIME_LIMIT = 75 -- from GO: 2x the slowest measured 3-lap run (36.9 s, D36; max 90); unfinished racers get nothing
+RaceConfig.COUNTDOWN = 5 -- big numbers + sound in the last seconds of the join window; racers on the pad are frozen
+-- (no walking or jumping) for these seconds and let go at GO (032); off the pad at GO = not racing
+RaceConfig.TIME_LIMIT = 62 -- from GO: 2x the slowest measured 3-lap run (31.0 s with the track walls, 032, D37; max 90); unfinished racers get nothing
 RaceConfig.PODIUM_SECONDS = 20 -- top 3 names stay on the podium board
 RaceConfig.LAPS = 3
 
 -- Racing: everyone runs at the same fixed speed (D24), no collisions between racers.
 RaceConfig.WALK_SPEED = 16
 RaceConfig.COLLISION_GROUP = "Racers"
+-- Invisible walls along both track edges (032): only racers collide with them, everyone else walks through.
+RaceConfig.WALL_GROUP = "RaceWalls"
 RaceConfig.TICK = 0.1 -- server checkpoint check
 -- A racer who moves further than this in one tick (studs, flat) was teleported: that tick counts no
 -- checkpoint, and WARP_LIMIT such ticks take them out of the race.
@@ -59,7 +62,7 @@ function RaceConfig.goldPlaces(racers: number): number
 	return if racers >= RaceConfig.SMALL_RACE_MIN then RaceConfig.GOLD_PLACES else RaceConfig.SMALL_RACE_GOLD_PLACES
 end
 
--- "70/20/8/1.8/0.2" style text for the pad sign.
+-- "Common 70% · Rare 20% · ..." text for the odds board.
 function RaceConfig.oddsText(capsule: string): string
 	local parts = {}
 	for _, rarity in RaceConfig.RARITIES do

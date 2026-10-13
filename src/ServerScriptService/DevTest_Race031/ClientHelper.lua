@@ -1,7 +1,8 @@
 -- Studio location: ServerScriptService.DevTest_Race031.ClientHelper (LocalScript)
 -- Client half of ServerScriptService.DevTest_Race031 (cloned into PlayerGui during that Studio test only):
 -- runs the circuit with real Humanoid:MoveTo (physics on this client, like a player), records RaceEvent /
--- WorkerRevealed / ClaimFeedback, re-sends fake race messages, and checks the race HUD at phone sizes.
+-- WorkerRevealed / ClaimFeedback, re-sends fake race messages, checks the race HUD at phone sizes, reads the pad
+-- message / billboard and the next-checkpoint arch, and tries to walk or jump (frozen pad, track walls).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -183,6 +184,46 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 		local course = workspace.World.VelocityRoyale:FindFirstChild("RaceCourse")
 		local status = course and course:FindFirstChild("Sign") and course.Sign:FindFirstChild("SignFront") and course.Sign.SignFront:FindFirstChild("Status")
 		reply.sign = status and (status :: TextLabel).Text
+	elseif kind == "pad" then
+		-- the pad message on screen + the billboard above the pad (032)
+		local gui = playerGui:FindFirstChild("Race031")
+		local msg = gui and gui:FindFirstChild("Root") and gui.Root:FindFirstChild("PadMessage")
+		reply.visible = msg ~= nil and (msg :: GuiObject).Visible
+		reply.big = msg and (msg :: any).Big.Text
+		reply.small = msg and (msg :: any).Small.Text
+		local board = playerGui:FindFirstChild("RacePadBillboard") :: BillboardGui?
+		reply.board = board and board.Enabled and board.Adornee ~= nil and (board :: any).Big.Text
+	elseif kind == "route" then
+		-- the next-checkpoint arch (this client's own parts) and the HUD arrow (032)
+		local folder = workspace:FindFirstChild("RaceRouteLocal")
+		local parts = folder and folder:GetChildren() or {}
+		local sum = Vector3.zero
+		for _, part in parts do
+			sum += (part :: BasePart).Position
+		end
+		reply.count = #parts
+		reply.centre = if #parts > 0 then sum / #parts else nil
+		local gui = playerGui:FindFirstChild("Race031")
+		local panel = gui and gui:FindFirstChild("Root") and gui.Root:FindFirstChild("RacePanel")
+		local arrow = panel and panel:FindFirstChild("NextArrow")
+		reply.arrow = panel ~= nil and (panel :: GuiObject).Visible and arrow ~= nil and (arrow :: GuiObject).Visible
+	elseif kind == "push" then
+		-- walks (and jumps, if asked) towards a point for a few seconds; reports where the character got to
+		local h, r = humanoid(), rootPart()
+		if h and r then
+			local start, rise = r.Position, 0
+			local t0 = os.clock()
+			while os.clock() - t0 < (arg.seconds or 2) do
+				h:MoveTo(arg.to)
+				if arg.jump then
+					h.Jump = true
+				end
+				rise = math.max(rise, r.Position.Y - start.Y)
+				task.wait(0.1)
+			end
+			h:MoveTo(r.Position)
+			reply.start, reply.finish, reply.rise = start, r.Position, rise
+		end
 	elseif kind == "texts" then
 		local gui = playerGui:FindFirstChild("Race031")
 		local root = gui and gui:FindFirstChild("Root")
