@@ -662,6 +662,10 @@ end
 
 local function soloPurchases()
 	local P = PurchaseService
+	local realIds = {}
+	for key, item in ProductConfig.BY_KEY do
+		realIds[key] = item.id
+	end
 	local ids = { cash_s = 9001, cash_m = 9002, cash_l = 9003, starter = 9004, x2cash = 8001, slots = 8002, vip = 8003 }
 	for key, id in ids do
 		P._test.setId(key, id)
@@ -764,7 +768,7 @@ local function soloPurchases()
 		true
 	)
 	for key in ids do
-		P._test.setId(key, 0)
+		P._test.setId(key, realIds[key]) -- (back to the dashboard ids)
 	end
 end
 
@@ -939,6 +943,7 @@ local function saveBuild()
 	expect("test user", A.UserId < 0, A.UserId)
 	switches(true)
 	local P = PurchaseService
+	saveState.realIds = { cash_s = ProductConfig.BY_KEY.cash_s.id, starter = ProductConfig.BY_KEY.starter.id }
 	P._test.setId("cash_s", 9001)
 	P._test.setId("starter", 9004)
 	clearWorkers(A)
@@ -980,7 +985,7 @@ local function saveBuild()
 	end
 	expect("Cash Stack granted (real save)", receipt(9001, "T033S-r1") == Enum.ProductPurchaseDecision.PurchaseGranted, nil, true)
 	expect("Starter Pack granted (real save)", receipt(9004, "T033S-s1") == Enum.ProductPurchaseDecision.PurchaseGranted and data(A).hub.starter == true, nil, true)
-	saveState = { uid = w.uid, uid7 = w7.uid, station7 = w7.station, pads = BaseService._test.padsBought(A), receipt = receipt }
+	saveState = { realIds = saveState.realIds, uid = w.uid, uid7 = w7.uid, station7 = w7.station, pads = BaseService._test.padsBought(A), receipt = receipt }
 	task.wait(1)
 	saveState.income = PassiveIncome.getIncome(A)
 end
@@ -1036,8 +1041,8 @@ local function saveRejoin()
 		true
 	)
 	expect("Starter Pack can't be bought again", PurchaseService.buy(A, "starter") == false and PurchaseService._test.starterShown(A) == false, nil, true)
-	PurchaseService._test.setId("cash_s", 0)
-	PurchaseService._test.setId("starter", 0)
+	PurchaseService._test.setId("cash_s", st.realIds.cash_s)
+	PurchaseService._test.setId("starter", st.realIds.starter)
 	switches(false)
 end
 
