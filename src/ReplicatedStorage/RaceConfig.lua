@@ -21,8 +21,9 @@ RaceConfig.FOLDER = "RaceCourse" -- Workspace.World.VelocityRoyale
 
 -- Timing (seconds)
 RaceConfig.INTERVAL = 180 -- a race every 3 minutes if at least 1 player is on the pad
-RaceConfig.COUNTDOWN = 5 -- big numbers + sound; stepping off the pad before GO = not in the race
-RaceConfig.TIME_LIMIT = 64 -- from GO: 2x a measured 3-lap run (31.7 s, 2026-10-13; max 90); unfinished racers get nothing
+RaceConfig.JOIN_WINDOW = 15 -- the first player on the pad starts this "Join the race!" countdown (D36)
+RaceConfig.COUNTDOWN = 5 -- big numbers + sound in the last seconds of the join window; off the pad at GO = not racing
+RaceConfig.TIME_LIMIT = 75 -- from GO: 2x the slowest measured 3-lap run (36.9 s, D36; max 90); unfinished racers get nothing
 RaceConfig.PODIUM_SECONDS = 20 -- top 3 names stay on the podium board
 RaceConfig.LAPS = 3
 
@@ -68,6 +69,7 @@ function RaceConfig.oddsText(capsule: string): string
 	return table.concat(parts, " · ")
 end
 
+assert(RaceConfig.COUNTDOWN <= RaceConfig.JOIN_WINDOW, "big countdown must fit in the join window")
 assert(RaceConfig.TIME_LIMIT <= 90, "race time limit is capped at 90 s")
 assert(RaceConfig.PER_MILLE.Gold.Legendary > RaceConfig.PER_MILLE.Silver.Legendary, "Gold must beat Silver")
 

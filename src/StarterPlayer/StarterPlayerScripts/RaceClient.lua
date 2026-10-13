@@ -1,6 +1,6 @@
 -- Studio location: StarterPlayer.StarterPlayerScripts.RaceClient (LocalScript)
--- RaceClient  (Milestone 031, D21 Royale Race): display only. The pad sign's status line, the big 5-4-3-2-1-GO
--- countdown (for players on the pad), the race HUD (big "LAP 2/3" + time left), the capsule pop at the finish
+-- RaceClient  (Milestone 031, D21 Royale Race): display only. The pad sign's status line ("Join the race!" during
+-- the join window), the big 5-4-3-2-1-GO countdown in its last seconds (for players on the pad), the race HUD (big "LAP 2/3" + time left), the capsule pop at the finish
 -- (the reveal card itself comes from WorkerRevealCard) and the top-3 banner after a race.
 -- Everything is read from Workspace.World.VelocityRoyale.RaceCourse attributes, the local player's
 -- Racing / RaceLap attributes and RaceEvent; RaceService decides everything. Nothing runs while RaceOn is off.
@@ -200,7 +200,7 @@ local function runCountdown(goAt: number)
 			local n = math.ceil(left)
 			if n ~= shown then
 				shown = n
-				if nearPad() or player:GetAttribute("Racing") then
+				if n <= RaceConfig.COUNTDOWN and (nearPad() or player:GetAttribute("Racing")) then
 					pop(tostring(n), C.Text)
 					beep("tick", 1 + (5 - n) * 0.08)
 				else
@@ -332,7 +332,7 @@ local function signText(folder: Instance): string
 	local now = serverNow()
 	local ready = folder:GetAttribute("Ready") or now
 	if state == "Countdown" then
-		return ("Starting in %d!"):format(math.max(0, math.ceil((folder:GetAttribute("GoAt") or now) - now)))
+		return ("Join the race! %d"):format(math.max(0, math.ceil((folder:GetAttribute("GoAt") or now) - now)))
 	elseif state == "Racing" then
 		local racers = tonumber(folder:GetAttribute("Racers")) or 0
 		return ("Race on! %d racer%s"):format(racers, if racers == 1 then "" else "s")

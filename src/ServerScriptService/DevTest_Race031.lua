@@ -261,7 +261,7 @@ if mode == "save" then
 		put(B, PAD + Vector3.new(0, 3, 40))
 		startNow()
 		expect("countdown", waitState("Countdown", 4))
-		expect("racing", waitState("Racing", RaceConfig.COUNTDOWN + 2))
+		expect("racing", waitState("Racing", RaceConfig.JOIN_WINDOW + 2))
 		local run = ask(A, "walk", { points = lapPoints(RaceConfig.LAPS) }, RaceConfig.TIME_LIMIT + 10)
 		expect("A walked 3 laps", run.answered, run.stuck)
 		expect(
@@ -407,9 +407,18 @@ scenario("race 1: two racers, 3 laps, small-race rule", function()
 	onPads({ A, B })
 	startNow()
 	expect("countdown starts", waitState("Countdown", 3))
+	-- join window: no big number yet, sign says "Join the race!"
+	task.wait(2)
+	local early = ask(B, "visible", { piece = "Count" })
+	expect("no big number early in the join window", early.visible == false, early.visible)
+	expect("sign says Join the race!", tostring(early.sign):find("Join the race!") ~= nil, early.sign)
+	waitUntil(RaceConfig.JOIN_WINDOW, function()
+		local goAt = (course() :: Instance):GetAttribute("GoAt")
+		return goAt and goAt - workspace:GetServerTimeNow() <= RaceConfig.COUNTDOWN - 0.4
+	end)
 	local hudCount = ask(B, "hud", { pieces = { "Count" }, settle = 0.35 }, 10)
 	expect("countdown fits phone screens", hudCount.hud and #hudCount.hud.issues == 0, hudCount.hud and table.concat(hudCount.hud.issues, "; "))
-	expect("GO", waitState("Racing", RaceConfig.COUNTDOWN + 2))
+	expect("GO", waitState("Racing", RaceConfig.JOIN_WINDOW + 2))
 	local c = course() :: Instance
 	expect("2 racers", c:GetAttribute("Racers") == 2, c:GetAttribute("Racers"))
 	expect("A racing, lap 1", A:GetAttribute("Racing") == true and A:GetAttribute("RaceLap") == 1)
@@ -487,7 +496,7 @@ scenario("race 2: skipping checkpoints + time limit", function()
 	ask(B, "clear")
 	onPads({ A, B })
 	startNow()
-	expect("GO", waitState("Racing", RaceConfig.COUNTDOWN + 4))
+	expect("GO", waitState("Racing", RaceConfig.JOIN_WINDOW + 4))
 	local runA
 	task.spawn(function()
 		runA = ask(A, "walk", { points = lapPoints(RaceConfig.LAPS) }, RaceConfig.TIME_LIMIT + 10)
@@ -525,7 +534,7 @@ scenario("race 3: teleport cut (SIM) and leave + rejoin mid-race (SIM)", functio
 	ask(A, "clear")
 	onPads({ A, B })
 	startNow()
-	expect("GO", waitState("Racing", RaceConfig.COUNTDOWN + 4))
+	expect("GO", waitState("Racing", RaceConfig.JOIN_WINDOW + 4))
 	-- A "teleports" (exploit) from gate to gate
 	for i = 1, RaceConfig.WARP_LIMIT do
 		local g = RaceService._test.gates[i]

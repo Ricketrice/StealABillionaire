@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D36 | **031 review:** join window = the first player on the pad starts a 15 s "Join the race!" countdown on the pad sign; the big 5-4-3-2-1 shows only in the last 5 s; anyone on the pad at GO races. Time limit 75 s (2x the slowest measured 3-lap run, 36.9 s). Replaces the 5 s countdown and 64 s limit in D34. | 2026-10 |
 | D35 | **Race save field `hub.race` approved** (optional, schema stays 3): `{ id, cap, uid, place }` of the player's last race capsule, written with the worker so one race can never pay twice. Creature prototypes stay as imported; MechBeast tri trim + part merge and the Dragon Pup rework go to the 034 art pass. | 2026-10 |
 | D34 | **Royale Race numbers (031 Checkpoint 1):** a race every 180 s if someone is on the pad, 5 s countdown, 3 laps, limit = 2x a measured 3-lap run (31.7 s -> 64 s, max 90), podium 20 s, big "LAP 2/3" counter. **Capsule odds: Silver = normal parade odds 70/20/8/1.8/0.2, Gold = Golden Parade odds 50/30/14.5/5/0.5** (capsules are free and solo players win Gold every race), shown on the pad sign; rolled from the Zone 6 pool `BillionaireHills` (ours, 8 workers; teammates own Zones 2-5 only). | 2026-10 |
 | D33 | **Zone 6 unlock price = 250,000** (owner, replaces the 500,000 proposal in D32) while teammate Zones 2-5 are closed; to be raised when they open. | 2026-10 |

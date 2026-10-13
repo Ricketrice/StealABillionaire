@@ -3,7 +3,7 @@
 -- Stand on the pad -> race 3 laps of the Velocity Royale circuit -> finish -> a capsule opens -> a Zone 6 worker.
 --
 -- Rounds: once RaceConfig.INTERVAL has passed since the last start, the next player who stands on the pad
--- starts a COUNTDOWN; whoever is on the pad at GO races (eligible = data loaded, Zone 6 unlocked, not
+-- starts a JOIN_WINDOW countdown ("Join the race!" on the sign, big numbers for the last COUNTDOWN s); whoever is on the pad at GO races (eligible = data loaded, Zone 6 unlocked, not
 -- carrying, room for one more worker). Racers run at a fixed speed and don't collide with each other
 -- (collision group). The server checks every racer's position against invisible gates (Gates.CP1..N in
 -- order, then Gates.Finish = one lap); a skipped checkpoint means the lap never counts. Nothing about
@@ -594,8 +594,8 @@ function RaceService.start()
 				local state = folder:GetAttribute("State")
 				if state == "Waiting" and now >= (folder:GetAttribute("Ready") or math.huge) then
 					if #eligibleOnPad() > 0 then
-						setState("Countdown", { GoAt = now + RaceConfig.COUNTDOWN })
-						clientEvent:FireAllClients("Countdown", { goAt = now + RaceConfig.COUNTDOWN })
+						setState("Countdown", { GoAt = now + RaceConfig.JOIN_WINDOW })
+						clientEvent:FireAllClients("Countdown", { goAt = now + RaceConfig.JOIN_WINDOW })
 					end
 				elseif state == "Countdown" and now >= (folder:GetAttribute("GoAt") or 0) then
 					local players = eligibleOnPad()

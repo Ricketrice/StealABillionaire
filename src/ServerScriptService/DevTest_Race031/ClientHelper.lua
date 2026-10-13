@@ -176,6 +176,13 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 			result[name] = { bob = maxY - minY, movingJoints = moving }
 		end
 		reply.creatures = result
+	elseif kind == "visible" then
+		local gui = playerGui:FindFirstChild("Race031")
+		local piece = gui and gui:FindFirstChild("Root") and gui.Root:FindFirstChild(arg.piece)
+		reply.visible = piece ~= nil and (piece :: GuiObject).Visible
+		local course = workspace.World.VelocityRoyale:FindFirstChild("RaceCourse")
+		local status = course and course:FindFirstChild("Sign") and course.Sign:FindFirstChild("SignFront") and course.Sign.SignFront:FindFirstChild("Status")
+		reply.sign = status and (status :: TextLabel).Text
 	elseif kind == "texts" then
 		local gui = playerGui:FindFirstChild("Race031")
 		local root = gui and gui:FindFirstChild("Root")
