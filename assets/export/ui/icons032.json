@@ -1,0 +1,61 @@
+{
+ "tile": 256,
+ "sheet": 3,
+ "icons": {
+  "shoe": {
+   "sheet": 3,
+   "x": 0,
+   "y": 0
+  },
+  "vault": {
+   "sheet": 3,
+   "x": 256,
+   "y": 0
+  },
+  "robot": {
+   "sheet": 3,
+   "x": 512,
+   "y": 0
+  },
+  "shield": {
+   "sheet": 3,
+   "x": 768,
+   "y": 0
+  },
+  "capsule": {
+   "sheet": 3,
+   "x": 0,
+   "y": 256
+  },
+  "trail_bubble": {
+   "sheet": 3,
+   "x": 256,
+   "y": 256
+  },
+  "trail_leaf": {
+   "sheet": 3,
+   "x": 512,
+   "y": 256
+  },
+  "trail_star": {
+   "sheet": 3,
+   "x": 768,
+   "y": 256
+  },
+  "trail_comet": {
+   "sheet": 3,
+   "x": 0,
+   "y": 512
+  },
+  "trail_rainbow": {
+   "sheet": 3,
+   "x": 256,
+   "y": 512
+  },
+  "trail_gold": {
+   "sheet": 3,
+   "x": 512,
+   "y": 512
+  }
+ }
+}

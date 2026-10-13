@@ -553,7 +553,8 @@ def render(name, build):
     print("ICON", name, "ok")
 
 
-wanted = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
-for name, build in ICONS:
-    if not wanted or name in wanted:
-        render(name, build)
+if __name__ == "__main__":  # build_032_icons.py imports the helpers above without rendering these
+    wanted = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
+    for name, build in ICONS:
+        if not wanted or name in wanted:
+            render(name, build)

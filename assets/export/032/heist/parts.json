@@ -1,0 +1,626 @@
+{
+ "parts": {
+  "SecurityBot": [
+   {
+    "name": "SecurityBot_Torso",
+    "colour": "navy",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     2.5,
+     1.9,
+     2.3
+    ]
+   },
+   {
+    "name": "SecurityBot_Chest",
+    "colour": "cream",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     1.7,
+     0.4,
+     1.5
+    ]
+   },
+   {
+    "name": "SecurityBot_Badge",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     0.784,
+     0.12,
+     0.746
+    ]
+   },
+   {
+    "name": "SecurityBot_Belt",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     2.64,
+     2.04,
+     0.36
+    ]
+   },
+   {
+    "name": "SecurityBot_Hips",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     1.8,
+     1.4,
+     0.6
+    ]
+   },
+   {
+    "name": "SecurityBot_Neck",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.691,
+     0.691,
+     0.35
+    ]
+   },
+   {
+    "name": "SecurityBot_Head",
+    "colour": "cream",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     1.9,
+     1.6,
+     1.24
+    ]
+   },
+   {
+    "name": "SecurityBot_Visor",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     1.56,
+     0.24,
+     0.76
+    ]
+   },
+   {
+    "name": "SecurityBot_EyeL",
+    "colour": "cyan",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.34,
+     0.1,
+     0.4
+    ]
+   },
+   {
+    "name": "SecurityBot_EarL",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.24,
+     0.56,
+     0.56
+    ]
+   },
+   {
+    "name": "SecurityBot_EyeR",
+    "colour": "cyan",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.34,
+     0.1,
+     0.4
+    ]
+   },
+   {
+    "name": "SecurityBot_EarR",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.24,
+     0.56,
+     0.56
+    ]
+   },
+   {
+    "name": "SecurityBot_Smile",
+    "colour": "cyan",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.342,
+     0.08,
+     0.1
+    ]
+   },
+   {
+    "name": "SecurityBot_SirenBase",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.64,
+     0.64,
+     0.12
+    ]
+   },
+   {
+    "name": "SecurityBot_Siren",
+    "colour": "amber",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.546,
+     0.56,
+     0.6
+    ]
+   },
+   {
+    "name": "SecurityBot_ShoulderL",
+    "colour": "gold",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.864,
+     0.886,
+     0.9
+    ]
+   },
+   {
+    "name": "SecurityBot_ArmL",
+    "colour": "steelDark",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.54,
+     0.54,
+     1.2
+    ]
+   },
+   {
+    "name": "SecurityBot_HandL",
+    "colour": "cream",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.96,
+     0.886,
+     0.96
+    ]
+   },
+   {
+    "name": "SecurityBot_LegL",
+    "colour": "steelDark",
+    "pivot": [
+     -0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.72,
+     0.72,
+     1.25
+    ]
+   },
+   {
+    "name": "SecurityBot_FootL",
+    "colour": "navy",
+    "pivot": [
+     -0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     1.0,
+     1.44,
+     0.56
+    ]
+   },
+   {
+    "name": "SecurityBot_ToeL",
+    "colour": "gold",
+    "pivot": [
+     -0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.84,
+     0.36,
+     0.44
+    ]
+   },
+   {
+    "name": "SecurityBot_ShoulderR",
+    "colour": "gold",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.864,
+     0.886,
+     0.9
+    ]
+   },
+   {
+    "name": "SecurityBot_ArmR",
+    "colour": "steelDark",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.54,
+     0.54,
+     1.2
+    ]
+   },
+   {
+    "name": "SecurityBot_HandR",
+    "colour": "cream",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.96,
+     0.886,
+     0.96
+    ]
+   },
+   {
+    "name": "SecurityBot_LegR",
+    "colour": "steelDark",
+    "pivot": [
+     0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.72,
+     0.72,
+     1.25
+    ]
+   },
+   {
+    "name": "SecurityBot_FootR",
+    "colour": "navy",
+    "pivot": [
+     0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     1.0,
+     1.44,
+     0.56
+    ]
+   },
+   {
+    "name": "SecurityBot_ToeR",
+    "colour": "gold",
+    "pivot": [
+     0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.84,
+     0.36,
+     0.44
+    ]
+   },
+   {
+    "name": "SecurityBot_LightMount",
+    "colour": "steelDark",
+    "pivot": [
+     1.4,
+     0.0,
+     4.25
+    ],
+    "size": [
+     0.227,
+     0.227,
+     0.25
+    ]
+   },
+   {
+    "name": "SecurityBot_Searchlight",
+    "colour": "steel",
+    "pivot": [
+     1.4,
+     0.0,
+     4.25
+    ],
+    "size": [
+     0.546,
+     0.6,
+     0.56
+    ]
+   },
+   {
+    "name": "SecurityBot_Lens",
+    "colour": "gold",
+    "pivot": [
+     1.4,
+     0.0,
+     4.25
+    ],
+    "size": [
+     0.448,
+     0.06,
+     0.46
+    ]
+   },
+   {
+    "name": "SecurityBot_Pack",
+    "colour": "steel",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     1.4,
+     0.5,
+     1.5
+    ]
+   },
+   {
+    "name": "SecurityBot_Charge",
+    "colour": "cyan",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     0.24,
+     0.1,
+     1.0
+    ]
+   }
+  ],
+  "VaultDoor": [
+   {
+    "name": "VaultDoor_Frame",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     4.9,
+     0.6,
+     4.9
+    ]
+   },
+   {
+    "name": "VaultDoor_Trim",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     4.24,
+     0.24,
+     4.24
+    ]
+   },
+   {
+    "name": "VaultDoor_Rivets",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     4.671,
+     0.114,
+     4.68
+    ]
+   },
+   {
+    "name": "VaultDoor_Door",
+    "colour": "steel",
+    "pivot": [
+     -1.85,
+     0.0,
+     2.4
+    ],
+    "size": [
+     3.64,
+     0.53,
+     3.64
+    ]
+   },
+   {
+    "name": "VaultDoor_DoorStar",
+    "colour": "gold",
+    "pivot": [
+     -1.85,
+     0.0,
+     2.4
+    ],
+    "size": [
+     0.479,
+     0.08,
+     0.456
+    ]
+   },
+   {
+    "name": "VaultDoor_Hinges",
+    "colour": "steelDark",
+    "pivot": [
+     -1.85,
+     0.0,
+     2.4
+    ],
+    "size": [
+     0.304,
+     0.309,
+     2.7
+    ]
+   },
+   {
+    "name": "VaultDoor_Wheel",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     -0.5,
+     2.4
+    ],
+    "size": [
+     1.38,
+     0.23,
+     1.38
+    ]
+   }
+  ],
+  "BossCapsule": [
+   {
+    "name": "BossCapsule_Base",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.576,
+     1.6,
+     1.24
+    ]
+   },
+   {
+    "name": "BossCapsule_Dome",
+    "colour": "glass",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.536,
+     1.56,
+     1.64
+    ]
+   },
+   {
+    "name": "BossCapsule_Band",
+    "colour": "purple",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.8,
+     1.8,
+     0.2
+    ]
+   },
+   {
+    "name": "BossCapsule_Star",
+    "colour": "cream",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     0.404,
+     0.06,
+     0.384
+    ]
+   }
+  ]
+ },
+ "report": {
+  "SecurityBot": {
+   "tris": 6088,
+   "parts": 32
+  },
+  "VaultDoor": {
+   "tris": 8120,
+   "parts": 7
+  },
+  "BossCapsule": {
+   "tris": 1580,
+   "parts": 4
+  }
+ }
+}
