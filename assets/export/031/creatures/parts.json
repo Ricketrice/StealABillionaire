@@ -1,0 +1,483 @@
+{
+ "parts": {
+  "SlimeRookie": [
+   {
+    "name": "SlimeRookie_Body",
+    "colour": "slime",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_Base",
+    "colour": "slimeDark",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_EyeL",
+    "colour": "white",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_EyeLPupil",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_EyeR",
+    "colour": "white",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_EyeRPupil",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_Mouth",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_CheekL",
+    "colour": "pink",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_CheekR",
+    "colour": "pink",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "SlimeRookie_Antenna",
+    "colour": "slimeDark",
+    "pivot": [
+     0.0,
+     0.0,
+     1.3
+    ]
+   },
+   {
+    "name": "SlimeRookie_Leaf",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     1.6
+    ]
+   }
+  ],
+  "DragonPup": [
+   {
+    "name": "DragonPup_Body",
+    "colour": "dragon",
+    "pivot": [
+     0.0,
+     0.0,
+     0.9
+    ]
+   },
+   {
+    "name": "DragonPup_Belly",
+    "colour": "belly",
+    "pivot": [
+     0.0,
+     0.0,
+     0.9
+    ]
+   },
+   {
+    "name": "DragonPup_Head",
+    "colour": "dragon",
+    "pivot": [
+     0.0,
+     -0.2,
+     1.4
+    ]
+   },
+   {
+    "name": "DragonPup_Snout",
+    "colour": "dragonDark",
+    "pivot": [
+     0.0,
+     -0.2,
+     1.4
+    ]
+   },
+   {
+    "name": "DragonPup_EyeL",
+    "colour": "white",
+    "pivot": [
+     0.0,
+     -0.2,
+     1.4
+    ]
+   },
+   {
+    "name": "DragonPup_EyeLPupil",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     -0.2,
+     1.4
+    ]
+   },
+   {
+    "name": "DragonPup_HornL",
+    "colour": "horn",
+    "pivot": [
+     -0.4,
+     -0.45,
+     2.25
+    ]
+   },
+   {
+    "name": "DragonPup_WingL",
+    "colour": "wing",
+    "pivot": [
+     -0.75,
+     0.25,
+     1.25
+    ]
+   },
+   {
+    "name": "DragonPup_FootL",
+    "colour": "dragonDark",
+    "pivot": [
+     -0.5,
+     -0.4,
+     0.4
+    ]
+   },
+   {
+    "name": "DragonPup_EyeR",
+    "colour": "white",
+    "pivot": [
+     0.0,
+     -0.2,
+     1.4
+    ]
+   },
+   {
+    "name": "DragonPup_EyeRPupil",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     -0.2,
+     1.4
+    ]
+   },
+   {
+    "name": "DragonPup_HornR",
+    "colour": "horn",
+    "pivot": [
+     0.4,
+     -0.45,
+     2.25
+    ]
+   },
+   {
+    "name": "DragonPup_WingR",
+    "colour": "wing",
+    "pivot": [
+     0.75,
+     0.25,
+     1.25
+    ]
+   },
+   {
+    "name": "DragonPup_FootR",
+    "colour": "dragonDark",
+    "pivot": [
+     0.5,
+     -0.4,
+     0.4
+    ]
+   },
+   {
+    "name": "DragonPup_Tail1",
+    "colour": "dragon",
+    "pivot": [
+     0.0,
+     0.7,
+     0.75
+    ]
+   },
+   {
+    "name": "DragonPup_Tail2",
+    "colour": "dragon",
+    "pivot": [
+     0.0,
+     0.7,
+     0.75
+    ]
+   },
+   {
+    "name": "DragonPup_Tail3",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.7,
+     0.75
+    ]
+   },
+   {
+    "name": "DragonPup_Spike1",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.5,
+     1.0
+    ]
+   },
+   {
+    "name": "DragonPup_Spike2",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.5,
+     1.0
+    ]
+   }
+  ],
+  "MechBeast": [
+   {
+    "name": "MechBeast_Body",
+    "colour": "steel",
+    "pivot": [
+     0.0,
+     0.0,
+     1.3
+    ]
+   },
+   {
+    "name": "MechBeast_Armor",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     1.3
+    ]
+   },
+   {
+    "name": "MechBeast_Core",
+    "colour": "cyan",
+    "pivot": [
+     0.0,
+     0.0,
+     1.3
+    ]
+   },
+   {
+    "name": "MechBeast_Head",
+    "colour": "steel",
+    "pivot": [
+     0.0,
+     -0.9,
+     1.6
+    ]
+   },
+   {
+    "name": "MechBeast_Muzzle",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     -0.9,
+     1.6
+    ]
+   },
+   {
+    "name": "MechBeast_EyeL",
+    "colour": "orange",
+    "pivot": [
+     0.0,
+     -0.9,
+     1.6
+    ]
+   },
+   {
+    "name": "MechBeast_EarL",
+    "colour": "steelDark",
+    "pivot": [
+     -0.4,
+     -1.1,
+     2.3
+    ]
+   },
+   {
+    "name": "MechBeast_CannonL",
+    "colour": "steelDark",
+    "pivot": [
+     -0.62,
+     0.35,
+     1.95
+    ]
+   },
+   {
+    "name": "MechBeast_LegFL",
+    "colour": "steelDark",
+    "pivot": [
+     -0.75,
+     -0.75,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_PawFL",
+    "colour": "steel",
+    "pivot": [
+     -0.75,
+     -0.75,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_LegBL",
+    "colour": "steelDark",
+    "pivot": [
+     -0.75,
+     0.9,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_PawBL",
+    "colour": "steel",
+    "pivot": [
+     -0.75,
+     0.9,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_EyeR",
+    "colour": "orange",
+    "pivot": [
+     0.0,
+     -0.9,
+     1.6
+    ]
+   },
+   {
+    "name": "MechBeast_EarR",
+    "colour": "steelDark",
+    "pivot": [
+     0.4,
+     -1.1,
+     2.3
+    ]
+   },
+   {
+    "name": "MechBeast_CannonR",
+    "colour": "steelDark",
+    "pivot": [
+     0.62,
+     0.35,
+     1.95
+    ]
+   },
+   {
+    "name": "MechBeast_LegFR",
+    "colour": "steelDark",
+    "pivot": [
+     0.75,
+     -0.75,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_PawFR",
+    "colour": "steel",
+    "pivot": [
+     0.75,
+     -0.75,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_LegBR",
+    "colour": "steelDark",
+    "pivot": [
+     0.75,
+     0.9,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_PawBR",
+    "colour": "steel",
+    "pivot": [
+     0.75,
+     0.9,
+     1.0
+    ]
+   },
+   {
+    "name": "MechBeast_Tail",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     1.3,
+     1.4
+    ]
+   },
+   {
+    "name": "MechBeast_TailTip",
+    "colour": "cyan",
+    "pivot": [
+     0.0,
+     1.3,
+     1.4
+    ]
+   }
+  ]
+ },
+ "report": {
+  "SlimeRookie": {
+   "tris": 2314,
+   "parts": 11
+  },
+  "DragonPup": {
+   "tris": 3408,
+   "parts": 19
+  },
+  "MechBeast": {
+   "tris": 4272,
+   "parts": 21
+  }
+ }
+}
