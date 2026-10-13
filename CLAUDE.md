@@ -10,6 +10,8 @@ Roblox, phone-first. ~80% kids. Code lives in Studio only (no Rojo); work throug
 5. `docs/RETENTION_AND_JUICE.md` — when touching the first minute, rewards, UI, VFX, sound.
 6. `docs/TOOLS.md` — when using Blender, Figma or other outside tools.
 
+7. `docs/PIVOT.md` — planned Steal a Boss reskin (034). Don't apply it before 034.
+
 ## Hard rules
 - **Zones 2, 3, 4, 5 are teammate-owned. Never modify anything inside them.** Bridges/paths may stop at their entrances.
 - Never change worker IDs, rarities, odds, income, economy formulas, progression or zone IDs unless the milestone prompt says so.
