@@ -781,6 +781,28 @@ local function soloOffAgain()
 end
 
 -- DUO ----------------------------------------------------------------------------------------------------------
+-- A thief who got a worker home still holds it: put it on a free pad of their base.
+local function placeCarried(p: Player)
+	local record = nil
+	for _, w in data(p).workers do
+		if w.loc == "carried" then
+			record = w
+		end
+	end
+	if not record then
+		return
+	end
+	local _, stations = WorkerInventory.capacity(p)
+	for index = 1, stations do
+		local free = pad(p, index)
+		if free and free:GetAttribute("Occupied") ~= true then
+			put(p, free.Position)
+			NPCPlacement.tryPlace(p, free)
+			return
+		end
+	end
+end
+
 local function duoFair()
 	switches(true)
 	ServerStorage:SetAttribute("StudioPvPStealing", true)
@@ -788,6 +810,7 @@ local function duoFair()
 	PvPBase._test.setProtection(A, nil)
 	PvPBase._test.setProtection(B, nil)
 	StealGuard._test.reset()
+	PvPSteal._test.setTeleportCheck(false) -- (the test moves A home by teleport; a real thief walks)
 	clearWorkers(A)
 	clearWorkers(B)
 	local b1 = grant(B, "street_hustler", 4)
@@ -826,26 +849,13 @@ local function duoFair()
 	ok, message = PvPSteal.tryBegin(A, m1)
 	expect("A starts stealing B's Level 4 worker", ok, message)
 	put(A, (plotOf(A).PrimaryPart :: BasePart).Position)
-	local delivered = PvPSteal._test.deliver(A)
-	waitUntil(4, function()
+	PvPSteal._test.deliver(A) -- (or the server's own home check delivers it first)
+	waitUntil(6, function()
 		return WorkerInventory.getRecord(A, b1.uid) ~= nil
 	end)
 	local got = WorkerInventory.getRecord(A, b1.uid)
-	expect("delivered to A at Level 4", delivered and got and got.level == 4, got and got.level)
-	if got and got.loc == "carried" then
-		local free = nil
-		for index = 1, 6 do
-			local p = pad(A, index)
-			if p and p:GetAttribute("Occupied") ~= true then
-				free = p
-				break
-			end
-		end
-		if free then
-			put(A, free.Position)
-			NPCPlacement.tryPlace(A, free)
-		end
-	end
+	expect("delivered to A at Level 4", got and got.level == 4, got and got.level)
+	placeCarried(A)
 	local onA = placedModel(A, b1.uid)
 	expect(
 		"on A's pad with Level 4 income",
@@ -867,7 +877,11 @@ local function duoFair()
 	expect("(cooldown 0 for this check) A steals a second worker", ok, message)
 	put(A, (plotOf(A).PrimaryPart :: BasePart).Position)
 	PvPSteal._test.deliver(A)
-	task.wait(1)
+	waitUntil(6, function()
+		return WorkerInventory.getRecord(A, b3.uid) ~= nil
+	end)
+	task.wait(0.5)
+	placeCarried(A)
 	expect("B's 2nd loss: safety bubble", PvPBase.isBubble(B.UserId) and B:GetAttribute("ProtectedUntil") ~= nil)
 	local b4 = grant(B, "crypto_carl")
 	task.wait(0.5)
@@ -901,8 +915,12 @@ local function duoFair()
 	expect("worker on pad 7 can be stolen", ok, message)
 	put(A, (plotOf(A).PrimaryPart :: BasePart).Position)
 	PvPSteal._test.deliver(A)
-	task.wait(1)
+	waitUntil(6, function()
+		return WorkerInventory.getRecord(A, b7.uid) ~= nil
+	end)
+	task.wait(0.5)
 	expect("delivered from pad 7", WorkerInventory.getRecord(A, b7.uid) ~= nil and pad(B, 7):GetAttribute("Occupied") ~= true)
+	PvPSteal._test.setTeleportCheck(true)
 	switches(false)
 end
 

@@ -5,7 +5,7 @@ Roblox, phone-first. ~80% kids. Work through Roblox Studio MCP (Studio runs thro
 ## Code
 - Every script's source lives in this repo under `src/` (`src/<Service>/<Path>.lua`, first line `-- Studio location: <Service.Path> (<Class>)`). No Rojo.
 - Edit the file, then sync it into the open Studio: `python3 tools/push_to_studio.py <files>` prints a Luau snippet to run in Edit mode (back up the old scripts first). Afterwards run the snippet from `python3 tools/verify_sync.py`: it must say "all match" before you commit.
-- `tools/rbxl_scripts.py place.rbxl [--export src]` lists or exports scripts from a saved place. `tools/test_guard.sh` guards multi-client tests (max 3 clients on this 13 GB machine).
+- `tools/rbxl_scripts.py place.rbxl [--export src]` lists or exports scripts from a saved place. `tools/test_guard.sh` guards multi-client tests (max 3 clients on this 13 GB machine). `tools/kill_tests.sh --check` before every test (must be CLEAN), `tools/kill_tests.sh` after every test (pass, fail or crash): kills test server/clients, never the editor. Prefer solo tests; multi-client only when needed.
 - Local place backups go in `backups/` (git-ignored).
 - Linters (pinned in `rokit.toml`; `rokit install`, binaries in `~/.rokit/bin`): `selene.toml`, `stylua.toml`. Before pushing to Studio, run selene and stylua --check on changed files. Type check: `luau-lsp analyze --platform=roblox --definitions=tools/types/globalTypes.d.luau <files>` (download that file from the luau-lsp repo's `scripts/` folder; without a sourcemap, "Unknown require" and missing-child warnings are expected).
 

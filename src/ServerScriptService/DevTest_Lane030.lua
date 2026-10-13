@@ -300,8 +300,14 @@ scenario("carry: teleports refused, then down the lane with the opponent's bat",
 	end
 	put(A, (npc.HumanoidRootPart :: BasePart).Position + Vector3.new(3, 0, 0))
 	npc:SetAttribute("Claimed", true) -- (the spawner must not despawn it mid-test)
+	local hum = (A.Character :: Model):FindFirstChildOfClass("Humanoid")
+	local before = ("health %s, already carrying %s, npc root %s"):format(
+		tostring(hum and hum.Health),
+		tostring(NPCCarry.getCarried(A)),
+		tostring(npc:FindFirstChild("HumanoidRootPart") ~= nil)
+	)
 	NPCCarry.start(A, npc)
-	expect("A is carrying", A:GetAttribute("CarryingNPC") == true)
+	expect("A is carrying", A:GetAttribute("CarryingNPC") == true, before)
 	local ok, why = LaneService.travel(A, "Home")
 	expect("Home refused while carrying", ok == false and tostring(why):find("carrying") ~= nil, why)
 	ok, why = LaneService.travel(A, "Zone", "MainStreet")
