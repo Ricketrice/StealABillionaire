@@ -223,7 +223,12 @@ local function localXZ(plot: Model, part: BasePart): (number, number)
 	return l.X, l.Z
 end
 local function setCash(p: Player, amount: number)
-	CashService.add(p, amount - CashService.get(p))
+	local have = CashService.get(p)
+	if amount > have then
+		CashService.add(p, amount - have)
+	elseif amount < have then
+		CashService.trySpend(p, have - amount)
+	end
 end
 local uidN = 0
 local function grant(p: Player, id: string, level: number?): any
@@ -346,7 +351,7 @@ local function soloLevels()
 	r = ask(A, "padLevel")
 	expect("client: one level prompt enabled (nearest own pad)", r.enabled == 1, r.enabled)
 	expect("pad prompt: Level 3", w1.level == 3, w1.level)
-	expect("pad prompt charged", CashService.get(A) < 30, CashService.get(A))
+	expect("pad prompt charged", CashService.get(A) < BaseConfig.levelCost(5, 2), CashService.get(A))
 	-- to Level 10
 	for level = 3, 9 do
 		setCash(A, BaseConfig.levelCost(5, level))
@@ -432,14 +437,14 @@ local function soloPads()
 	local r = ask(A, "unlockRemote")
 	expect("refused far away", r.ok ~= true and BaseService._test.padsBought(A) == 0, r.message)
 	-- no cash, standing on it
-	setCash(A, 4999)
+	setCash(A, 0)
 	put(A, (unlock :: BasePart).Position)
 	r = ask(A, "unlockPrompt")
 	expect("client: unlock prompt shown to the owner", r.enabled == true)
-	expect("refused without cash", BaseService._test.padsBought(A) == 0 and CashService.get(A) == 4999)
+	expect("refused without cash", BaseService._test.padsBought(A) == 0, BaseService._test.padsBought(A))
 	setCash(A, 5000)
 	r = ask(A, "unlockPrompt")
-	expect("prompt hold: pad 7 unlocked", BaseService._test.padsBought(A) == 1 and CashService.get(A) == 0, BaseService._test.padsBought(A))
+	expect("prompt hold: pad 7 unlocked, $5,000 charged", BaseService._test.padsBought(A) == 1 and CashService.get(A) < 5000, CashService.get(A))
 	local p7 = pad(A, 7)
 	expect("pad 7 at its spot", p7 ~= nil and p7:GetAttribute("BasePad") == true)
 	if p7 then
@@ -469,7 +474,7 @@ local function soloPads()
 		setCash(A, price)
 		put(A, u.Position)
 		local ok, message = BaseService.unlockPad(A)
-		expect(("pad %d unlocked"):format(6 + n), ok and BaseService._test.padsBought(A) == n and CashService.get(A) == 0, message)
+		expect(("pad %d unlocked"):format(6 + n), ok and BaseService._test.padsBought(A) == n and CashService.get(A) < price, message)
 	end
 	expect("prices in order 12k 30k 75k 180k 450k", table.concat(prices, ",") == "12000,30000,75000,180000,450000", table.concat(prices, ","))
 	_, stations = WorkerInventory.capacity(A)
@@ -603,7 +608,7 @@ local function soloLiving()
 	end
 	expect("client: laptop desk at hand height", r.deskGap == nil or math.abs(r.deskGap) < 1.2, r.deskGap)
 	-- far away: no props
-	put(A, workspace.SpawnLocation.Position + Vector3.new(0, 0, 150))
+	put(A, (workspace.Hub.Plots.Plot11.PrimaryPart :: BasePart).Position) -- (the far end of the bases, ~200 studs)
 	task.wait(1)
 	r = ask(A, "living")
 	info("props while 150 studs away", r.props)
@@ -652,6 +657,7 @@ local function soloPurchases()
 	for key, id in ids do
 		P._test.setId(key, id)
 	end
+	ask(A, "setIds", ids) -- (the client's Store reads its own copy of ProductConfig)
 	ServerStorage:SetAttribute("StudioPurchases", false)
 	task.wait(0.3)
 	ServerStorage:SetAttribute("StudioPurchases", true) -- (re-indexes the ids)
@@ -670,23 +676,26 @@ local function soloPurchases()
 	end
 	local small = ProductConfig.BY_KEY.cash_s
 	local want = ProductConfig.cashFor(small, income)
+	local slack0 = income * 20 + 1 -- (income keeps coming in while the save runs)
+	local before = CashService.get(A)
 	local d = receipt(9001, "T033-r1")
-	expect("Cash Stack granted", d == Enum.ProductPurchaseDecision.PurchaseGranted and CashService.get(A) == want, ("%s %d/%d"):format(tostring(d), CashService.get(A), want), true)
+	local got = CashService.get(A) - before
+	expect("Cash Stack granted", d == Enum.ProductPurchaseDecision.PurchaseGranted and got >= want and got < want + slack0, ("%s %d/%d"):format(tostring(d), got, want), true)
+	before = CashService.get(A)
 	d = receipt(9001, "T033-r1")
-	expect("same receipt again: granted, nothing more", d == Enum.ProductPurchaseDecision.PurchaseGranted and CashService.get(A) == want, CashService.get(A), true)
+	got = CashService.get(A) - before
+	expect("same receipt again: granted, nothing more", d == Enum.ProductPurchaseDecision.PurchaseGranted and got < slack0, got, true)
 	local store = PlayerData.store()
-	store.failNext = 1
+	store.failNext = 3 -- (SessionStore tries a save 3 times)
 	local c0 = CashService.get(A)
 	d = receipt(9002, "T033-r2")
 	local mid = ProductConfig.cashFor(ProductConfig.BY_KEY.cash_m, PassiveIncome.getIncome(A))
 	expect("save failed: NotProcessedYet", d == Enum.ProductPurchaseDecision.NotProcessedYet, d, true)
+	store.failNext = 0
 	d = receipt(9002, "T033-r2")
-	expect(
-		"retry: granted once in total",
-		d == Enum.ProductPurchaseDecision.PurchaseGranted and CashService.get(A) - c0 == mid,
-		("%d vs %d"):format(CashService.get(A) - c0, mid),
-		true
-	)
+	local gained = CashService.get(A) - c0
+	local slack = PassiveIncome.getIncome(A) * 30
+	expect("retry: granted once in total", d == Enum.ProductPurchaseDecision.PurchaseGranted and gained >= mid and gained < mid + slack, ("%d vs %d"):format(gained, mid), true)
 	expect("absent player: NotProcessedYet", receipt(9001, "T033-r3", 123456789) == Enum.ProductPurchaseDecision.NotProcessedYet, nil, true)
 	expect("unknown product: NotProcessedYet", receipt(7777, "T033-r4") == Enum.ProductPurchaseDecision.NotProcessedYet, nil, true)
 	for i = 1, 55 do
@@ -741,7 +750,7 @@ local function soloPurchases()
 	local back = reload(saved)
 	expect(
 		"receipts, starter, born saved",
-		type(back.hub.receipts) == "table" and table.find(back.hub.receipts, "T033-r2") ~= nil and back.hub.starter == true and type(back.hub.born) == "number",
+		type(back.hub.receipts) == "table" and table.find(back.hub.receipts, "T033-cap55") ~= nil and back.hub.starter == true and type(back.hub.born) == "number",
 		nil,
 		true
 	)

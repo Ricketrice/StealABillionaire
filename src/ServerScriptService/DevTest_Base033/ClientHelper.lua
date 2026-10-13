@@ -20,8 +20,8 @@ baseEvent.OnClientEvent:Connect(function(kind, info)
 	table.insert(events, { kind = kind, info = info })
 end)
 local acks: { [number]: any } = {}
-inventoryAck.OnClientEvent:Connect(function(id, ok, message)
-	acks[id] = { ok = ok, message = message }
+inventoryAck.OnClientEvent:Connect(function(id, ok, message, retry)
+	acks[id] = { ok = ok, message = message, retry = retry }
 end)
 
 local function ownPlot(): Instance?
@@ -51,7 +51,8 @@ local function driven(): number
 	local placed = plot and plot:FindFirstChild("PlacedNPCs")
 	for _, m in (if placed then placed:GetChildren() else {}) do
 		for _, d in m:GetDescendants() do
-			if d:IsA("Motor6D") and (d.Transform.Position.Magnitude > 0.01 or d.Transform.LookVector:Dot(Vector3.new(0, 0, -1)) < 0.9999) then
+			local t = if d:IsA("Motor6D") or d:IsA("AnimationConstraint") then (d :: any).Transform :: CFrame else nil
+			if t and (t.Position.Magnitude > 0.01 or t.LookVector:Dot(Vector3.new(0, 0, -1)) < 0.9999) then
 				n += 1
 			end
 		end
@@ -108,10 +109,17 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 	elseif kind == "inventory" then
 		nextId += 1
 		local rid = nextId
-		inventoryAction:FireServer(arg.action, arg.uid, rid)
-		local t0 = os.clock()
-		while not acks[rid] and os.clock() - t0 < 5 do
-			task.wait(0.1)
+		for _ = 1, 5 do -- (re-sent like WorkerState when the server says "too fast, try again")
+			acks[rid] = nil
+			inventoryAction:FireServer(arg.action, arg.uid, rid)
+			local t0 = os.clock()
+			while not acks[rid] and os.clock() - t0 < 5 do
+				task.wait(0.1)
+			end
+			if not (acks[rid] and acks[rid].retry) then
+				break
+			end
+			task.wait(0.3)
 		end
 		reply.ok = acks[rid] and acks[rid].ok
 	elseif kind == "badge" then
@@ -124,6 +132,11 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 		task.wait(0.5)
 		local m = modelByUid(arg)
 		reply.shield = m ~= nil and m:FindFirstChild("FavShield") ~= nil
+	elseif kind == "setIds" then
+		local ProductConfig = require(ReplicatedStorage:WaitForChild("ProductConfig")) :: any
+		for key, value in arg do
+			ProductConfig.BY_KEY[key].id = value
+		end
 	elseif kind == "favourite" then
 		ReplicatedStorage:WaitForChild("RewardsAction"):FireServer("Favourite", arg, true)
 		task.wait(1)
