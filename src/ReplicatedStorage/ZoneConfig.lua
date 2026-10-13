@@ -36,13 +36,13 @@ ZoneConfig.ZONES = {
 	{ id = "BeachBoardwalk", number = 3, name = "Beach Boardwalk", price = 150000, folder = "Zone3_BeachBoardwalk", purchasable = false, gate = false },
 	{ id = "ToyTown", number = 4, name = "Toy Town", price = 500000, folder = "Zone4_ToyTown", purchasable = true, gate = true },
 	{ id = "NeonDowntown", number = 5, name = "Neon Downtown", price = 1500000, folder = "Zone5_NeonDowntown", purchasable = false, gate = false },
-	-- Zone 6 is ours: its gate is the top of the Rising Lane (030). PROPOSED launch price 500,000 while Zones 2-5 are
-	-- closed (the old 5,000,000 ladder price returns once they open); it needs only Main Street.
+	-- Zone 6 is ours: its gate is the top of the Rising Lane (030). Launch price 250,000 (D33) while Zones 2-5 are
+	-- closed (to be raised when they open; the old 5,000,000 ladder price is the fallback); it needs only Main Street.
 	{
 		id = "BillionaireHills",
 		number = 6,
 		name = "Billionaire Hills",
-		price = 500000,
+		price = 250000,
 		folder = "Zone6_BillionaireHills",
 		purchasable = true,
 		gate = true,

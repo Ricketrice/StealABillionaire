@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D33 | **Zone 6 unlock price = 250,000** (owner, replaces the 500,000 proposal in D32) while teammate Zones 2-5 are closed; to be raised when they open. | 2026-10 |
 | D30 | **Build first, polish in one dedicated art pass** once the lane layout is final (after 033, before launch polish/trailer). Before that, only a cheap global lighting/atmosphere tune. New builds follow `ART_STYLE.md` so nothing needs redoing. | 2026-10 |
 | D32 | **030 review:** Zone 6 sits behind a cash unlock (price 500,000 proposed while Zones 2-5 are closed, 5,000,000 ladder price later; needs only Main Street); ranks never go down (peak net worth saved as `hub.peak`); thresholds Broke <1k, Intern 1k, Manager 25k, CEO 250k, Millionaire 1M, Billionaire 1B. | 2026-10 |
 | D31 | **Rising Lane built (030, owner-approved changes):** lane runs north (-Z) from the spawn square, 12-stud steps, 24-wide railed ramps; T2-T5 are short ~40-stud portal stops (colour arch, sign, gate; unlock rules unchanged, teleport to the teammate island), sizes in `Kit.L.lane.stops`; T1 = Main Street, T6 = Velocity Royale, both moved as blocks. Home + Zones teleports only when not carrying / not in a fight, 3 s cooldown, server-checked. Ranks Broke > Intern > Manager > CEO > Millionaire > Billionaire from net worth = cash + 300 s of income (thresholds proposed, waiting for approval). | 2026-10 |
