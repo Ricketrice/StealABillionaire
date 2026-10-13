@@ -1,5 +1,5 @@
-# Theme pivot: Steal a Boss (planned)
-Owner's direction. **Not built yet.** Every system built so far stays and works the same (catch, parade, carry, steal, bases, levels, pads, heist, race rules, speed, rewards, ranks, store). Pitch page: https://claude.ai/artifact/PNphBHAsYovmxcsTMQT6ks
+# Theme pivot: Steal a Boss
+Owner's direction. **Being built in milestone 034** (decisions D41-D43). Every system built so far stays and works the same (catch, parade, carry, steal, bases, levels, pads, heist, race rules, speed, rewards, ranks, store). Pitch page: https://claude.ai/artifact/PNphBHAsYovmxcsTMQT6ks
 
 ## One line
 Climb a world of kingdoms, catch their creatures, make them earn coins at your base, steal from other players, and rob each kingdom's boss while it chases you.
@@ -46,3 +46,21 @@ Every boss reuses the heist robot's 3 attack types (circle, line, ring), just th
 ## Needs before building
 - **Teammates agree** to move their zones from 2–5 to 4–7 (renumbering and a 7th terrace touch shared things: zone IDs, gates, unlock prices, district detection). Their content inside their zones is not touched.
 - Final names. Unlock prices for zones 2–3 (new) and the shifted ones.
+
+## Approved creature mapping (034, D43; same id, rarity, income)
+| Id | Rarity | $/s | Knight's Keep | Id | $/s | Ember Academy |
+|---|---|---|---|---|---|---|
+| broke_bob | C | 5 | Rookie Squire (helmet keeps slipping) | butler_barnaby | 500 | Candle Imp (flame on its head) |
+| delivery_dave | C | 6 | Scroll Page (scroll tube) | caddie_gus | 600 | Ember Newt (tiny lantern) |
+| training_dummy (new) | C | 5 | Training Dummy (hops on its post) | bookling (new) | 500 | Bookling (chomping spellbook) |
+| street_hustler | R | 9 | Apple Archer | polo_pro_penny | 900 | Ember Owl (burning quill) |
+| business_betty | R | 14 | Banner Bearer (huge flag) | chef_pierre | 1,400 | Fire Apprentice (oversized hat) |
+| security_sam | E | 22 | Shield Knight | bodyguard_boris | 2,200 | Rune Golem |
+| crypto_carl | E | 35 | Forge Master (glowing hammer) | hedge_fund_hank | 3,500 | Phoenix |
+| ceo_chad | L | 100 | Golden Paladin (Ironclad's champion) | oil_baron_oswald | 10,000 | Flame Archmage (Ignis's champion) |
+| mystery_millionaire | S | 500 | Sir Ironclad | the_trillionaire | 50,000 | Ignis the Pyromancer |
+
+Sunken Kingdom (`SunkenKingdom`, new ids, x10): bubble_fish C 50 · hermit_porter C 60 · coral_snail C 50 · puffer_guard R 90 · mermaid_mage R 140 · shark_knight E 220 · pearl_seahorse E 350 · tide_warden L 1,000 · aquaris S 5,000.
+
+## Income guideline for teammate zones (D43)
+Our zones earn x1 (Knight's Keep), x10 (Sunken Kingdom), x100 (Ember Academy) of Main Street's slot incomes ($5 / 6 / 5 Common, 9 / 14 Rare, 22 / 35 Epic, 100 Legendary, 500 Secret). Your zones come after them, so please aim for about **zone 4 x300, zone 5 x1,000, zone 6 x3,000, zone 7 x10,000** (same 9-creature shape and the normal odds 70/20/8/1.8/0.2). Unlock prices are set by us: 2.5M / 7.5M / 25M / 75M. Your gate stays "Coming soon" until your zone's ready flag (`ZoneConfig`) is switched on. Today's placeholder rosters (Beach x6, Toy Town x15, Neon x40) are yours to replace; we don't change them.
