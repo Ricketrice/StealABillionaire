@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D-next2 | **Creature rosters**: 9 per zone (6 normal themed with a twist, Epic/Legendary/Secret mega cool; Secret = the zone boss). V1 shows and balances only money ($/s), zone 1 < 2 < 3; Attack/Speed/Defence hidden, kept for future battles. Details `docs/PIVOT.md`. *(Renumber on merge.)* | 2026-10 |
 | D-next | **Theme pivot planned: Steal a Boss.** Lane = Start (Hideout Camp) → our zones 1 Knight's Keep (warriors), 2 Sunken Kingdom (underwater, water dragon), 3 Ember Academy (fire wizards + Spell Run parkour race replacing the race track) → teammate zones 4–7 (their themes, moved up from 2–5, needs their agreement). Uniqueness rule: element + culture + building style + landmark per zone. Systems, IDs, odds, income and saves unchanged. Details: `docs/PIVOT.md`. *(Renumber to the next free D# when merging.)* | 2026-10 |
 | D30 | **Build first, polish in one dedicated art pass** once the lane layout is final (after 033, before launch polish/trailer). Before that, only a cheap global lighting/atmosphere tune. New builds follow `ART_STYLE.md` so nothing needs redoing. | 2026-10 |
 | D29 | **Arena hidden for V1**: keep the code and the venue, turn it off for players with a flag (ArenaEnabled = false live). No HUD button, no quests or tutorial steps pointing to it. Can return later as an update. Venue anchor names stay. | 2026-10 |
