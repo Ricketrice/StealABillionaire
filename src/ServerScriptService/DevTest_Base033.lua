@@ -24,6 +24,11 @@
 --     fair       B's starred favourite can't be stolen (shield on A's screen, prompt off); a stolen Level 4 worker
 --                keeps its level and income at A's base; same base twice refused; B's 2nd loss -> safety bubble;
 --                a worker on a bought pad can be stolen; B's Store never opens by itself after the robbery
+--   "base033:save" (1 client, REAL Studio DataStore: StudioMemoryStore not set, API access on; test user -1):
+--     save       a Level 4 worker, bought pad 7 with a worker on it, a Cash Stack receipt and the Starter Pack go
+--                through a real final save and a real load (rejoin); afterwards the level, income, pad and worker
+--                are back, the same receipt grants nothing and the Starter Pack can't be bought again; test keys
+--                removed at the end
 -- Results: "@@T033|". Start `TAG=T033 tools/test_guard.sh <label>` BEFORE launching.
 
 local RunService = game:GetService("RunService")
@@ -34,7 +39,7 @@ local StudioTestService = game:GetService("StudioTestService")
 local okArgs, args = pcall(function()
 	return StudioTestService:GetTestArgs()
 end)
-local mode = if okArgs and args == "base033:solo" then "solo" elseif okArgs and args == "base033:duo" then "duo" else nil
+local mode = if okArgs and args == "base033:solo" then "solo" elseif okArgs and args == "base033:duo" then "duo" elseif okArgs and args == "base033:save" then "save" else nil
 if not mode then
 	return
 end
@@ -136,8 +141,12 @@ waitUntil(240, function()
 	return n >= NEED
 end)
 task.wait(3)
-if not (ServerStorage:GetAttribute("StudioMemoryStore") == true or not PlayerData.isPersistent()) then
+local memory = ServerStorage:GetAttribute("StudioMemoryStore") == true or not PlayerData.isPersistent()
+if mode ~= "save" and not memory then
 	finish("ABORTED: run base033 on the in-memory save (ServerStorage StudioMemoryStore = true)")
+	return
+elseif mode == "save" and memory then
+	finish("ABORTED: base033:save needs the real Studio DataStore (API access on, StudioMemoryStore not set)")
 	return
 end
 local list = Players:GetPlayers()
@@ -924,8 +933,131 @@ local function duoFair()
 	switches(false)
 end
 
+-- SAVE (real Studio DataStore) ----------------------------------------------------------------------------------
+local saveState: any = {}
+local function saveBuild()
+	expect("test user", A.UserId < 0, A.UserId)
+	switches(true)
+	local P = PurchaseService
+	P._test.setId("cash_s", 9001)
+	P._test.setId("starter", 9004)
+	clearWorkers(A)
+	setCash(A, 0)
+	-- a Level 4 worker (levels show from 3 placed)
+	local w = grant(A, "business_betty")
+	for _ = 2, 6 do
+		grant(A, "delivery_dave")
+	end
+	waitUntil(3, function()
+		return A:GetAttribute("LevelsShown") == true and A:GetAttribute("PadUnlockShown") == true
+	end)
+	for _ = 1, 3 do
+		setCash(A, BaseConfig.levelCost(14, w.level) or 0)
+		BaseService.levelUp(A, w.uid)
+	end
+	expect("Business Betty at Level 4", w.level == 4, w.level)
+	-- pad 7 + a worker on it
+	local bought0 = BaseService._test.padsBought(A)
+	local u = plotOf(A):FindFirstChild("PadUnlock") :: BasePart?
+	setCash(A, A:GetAttribute("PadNextPrice") or 0)
+	if u then
+		put(A, u.Position)
+	end
+	local ok, message = BaseService.unlockPad(A)
+	expect("a pad bought", ok and BaseService._test.padsBought(A) == bought0 + 1, message)
+	local w7 = grant(A, "crypto_carl")
+	expect("worker on the new pad", w7.loc == "station" and w7.station == 7 + bought0, w7.station)
+	-- purchases (SIM receipts into the real handler, saved to the real store before PurchaseGranted)
+	local function receipt(productId: number, purchaseId: string): any
+		return P.processReceipt({
+			PlayerId = A.UserId,
+			ProductId = productId,
+			PurchaseId = purchaseId,
+			CurrencySpent = 25,
+			CurrencyType = Enum.CurrencyType.Robux,
+			PlaceIdWherePurchased = 0,
+		})
+	end
+	expect("Cash Stack granted (real save)", receipt(9001, "T033S-r1") == Enum.ProductPurchaseDecision.PurchaseGranted, nil, true)
+	expect("Starter Pack granted (real save)", receipt(9004, "T033S-s1") == Enum.ProductPurchaseDecision.PurchaseGranted and data(A).hub.starter == true, nil, true)
+	saveState = { uid = w.uid, uid7 = w7.uid, station7 = w7.station, pads = BaseService._test.padsBought(A), receipt = receipt }
+	task.wait(1)
+	saveState.income = PassiveIncome.getIncome(A)
+end
+
+local function saveRejoin()
+	local st = saveState
+	PlayerData._test.leave(A)
+	local stored = PlayerData.store():GetAsync("player_" .. A.UserId)
+	local saved = stored and stored.data
+	local lv, on7 = nil, nil
+	for _, w in (saved and saved.workers or {}) do
+		if w.uid == st.uid then
+			lv = w.level
+		elseif w.uid == st.uid7 then
+			on7 = w.station
+		end
+	end
+	expect("real save: Level 4", lv == 4, lv)
+	expect("real save: worker on the bought pad", on7 == st.station7, on7)
+	expect("real save: hub.pads", saved and saved.hub and saved.hub.pads == st.pads, saved and saved.hub and saved.hub.pads)
+	expect(
+		"real save: receipts + starter",
+		saved and saved.hub and type(saved.hub.receipts) == "table" and table.find(saved.hub.receipts, "T033S-r1") ~= nil and saved.hub.starter == true
+	)
+	expect("real save: schema 3", saved and saved.schema == 3, saved and saved.schema)
+	local plot = PlotService.getPlot(A)
+	if plot then
+		plot.PlacedNPCs:ClearAllChildren()
+		for _, station in plot.Stations:GetChildren() do
+			station:SetAttribute("Occupied", false)
+		end
+	end
+	task.spawn(PlayerData._test.load, A)
+	expect(
+		"A loads again from the store",
+		waitUntil(40, function()
+			return PlayerData.isLoaded(A) and WorkerInventory.isReady(A)
+		end)
+	)
+	task.wait(2)
+	local w = WorkerInventory.getRecord(A, st.uid)
+	expect("Level 4 came back", w and w.level == 4, w and w.level)
+	local w7 = WorkerInventory.getRecord(A, st.uid7)
+	expect("worker back on the bought pad", w7 and w7.loc == "station" and w7.station == st.station7 and placedModel(A, st.uid7) ~= nil, w7 and w7.station)
+	expect("bought pads came back", BaseService._test.padsBought(A) == st.pads, BaseService._test.padsBought(A))
+	expect("income the same after the rejoin", PassiveIncome.getIncome(A) == st.income, ("%s vs %s"):format(PassiveIncome.getIncome(A), st.income))
+	local c0 = CashService.get(A)
+	local d = st.receipt(9001, "T033S-r1")
+	expect(
+		"same receipt after the rejoin: nothing more",
+		d == Enum.ProductPurchaseDecision.PurchaseGranted and CashService.get(A) - c0 < PassiveIncome.getIncome(A) * 20 + 1,
+		CashService.get(A) - c0,
+		true
+	)
+	expect("Starter Pack can't be bought again", PurchaseService.buy(A, "starter") == false and PurchaseService._test.starterShown(A) == false, nil, true)
+	PurchaseService._test.setId("cash_s", 0)
+	PurchaseService._test.setId("starter", 0)
+	switches(false)
+end
+
+local function saveCleanup()
+	if A.Parent then
+		PlayerData._test.leave(A)
+	end
+	local store = PlayerData.store()
+	for _, k in { "player_", "zones_", "pvpx_" } do
+		pcall(store.RemoveAsync, store, k .. A.UserId)
+	end
+	expect("test keys removed", store:GetAsync("player_" .. A.UserId) == nil)
+end
+
 task.spawn(function()
-	if mode == "solo" then
+	if mode == "save" then
+		scenario("build", saveBuild)
+		scenario("real final save + real load (rejoin)", saveRejoin)
+		scenario("cleanup", saveCleanup)
+	elseif mode == "solo" then
 		scenario("off", soloOff)
 		scenario("on", soloOn)
 		scenario("levels", soloLevels)
