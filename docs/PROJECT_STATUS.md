@@ -1,7 +1,7 @@
 # Project Status
 _Keep under ~60 lines. Replace sections at each milestone end; don't append history._
 
-**Current milestone:** 031 — Zone 6 Royale Race + creature prototypes (review changes done, D36; waiting for sign-off). **Last finished:** 030 — The Rising Lane.
+**Current milestone:** 031 — Zone 6 Royale Race + creature prototypes (review changes done, D36; waiting for sign-off). `pvp022` main carried over to 032. **Last finished:** 030 — The Rising Lane.
 **Save schema:** 3 (029 adds optional `hub.daily/play/seen/offline/index/settings/favs`; 031 adds optional `hub.race`, D35). **Map:** `Workspace.World.SkyCity`, built by `tools/build027`.
 
 ## Built
@@ -16,9 +16,10 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
   - `REWARDS_ENABLED` (D20, income-based with floors): 7-day daily streak (kind restart; day 7 adds a Golden ticket), playtime gifts (60 min = free parade catch), offline earnings popup (25%, max 3 h). Free catches / Golden tickets live in `hub.freeCatches/goldenCatches` and are used by `ParadeService` before cash. `INDEX_BONUS_ENABLED`: D15 bonus, claimed per zone tier, adds to income.
 - Inventory requests are delivery-safe: ids + InventoryAck, client re-sends until answered, server answers repeats without running them again; a Place press with no result is re-sent as a `Place` request.
 - Sky island, lots, lot PvP, arena, shops, Guide, quests, Top Billionaires board.
+- **Studio dev tools (032, Studio only, never live):** ServerStorage `StudioDevTools` (default false). On: Zone 6 counts as unlocked for the developer during Play (save unchanged; buying it says "owned"), chat `/devcash [amount]` adds test cash (default 300,000; refused on a real DataStore). Multi-client test players (negative ids) never get them. Play Solo check 20/20 (off does nothing, on, off again; Zones 2-5 unchanged).
 
 ## Tests
-- **031 review (2026-10-13, Studio, one test at a time):** `race031` 129/129 (4 SIM; adds: no big number early in the join window, sign says "Join the race!"). `lane030` 63/63. `save029:parade` 24/24 and `save029:rewards` 26/26 (2 SIM), REAL Studio DataStore. `pvp022` main (3 clients): 311 passed, 0 failed, then the memory guard stopped it (free memory 0 at 113 s) before the last scenarios; a retry was stopped before any scenario ran (swap nearly full) -> **not complete** (last full run 330/330 in 029). verify_sync: all match.
+- **031 review (2026-10-13, Studio, one test at a time):** `race031` 129/129 (4 SIM; adds: no big number early in the join window, sign says "Join the race!"). `lane030` 63/63. `save029:parade` 24/24 and `save029:rewards` 26/26 (2 SIM), REAL Studio DataStore. `pvp022` main (3 clients): **pending, carried over to 032.** Last partial run 311/311 (memory guard stopped it before the last scenarios). The 2026-10-13 rerun after a Studio restart hit a launch hang: the test server got stuck opening the place, no clients started, no checks ran (not a test failure). Last full run 330/330 in 029. verify_sync: all match.
 - 031 (2026-10-13, before review): `race031` 127/127, `race031:save` (REAL Studio DataStore) 17/17 (race worker + `hub.race` survive a real save/load, second capsule refused), `parade028` 76/76. 3-lap times: 26.8 s solo, 31.7 / 36.9 s with 2 clients.
 - 030 (2026-10-13): `DevTest_Lane030` 63/63 (layout 28 runs, portals, Zone 6 unlock, peak rank, carry + bat).
 ## Tests before 030 (2026-10-12 after the 029 review, Studio, all run)
@@ -37,7 +38,7 @@ Purchases (store ids still unset), worker levels, merge, gear tiers, zone bosses
 ## Known issues
 - 034 art pass: MechBeast tri trim + part merge, Dragon Pup rework (D35). Creature imports lie pitched -90 deg (the showcase stands them up through the body part).
 - Race HUD/visuals checked by layout tests only, never in a picture.
-- 3-client tests need ~3.5 GB free and swap headroom; on 2026-10-13 pvp022 was stopped twice by the guard (browser open, ~9 GB swap used). Run it after a Studio restart with the browser closed.
+- 3-client tests need ~3.5 GB free and swap headroom; on 2026-10-13 pvp022 was stopped twice by the guard (browser open, ~9 GB swap used), then a rerun hung at launch (test server stuck at `createAndShowIDEDoc`, ended itself after ~10 min). Next try: Studio restart, browser closed.
 - Zones 2–5 sit in the old sea (teammates'); only Toy Town's gate is enforced. Walkers are full R15 rigs (~245 instances each). Carry Zone 1 exit → farthest lot ≈ 20.2 s.
 
 ## Open questions (ask the owner; move answers to GAME_DESIGN → Decisions)

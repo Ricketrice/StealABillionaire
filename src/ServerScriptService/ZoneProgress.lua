@@ -15,6 +15,9 @@
 --
 -- Unlocked districts are shown to clients on the player's "UnlockedZones" attribute (comma
 -- separated ids, server-written only).
+--
+-- Studio only (032): with ServerStorage.StudioDevTools on, Zone 6 also counts as unlocked for the developer
+-- (StudioDevTools.unlocksZone); it is added to the attribute but never to the save.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,6 +26,7 @@ local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("ZoneConfig"))
 local CashService = require(script.Parent:WaitForChild("CashService"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
+local StudioDevTools = require(script.Parent:WaitForChild("StudioDevTools"))
 
 local ZoneProgress = {}
 
@@ -132,13 +136,22 @@ function ZoneProgress.isUnlocked(player: Player, zoneId: string): boolean
 		return true
 	end
 	local data = PlayerData.get(player)
+	if data ~= nil and StudioDevTools.unlocksZone(player, zoneId) then
+		return true
+	end
 	return data ~= nil and table.find(data.zones, zoneId) ~= nil
 end
 
 local function publish(player: Player)
 	local data = PlayerData.get(player)
 	if data then
-		player:SetAttribute(UNLOCKED_ATTRIBUTE, table.concat(data.zones, ","))
+		local shown = table.clone(data.zones)
+		for _, zone in ZoneConfig.ZONES do
+			if not table.find(shown, zone.id) and StudioDevTools.unlocksZone(player, zone.id) then
+				table.insert(shown, zone.id)
+			end
+		end
+		player:SetAttribute(UNLOCKED_ATTRIBUTE, table.concat(shown, ","))
 	end
 end
 
@@ -230,6 +243,11 @@ function ZoneProgress.start()
 	end
 	PlayerData.onLoaded(function(player)
 		publish(player)
+	end)
+	StudioDevTools.onChanged(function()
+		for _, player in Players:GetPlayers() do
+			publish(player)
+		end
 	end)
 	Players.PlayerRemoving:Connect(function(player)
 		lastRequest[player] = nil
