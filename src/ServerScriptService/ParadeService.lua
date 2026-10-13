@@ -557,13 +557,13 @@ catchHandler = function(player: Player, npc: Model)
 	end
 end
 
--- After every reveal (parade or zone): collection book and the server-wide message.
-WorkerReveal.onAnnounce(function(player, identity, npc)
-	local worker = WorkerCatalogue.get(identity.workerId)
+-- After every reveal (parade, zone or a Royale Race capsule): collection book and the server-wide message.
+function ParadeService.announce(player: Player, workerId: string, golden: boolean)
+	local worker = WorkerCatalogue.get(workerId)
 	if not worker then
 		return
 	end
-	if ParadeService.addToBook(player, identity.workerId) or ParadeService.flag("PARADE_ENABLED") then
+	if ParadeService.addToBook(player, workerId) or ParadeService.flag("PARADE_ENABLED") then
 		task.defer(ParadeService.pushState, player) -- the free catch is used up too
 	end
 	if ParadeService.flag("PARADE_ENABLED") and ParadeConfig.ANNOUNCE[worker.rarity] then
@@ -571,11 +571,14 @@ WorkerReveal.onAnnounce(function(player, identity, npc)
 			player = player.DisplayName,
 			userId = player.UserId,
 			worker = worker.name,
-			workerId = identity.workerId,
+			workerId = workerId,
 			rarity = worker.rarity,
-			golden = npc:GetAttribute("CaughtGolden") == true,
+			golden = golden,
 		})
 	end
+end
+WorkerReveal.onAnnounce(function(player, identity, npc)
+	ParadeService.announce(player, identity.workerId, npc:GetAttribute("CaughtGolden") == true)
 end)
 
 -- Start ---------------------------------------------------------------------------------------------------

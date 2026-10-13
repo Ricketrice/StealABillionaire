@@ -629,6 +629,27 @@ function WorkerInventory.putAway(player: Player, uid: string, preferredStation: 
 	return where
 end
 
+-- Whether the player can own one more worker (the same capacity rule a steal checks).
+function WorkerInventory.hasRoom(player: Player): boolean
+	local _, _, _, total = WorkerInventory.count(player)
+	return PlayerData.isLoaded(player) and total < slotsFor(player) + stationsFor(player)
+end
+
+-- Gives a brand-new worker straight to the player, with no carry (Royale Race capsules, 031): onto a
+-- free station if there is one, otherwise into storage. Never refuses for space (callers check
+-- hasRoom first; a full player keeps it in storage over the limit rather than lose it). The record is
+-- in the player's data before anything can yield. Returns where it went, or nil (data not ready, uid owned).
+function WorkerInventory.grant(player: Player, record: WorkerRecord): string?
+	local data, index = PlayerData.get(player), byUid[player]
+	if not (data and index) or index[record.uid] then
+		return nil
+	end
+	record.loc, record.station = "carried", nil -- saved as stored until it is put away below
+	table.insert(data.workers, record)
+	index[record.uid] = record
+	return WorkerInventory.putAway(player, record.uid, freeStationIndex(data, stationsFor(player)))
+end
+
 -- Studio tests only: ignore this player's next `count` requests, as if they were lost on the way.
 WorkerInventory._test = {
 	dropNext = function(player: Player, count: number)
