@@ -275,7 +275,12 @@ scenario("rank never goes down (saved peak, schema stays 3)", function()
 	task.wait(3)
 	expect("cash spent: still CEO", A:GetAttribute("Rank") == "CEO", A:GetAttribute("Rank"))
 	expect("net worth fell but the peak did not", (A:GetAttribute("NetWorth") or 0) < 1000 and (A:GetAttribute("Peak") or 0) >= peak, A:GetAttribute("Peak"))
-	expect("head tag shows the rank", (A.Character :: Model).Head:FindFirstChild("RankTag") ~= nil and ((A.Character :: Model).Head.RankTag.TextLabel :: TextLabel).Text == "CEO")
+	expect(
+		"head tag shows the rank",
+		(A.Character :: Model):FindFirstChild("RankTag") ~= nil
+			and ((A.Character :: Model).RankTag.Label :: TextLabel).Text == "CEO"
+			and (A.Character :: Model).RankTag.Adornee == (A.Character :: Model).Head
+	)
 end)
 
 scenario("carry: teleports refused, then down the lane with the opponent's bat", function()

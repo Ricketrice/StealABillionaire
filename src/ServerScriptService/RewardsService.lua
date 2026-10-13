@@ -23,6 +23,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 local ParadeConfig = require(ReplicatedStorage:WaitForChild("ParadeConfig"))
+local StealConfig = require(ReplicatedStorage:WaitForChild("StealConfig"))
 local RewardsConfig = require(ReplicatedStorage:WaitForChild("RewardsConfig"))
 local V1Flags = require(ReplicatedStorage:WaitForChild("V1Flags"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
@@ -465,6 +466,9 @@ function RewardsService.setFavourite(player: Player, uid: any, on: any): (boolea
 		if not owned then
 			return false, "not yours"
 		end
+		if StealConfig.on() then
+			table.clear(favs) -- (033 fair stealing: one favourite, the one that can't be stolen; the star moves)
+		end
 		local count = 0
 		for _ in favs do
 			count += 1
@@ -475,6 +479,11 @@ function RewardsService.setFavourite(player: Player, uid: any, on: any): (boolea
 		favs[uid] = true
 	else
 		favs[uid] = nil
+	end
+	local guard = script.Parent:FindFirstChild("StealGuard")
+	if guard then
+		local StealGuard = require(guard) :: any
+		StealGuard.refresh(player) -- the shield over the placed favourite follows
 	end
 	return true, "saved"
 end

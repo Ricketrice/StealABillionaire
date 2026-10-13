@@ -110,6 +110,9 @@ function NPCWanderer.cloneRig(template: Model): Model
 	assert(humanoid and root and root:IsA("BasePart"), template.Name .. " needs a Humanoid and a HumanoidRootPart")
 
 	humanoid.HipHeight = measureHipHeight(npc, root)
+	-- No Humanoid name tag ("MysteryNPC") or health bar over any NPC (033 fix).
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
 	for _, part in npc:GetDescendants() do
 		if part:IsA("BasePart") then
 			part.CollisionGroup = NPC_COLLISION_GROUP

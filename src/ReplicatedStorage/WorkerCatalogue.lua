@@ -48,9 +48,10 @@ WorkerCatalogue.RARITY_PER_MILLE = {
 	Secret = 2,
 }
 
-WorkerCatalogue.LEVEL = 1 -- every caught worker starts here (levelling comes later)
+WorkerCatalogue.LEVEL = 1 -- every caught worker starts here (levels 2-10: Milestone 033, BaseConfig)
 WorkerCatalogue.TIER = "Normal" -- every caught worker starts here (merging comes later)
 
+local BaseConfig = require(script.Parent:WaitForChild("BaseConfig"))
 local CustomWorkers = require(script.Parent:WaitForChild("CustomWorkers"))
 
 local WORKERS: { [string]: Worker } = {
@@ -188,14 +189,19 @@ function WorkerCatalogue.get(workerId: string): Worker?
 	return WORKERS[workerId]
 end
 
--- Stats for a worker at a level and tier. Only Level 1 / Normal exists for now, which is the
--- catalogue's base stats; levelling and merging will scale these here.
+-- Stats for a worker at a level and tier. Level 1 = the catalogue's base stats. Levels 2-10 (Milestone 033,
+-- BaseConfig) raise only the income: base x (1 + LEVEL_BOOST x (level - 1)), which can have one decimal.
+-- Only the Normal tier exists (merging comes later).
 function WorkerCatalogue.getStats(workerId: string, level: number, tier: string): (number, number, number, number)
 	local worker = WORKERS[workerId]
 	assert(worker, "unknown worker " .. tostring(workerId))
-	assert(level == WorkerCatalogue.LEVEL and tier == WorkerCatalogue.TIER, "only Level 1 Normal workers exist yet")
-	return worker.income, worker.attack, worker.speed, worker.defence
+	assert(type(level) == "number" and level >= 1 and level % 1 == 0 and tier == WorkerCatalogue.TIER, "bad level or tier")
+	local income = if level > 1 then BaseConfig.levelIncome(worker.income, level) else worker.income
+	return income, worker.attack, worker.speed, worker.defence
 end
+
+-- Worker type icon (033 cards): the role's icon name in UITheme.ICONS.
+WorkerCatalogue.ROLE_ICONS = { Earner = "coin", Fighter = "bolt", Tank = "shield", ["All-rounder"] = "star" }
 
 -- `perMille` (optional) replaces the normal odds for one roll, e.g. the Golden Parade's (Milestone 028).
 -- It must cover 1000 per mille; nil = the normal RARITY_PER_MILLE.
@@ -237,7 +243,7 @@ function WorkerCatalogue.validate()
 			local value = worker[field]
 			assert(type(value) == "number" and value >= 0 and value % 1 == 0, id .. " has a bad " .. field)
 		end
-		assert(type(worker.name) == "string" and type(worker.role) == "string", id .. " needs a name and role")
+		assert(type(worker.name) == "string" and WorkerCatalogue.ROLE_ICONS[worker.role], id .. " needs a name and a known type (role)")
 	end
 
 	table.clear(byZoneAndRarity)

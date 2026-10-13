@@ -4,6 +4,10 @@
 -- ReplicatedStorage.ProductConfig. Purchases are wired in Milestone 031: until then every card says
 -- "Coming soon" and its button can't be pressed. No pressure wording, no timers, no "only X left".
 -- Opened from the HUD (Store button, or the cash pill's "+" which opens the Cash tab).
+-- 033: purchases wired (ReplicatedStorage.PurchasesOn): a card with a real id shows its Robux price and Buy goes to
+-- the server (PurchaseRequest "Buy" key), which prompts the purchase; ProcessReceipt grants it. Owned passes say
+-- "Owned". The Starter tab shows only while the server offers it (first days, not bought). Cash packs show what
+-- they would give right now. The Store never opens by itself (no offer after being robbed or caught).
 -- 032: a Trails tab (cash only, while ReplicatedStorage.SpeedOn): the 6 speed trails from SpeedConfig with their
 -- boost and price; Buy / Equip go to the server (SpeedRequest), which checks and charges. One equipped at a time.
 
@@ -18,6 +22,36 @@ local UITheme = require(ReplicatedStorage:WaitForChild("UITheme"))
 
 local player = Players.LocalPlayer
 local speedRequest = ReplicatedStorage:WaitForChild("SpeedRequest", 30) :: RemoteFunction?
+local MarketplaceService = game:GetService("MarketplaceService")
+
+-- Purchases (033) ----------------------------------------------------------------------------------------------
+local purchaseState: any = { on = false, passes = {}, starterShown = false }
+local prices: { [string]: string } = {} -- key -> "R$ 349" from the dashboard, once known
+local function purchasesOn(): boolean
+	return ProductConfig.on()
+end
+local function fetchState()
+	local remote = ReplicatedStorage:FindFirstChild("PurchaseRequest") :: RemoteFunction?
+	if not remote then
+		return
+	end
+	local ok, granted, _, info = pcall(remote.InvokeServer, remote, "State")
+	if ok and granted and type(info) == "table" then
+		purchaseState = info
+	end
+end
+local function priceText(def: any): string
+	if prices[def.key] then
+		return prices[def.key]
+	end
+	task.spawn(function()
+		local ok, info = pcall(MarketplaceService.GetProductInfo, MarketplaceService, def.id, if def.kind == "pass" then Enum.InfoType.GamePass else Enum.InfoType.Product)
+		if ok and type(info) == "table" and type(info.PriceInRobux) == "number" then
+			prices[def.key] = "R$ " .. info.PriceInRobux
+		end
+	end)
+	return "Buy"
+end
 
 local T = UITheme.Colors
 local gui, root = UITheme.gui("Store029", 5)
@@ -39,8 +73,10 @@ local grid = UITheme.make("ScrollingFrame", {
 UITheme.make("UIGridLayout", { CellSize = UDim2.new(1 / 3, -10, 0, 222), CellPadding = UDim2.fromOffset(10, 10), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 UITheme.make("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingLeft = UDim.new(0, 4), PaddingRight = UDim.new(0, 8), Parent = grid })
 
+local buy: (string) -> ()
 local function item(def: any, order: number)
-	local available = ProductConfig.available(def) and false -- (029: purchases are not wired yet)
+	local available = ProductConfig.available(def) and purchasesOn()
+	local owned = def.kind == "pass" and purchaseState.passes and purchaseState.passes[def.key] == true
 	local card = UITheme.card({ Name = def.key, LayoutOrder = order, ZIndex = 13, Parent = grid })
 	if def.oneTime then -- the featured one-time pack gets rays behind its icon (once the texture is uploaded)
 		card.ClipsDescendants = true
@@ -84,19 +120,39 @@ local function item(def: any, order: number)
 			Parent = card,
 		})
 	end
+	if def.minutes and available then -- what a cash pack gives right now (D20: minutes of income, with a floor)
+		UITheme.text({
+			Name = "Now",
+			Text = "Now: +" .. CashFormat.format(ProductConfig.cashFor(def, player:GetAttribute("Income") or 0)),
+			Role = "Small",
+			TextSize = 15,
+			Color = T.Cash,
+			Size = UDim2.new(1, -96, 0, 18),
+			Position = UDim2.fromOffset(88, if def.oneTime then 74 else 56),
+			ZIndex = 14,
+			Parent = card,
+		})
+	end
+	local text = if owned then "Owned" elseif available then priceText(def) else "Coming soon"
 	local button = UITheme.button({
 		Name = "Buy",
 		Kind = "Gold",
-		Text = "Coming soon",
+		Text = text,
 		TextSize = 19,
 		Size = UDim2.new(1, -16, 0, 56),
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -8),
 		ZIndex = 14,
 		Parent = card,
+		OnActivated = function()
+			if available and not owned then
+				buy(def.key)
+			end
+		end,
 	})
-	UITheme.setEnabled(button, available, "Coming soon")
+	UITheme.setEnabled(button, available and not owned, text)
 	card:SetAttribute("Available", available)
+	card:SetAttribute("Owned", owned)
 end
 
 -- Trails (032) --------------------------------------------------------------------------------------------
@@ -171,7 +227,7 @@ local function trailCard(def: any, order: number)
 		Parent = card,
 	}).TextYAlignment =
 		Enum.TextYAlignment.Top
-	local text = if equipped then "Equipped" elseif owned then "Equip" else "Buy " .. CashFormat.format(def.price)
+	local text = if equipped then "Equipped" elseif owned then "Equip" else "Buy " .. CashFormat.format(def.price or 0)
 	local button = UITheme.button({
 		Name = "Buy",
 		Kind = if owned then "Primary" else "Gold",
@@ -203,6 +259,12 @@ function showTab(key: string)
 		for order, def in SpeedConfig.TRAILS do
 			trailCard(def, order)
 		end
+		local owned = string.split(player:GetAttribute("SpeedOwned") or "", ",")
+		for order, def in SpeedConfig.EXCLUSIVE do -- (033) pack trails, once owned
+			if table.find(owned, def.id) then
+				trailCard(def, #SpeedConfig.TRAILS + order)
+			end
+		end
 	else
 		for order, def in ProductConfig.ITEMS[key] or {} do
 			item(def, order)
@@ -216,7 +278,13 @@ end
 local tabRow: Instance? = nil
 local selectTab: (string) -> () = function(_key: string) end
 local function tabList(): { any }
-	local list = table.clone(ProductConfig.TABS)
+	local list = {}
+	for _, tab in ProductConfig.TABS do
+		-- (033) the Starter tab only while it is offered to this player; with purchases off, as in 029
+		if tab.key ~= "starter" or not purchasesOn() or purchaseState.starterShown then
+			table.insert(list, tab)
+		end
+	end
 	if speedOn() then
 		table.insert(list, { key = TRAILS, title = "Trails", icon = "shoe" })
 	end
@@ -243,10 +311,34 @@ for _, name in { "SpeedOwned", "SpeedTrail" } do
 	player:GetAttributeChangedSignal(name):Connect(refreshTrails)
 end
 
+buy = function(key: string)
+	local remote = ReplicatedStorage:FindFirstChild("PurchaseRequest") :: RemoteFunction?
+	if remote then
+		local ok, granted, message = pcall(remote.InvokeServer, remote, "Buy", key)
+		if ok and not granted and type(message) == "string" then
+			UITheme.toast("error", "Store", message)
+		end
+	end
+end
+local function refreshPurchases()
+	task.spawn(function()
+		fetchState()
+		buildTabs()
+	end)
+end
+ReplicatedStorage:GetAttributeChangedSignal(ProductConfig.PUBLISHED):Connect(refreshPurchases)
+for _, name in { "Pass_x2cash", "Pass_slots", "Pass_vip", "StarterOwned" } do
+	player:GetAttributeChangedSignal(name):Connect(refreshPurchases)
+end
+
 UITheme.registerScreen("Store", function(tab: any?)
 	if ReplicatedStorage:GetAttribute("StoreOn") ~= true then
 		UITheme.screenClosed("Store")
 		return
+	end
+	if purchasesOn() then
+		fetchState()
+		buildTabs()
 	end
 	if type(tab) == "string" and (ProductConfig.ITEMS[tab] or (tab == TRAILS and speedOn())) then
 		selectTab(tab)

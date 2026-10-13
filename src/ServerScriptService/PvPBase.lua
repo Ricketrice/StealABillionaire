@@ -201,6 +201,25 @@ function PvPBase.penalise(userId: number)
 	locks[userId] = lock
 end
 
+-- A safety bubble (033 fair stealing, StealGuard): protection for `seconds` from now, shown like new-player
+-- protection. Never shortens protection the player already has.
+local bubbled: { [number]: boolean } = {}
+function PvPBase.shield(userId: number, seconds: number)
+	local untilTime = now() + seconds
+	if (protectedUntil[userId] or 0) < untilTime then
+		protectedUntil[userId] = untilTime
+		bubbled[userId] = true
+	end
+	local player = Players:GetPlayerByUserId(userId)
+	if player then
+		publish(player)
+	end
+end
+-- Whether the player's protection is a safety bubble (not new-player protection).
+function PvPBase.isBubble(userId: number): boolean
+	return bubbled[userId] == true and PvPBase.isProtected(userId)
+end
+
 function PvPBase.endProtection(player: Player, message: string?)
 	if PvPBase.isProtected(player.UserId) then
 		protectedUntil[player.UserId] = nil

@@ -584,7 +584,7 @@ while true do
 		end
 		pill.Visible = nextAt ~= nil or golden
 		local o = oddsFor(golden)
-		local oddsLine = ("%s  ·  ★ %s  ✦ %s"):format(if golden then "🌟 " .. line else line, percent(o.Legendary), percent(o.Secret))
+		local oddsLine = ("%s  ·  ★ %s  🌈 %s"):format(if golden then "🌟 " .. line else line, percent(o.Legendary), percent(o.Secret))
 		for _, label in signLines do
 			label.Text = oddsLine
 			label.TextColor3 = if golden then T.Golden else T.Text

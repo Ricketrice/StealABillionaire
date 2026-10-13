@@ -157,6 +157,10 @@ function SpeedService.handle(player: Player, action: any, id: any): any
 		if owns(s, trail.id) then
 			return state(player, true, nil) -- already yours (a re-sent tap): nothing charged
 		end
+		if (trail :: any).exclusive then
+			SpeedService.stats.refused += 1
+			return state(player, false, "This trail comes with a pack") -- (033: never sold for cash)
+		end
 		if not CashService.trySpend(player, trail.price) then
 			SpeedService.stats.refused += 1
 			return state(player, false, "Not enough cash yet")
@@ -181,6 +185,24 @@ function SpeedService.handle(player: Player, action: any, id: any): any
 	publish(player)
 	SpeedService.apply(player)
 	return state(player, true, nil)
+end
+
+-- Gives a trail without charging (033: the Starter Pack's trail). Equips it if nothing is equipped. The caller saves.
+-- Returns whether the player owns it afterwards.
+function SpeedService.grant(player: Player, id: string): boolean
+	local s = record(player)
+	if not (s and SpeedConfig.BY_ID[id]) then
+		return false
+	end
+	if not owns(s, id) then
+		table.insert(s.owned, id)
+		if not s.on then
+			s.on = id
+		end
+		publish(player)
+		SpeedService.apply(player)
+	end
+	return true
 end
 
 local started = false

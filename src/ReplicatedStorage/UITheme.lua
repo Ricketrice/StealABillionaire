@@ -145,7 +145,7 @@ UITheme.Rarity = if V1
 		Legendary = rgb(236, 184, 76),
 		Secret = rgb(236, 98, 156),
 	}
-UITheme.RarityGlyph = { Common = "●", Rare = "◆", Epic = "▲", Legendary = "★", Secret = "✦" }
+UITheme.RarityGlyph = { Common = "●", Rare = "◆", Epic = "▲", Legendary = "★", Secret = "🌈" } -- (033: "✦" has no glyph in the V1 fonts)
 
 -- Type ------------------------------------------------------------------------------------------------
 UITheme.Fonts = if V1

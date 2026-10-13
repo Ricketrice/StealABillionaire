@@ -21,6 +21,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local BaseConfig = require(ReplicatedStorage:WaitForChild("BaseConfig"))
 local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local FxKit = require(ReplicatedStorage:WaitForChild("FxKit"))
 local ParadeConfig = require(ReplicatedStorage:WaitForChild("ParadeConfig"))
@@ -32,9 +33,14 @@ local J = ParadeConfig.Juice
 local T = UITheme.Colors
 local TAU = math.pi * 2
 local RANK = { Common = 1, Rare = 2, Epic = 3, Legendary = 4, Secret = 5 }
+local L = BaseConfig.Living
 
 local function juiceOn(): boolean
 	return ReplicatedStorage:GetAttribute("JuiceOn") == true
+end
+-- Living bases (Milestone 033, D25): placed workers do a job at their pad (published by BaseService).
+local function livingOn(): boolean
+	return ReplicatedStorage:GetAttribute("LivingOn") == true
 end
 local function cameraPos(): Vector3
 	local camera = workspace.CurrentCamera
@@ -379,6 +385,10 @@ type Placed = {
 	aura: ParticleEmitter?,
 	mine: boolean,
 	popAt: number,
+	job: string?, -- living bases (033): this worker's job loop, from its type
+	props: { BasePart }?, -- its job's props while near the camera
+	broom: { BasePart }?, -- (sweep) handle + brush, moved every frame
+	coinAt: number,
 }
 local placed: { [Model]: Placed } = {}
 local plots = workspace:WaitForChild("Hub", 30) and workspace.Hub:WaitForChild("Plots", 30)
@@ -400,6 +410,130 @@ local function nextMoveTime(): number
 	return os.clock() + J.MOVE_EVERY[1] + math.random() * (J.MOVE_EVERY[2] - J.MOVE_EVERY[1])
 end
 
+-- Living bases (033): job props ---------------------------------------------------------------------------------
+-- Client-only anchored parts in front of a working worker, made when it comes within PROP_RANGE of the camera and
+-- removed when it leaves (or with Low effects). Placed relative to its root, which stands still on the pad.
+local propFolder: Folder? = nil
+local function props(): Folder
+	if propFolder and propFolder.Parent then
+		return propFolder
+	end
+	local f = Instance.new("Folder")
+	f.Name = "BaseLifeLocal"
+	f.Parent = workspace
+	propFolder = f
+	return f
+end
+local function propPart(size: Vector3, cf: CFrame, color: Color3, material: Enum.Material?): BasePart
+	local part = Instance.new("Part")
+	part.Anchored, part.CanCollide, part.CanTouch, part.CanQuery = true, false, false, false
+	part.CastShadow = false
+	part.Size = size
+	part.CFrame = cf
+	part.Color = color
+	part.Material = material or Enum.Material.SmoothPlastic
+	part.TopSurface, part.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+	part.Parent = props()
+	return part
+end
+local function dropProps(p: Placed)
+	if p.props then
+		for _, part in p.props do
+			part:Destroy()
+		end
+	end
+	p.props, p.broom = nil, nil
+end
+-- Where the worker's feet are (the pad top), relative to its root.
+local function footY(model: Model, root: BasePart): number
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	return -((if humanoid then humanoid.HipHeight else 2) + root.Size.Y / 2)
+end
+local WOOD, STEEL, SCREEN = Color3.fromRGB(150, 104, 66), Color3.fromRGB(70, 74, 86), Color3.fromRGB(120, 210, 255)
+local function buildProps(p: Placed)
+	local root = p.model:FindFirstChild("HumanoidRootPart")
+	if not (root and root:IsA("BasePart")) then
+		return
+	end
+	local cf, feet = root.CFrame, footY(p.model, root)
+	local list = {}
+	if p.job == "laptop" then
+		local top = 0.3 -- desk top, just under the hands
+		table.insert(list, propPart(Vector3.new(0.35, top - feet, 0.35), cf * CFrame.new(0, (top + feet) / 2, -1.55), STEEL))
+		table.insert(list, propPart(Vector3.new(2.4, 0.16, 1.2), cf * CFrame.new(0, top, -1.55), WOOD))
+		table.insert(list, propPart(Vector3.new(1.3, 0.08, 0.85), cf * CFrame.new(0, top + 0.12, -1.5), STEEL))
+		local screen = cf * CFrame.new(0, top + 0.55, -1.95) * CFrame.Angles(0.25, 0, 0)
+		table.insert(list, propPart(Vector3.new(1.3, 0.85, 0.06), screen, STEEL))
+		table.insert(list, propPart(Vector3.new(1.15, 0.7, 0.02), screen * CFrame.new(0, 0, 0.04), SCREEN, Enum.Material.Neon))
+	elseif p.job == "sweep" then
+		local handle = propPart(Vector3.new(0.18, 0.18, 3.6), cf, WOOD)
+		local brush = propPart(Vector3.new(1.4, 0.32, 0.5), cf, Color3.fromRGB(240, 196, 70))
+		table.insert(list, handle)
+		table.insert(list, brush)
+		p.broom = { handle, brush }
+	end
+	p.props = list
+end
+-- (sweep) the broom from the hands down to the floor in front, swung by `swing` radians round the worker.
+local function broomCFrames(p: Placed, swing: number): (CFrame?, CFrame?)
+	local root = p.model:FindFirstChild("HumanoidRootPart")
+	if not (root and root:IsA("BasePart")) then
+		return nil, nil
+	end
+	local cf = root.CFrame * CFrame.Angles(0, swing, 0)
+	local feet = footY(p.model, root)
+	local hands = (cf * CFrame.new(0, 0.1, -1.1)).Position
+	local floor = (cf * CFrame.new(0, feet + 0.22, -3.1)).Position
+	local handle = CFrame.lookAt((hands + floor) / 2, floor)
+	local brush = CFrame.lookAt(floor, floor + cf.LookVector)
+	return handle, brush
+end
+-- Joint offsets of a job loop at time t (seconds, with the worker's own phase).
+local function jobOffsets(job: string, t: number): { [string]: CFrame }
+	if job == "laptop" then -- typing: arms forward to the desk, hands tapping, head down at the screen
+		local a, b = math.sin(t * 14) * 0.06, math.sin(t * 14 + 2) * 0.06
+		return {
+			LeftShoulder = CFrame.Angles(1.15 + a, 0, 0.12),
+			RightShoulder = CFrame.Angles(1.15 + b, 0, -0.12),
+			LeftElbow = CFrame.Angles(0.35, 0, 0),
+			RightElbow = CFrame.Angles(0.35, 0, 0),
+			Neck = CFrame.Angles(-0.28 + math.sin(t * 0.8) * 0.04, math.sin(t * 0.5) * 0.12, 0),
+			Root = CFrame.new(0, math.abs(math.sin(t * 1.6)) * 0.04, 0),
+		}
+	elseif job == "pushups" then -- lying face down, arms straight to the floor, body going up and down
+		local up = 0.5 + 0.5 * math.sin(t * 3.2)
+		return {
+			Root = CFrame.new(0, -1.55 + up * 0.45, 0) * CFrame.Angles(-1.4, 0, 0),
+			LeftShoulder = CFrame.Angles(1.4, 0, 0.1),
+			RightShoulder = CFrame.Angles(1.4, 0, -0.1),
+			LeftElbow = CFrame.Angles((1 - up) * 0.6, 0, 0),
+			RightElbow = CFrame.Angles((1 - up) * 0.6, 0, 0),
+			Neck = CFrame.Angles(0.7, 0, 0),
+		}
+	elseif job == "guard" then -- standing guard: wide stance, slow look left and right
+		local look = math.sin(t * 0.55)
+		return {
+			Root = CFrame.Angles(0, look * 0.35, 0) * CFrame.new(0, math.sin(t * 1.2) * 0.04, 0),
+			Neck = CFrame.Angles(0, math.sin(t * 0.55 + 0.9) * 0.35, 0),
+			LeftShoulder = CFrame.Angles(0.1, 0, -0.28),
+			RightShoulder = CFrame.Angles(0.1, 0, 0.28),
+			LeftHip = CFrame.Angles(0, 0, -0.08),
+			RightHip = CFrame.Angles(0, 0, 0.08),
+		}
+	elseif job == "sweep" then -- sweeping: arms down-forward on the broom, body twisting with the swing
+		local swing = math.sin(t * 2.6)
+		return {
+			Root = CFrame.Angles(0, swing * 0.32, 0) * CFrame.new(0, math.abs(swing) * 0.05, 0),
+			LeftShoulder = CFrame.Angles(0.85, 0, 0.18),
+			RightShoulder = CFrame.Angles(0.95, 0, -0.18),
+			LeftElbow = CFrame.Angles(0.25, 0, 0),
+			RightElbow = CFrame.Angles(0.25, 0, 0),
+			Neck = CFrame.Angles(-0.3, -swing * 0.2, 0),
+		}
+	end
+	return {}
+end
+
 local function stopPlaced(model: Model)
 	local p = placed[model]
 	if not p then
@@ -410,6 +544,7 @@ local function stopPlaced(model: Model)
 	if p.aura then
 		p.aura:Destroy()
 	end
+	dropProps(p)
 end
 
 local function startPlaced(model: Instance, plot: Instance, fresh: boolean)
@@ -431,6 +566,8 @@ local function startPlaced(model: Instance, plot: Instance, fresh: boolean)
 		moveAt = nextMoveTime(),
 		mine = plot:GetAttribute("OwnerUserId") == player.UserId,
 		popAt = os.clock() + math.random() * J.CASH_POP_EVERY,
+		job = L.JOBS[model:GetAttribute("Role") or ""],
+		coinAt = os.clock() + L.COIN_EVERY[1] + math.random() * (L.COIN_EVERY[2] - L.COIN_EVERY[1]),
 	}
 	placed[model] = p
 	if fresh and juiceOn() and os.clock() - startedAt > 3 then
@@ -496,7 +633,13 @@ local function moveOffsets(move: string, t: number): { [string]: CFrame }
 	return {}
 end
 
+local brooms: { BasePart } = {}
+local broomTargets: { CFrame } = {}
 local function stepPlaced(now: number, camPos: Vector3)
+	local juice, living, low = juiceOn(), livingOn(), FxKit.low()
+	local range = if living then L.RANGE else J.IDLE_RANGE
+	table.clear(brooms)
+	table.clear(broomTargets)
 	for model, p in placed do
 		if model.Parent == nil then
 			stopPlaced(model)
@@ -505,7 +648,7 @@ local function stepPlaced(now: number, camPos: Vector3)
 		local pivot = model:GetPivot().Position
 		local distance = (pivot - camPos).Magnitude
 		-- Aura: Epic+ only near the camera.
-		local wantAura = p.rank >= 3 and distance < J.AURA_RANGE
+		local wantAura = juice and p.rank >= 3 and distance < J.AURA_RANGE
 		if wantAura and not p.aura then
 			local torso = model:FindFirstChild("UpperTorso")
 			if torso and torso:IsA("BasePart") then
@@ -516,7 +659,7 @@ local function stepPlaced(now: number, camPos: Vector3)
 			p.aura = nil
 		end
 		-- Cash pops over your own working workers.
-		if p.mine and now >= p.popAt then
+		if juice and p.mine and now >= p.popAt then
 			p.popAt = now + J.CASH_POP_EVERY
 			local income = model:GetAttribute("Income")
 			local head = model:FindFirstChild("Head")
@@ -524,7 +667,21 @@ local function stepPlaced(now: number, camPos: Vector3)
 				FxKit.text(head, "+" .. CashFormat.format(income * J.CASH_POP_EVERY), T.Cash, 2.5)
 			end
 		end
-		if distance > J.IDLE_RANGE then
+		-- Living bases: the job's props near the camera, and a coin pop now and then on your own workers.
+		local working = living and not low and p.job ~= nil and distance < range
+		if working and not p.props then
+			buildProps(p)
+		elseif not working and p.props then
+			dropProps(p)
+		end
+		if living and p.mine and now >= p.coinAt then
+			p.coinAt = now + L.COIN_EVERY[1] + math.random() * (L.COIN_EVERY[2] - L.COIN_EVERY[1])
+			local head = model:FindFirstChild("Head")
+			if head and distance < range and not low then
+				FxKit.coins((head :: BasePart).Position + Vector3.new(0, 1, 0), 3)
+			end
+		end
+		if distance > range then
 			if next(jointState) then
 				for _, joint in p.joints do
 					if jointState[joint] then
@@ -539,10 +696,24 @@ local function stepPlaced(now: number, camPos: Vector3)
 		end
 		local j = p.joints
 		local t = now + p.phase
-		local offsets: { [string]: CFrame } = {
-			Root = CFrame.new(0, math.abs(math.sin(t * 2.4)) * 0.18, 0),
-			Neck = CFrame.Angles(math.sin(t * 0.7) * 0.08, math.sin(t * 0.45) * 0.45, 0),
-		}
+		local offsets: { [string]: CFrame }
+		if working then
+			offsets = jobOffsets(p.job :: string, t)
+			if p.broom then
+				local handle, brush = broomCFrames(p, math.sin(t * 2.6) * 0.32)
+				if handle and brush then
+					table.insert(brooms, p.broom[1])
+					table.insert(broomTargets, handle)
+					table.insert(brooms, p.broom[2])
+					table.insert(broomTargets, brush)
+				end
+			end
+		else
+			offsets = {
+				Root = CFrame.new(0, math.abs(math.sin(t * 2.4)) * 0.18, 0),
+				Neck = CFrame.Angles(math.sin(t * 0.7) * 0.08, math.sin(t * 0.45) * 0.45, 0),
+			}
+		end
 		-- Celebration hop right after being placed.
 		if p.hopStart then
 			local h = (now - p.hopStart) / 0.6
@@ -550,12 +721,14 @@ local function stepPlaced(now: number, camPos: Vector3)
 				p.hopStart = nil
 			else
 				local up = math.sin(h * math.pi)
-				offsets.Root = CFrame.new(0, up * 2.5, 0) * CFrame.Angles(0, h * TAU, 0)
-				offsets.LeftShoulder = CFrame.Angles(0, 0, -up * 2.6)
-				offsets.RightShoulder = CFrame.Angles(0, 0, up * 2.6)
+				offsets = {
+					Root = CFrame.new(0, up * 2.5, 0) * CFrame.Angles(0, h * TAU, 0),
+					LeftShoulder = CFrame.Angles(0, 0, -up * 2.6),
+					RightShoulder = CFrame.Angles(0, 0, up * 2.6),
+				}
 			end
-		elseif p.move and now >= p.moveAt and not p.moveStart then
-			p.moveStart = now
+		elseif juice and not working and p.move and now >= p.moveAt and not p.moveStart then
+			p.moveStart = now -- (personality moves only while idle: never in the middle of a job)
 		end
 		if p.moveStart and p.move then
 			local length = MOVE_LENGTH[p.move] or 1
@@ -583,6 +756,9 @@ local function stepPlaced(now: number, camPos: Vector3)
 				end
 			end
 		end
+	end
+	if #brooms > 0 then
+		workspace:BulkMoveTo(brooms, broomTargets, Enum.BulkMoveMode.FireCFrameChanged)
 	end
 end
 
@@ -614,13 +790,16 @@ end
 
 -- After the Animator has posed everything this frame.
 RunService.PreSimulation:Connect(function()
-	if not juiceOn() then
+	local juice = juiceOn()
+	if not (juice or livingOn()) then
 		return
 	end
 	local now = os.clock()
 	local camPos = cameraPos()
 	stepPlaced(now, camPos)
-	stepCarried(now, camPos)
+	if juice then
+		stepCarried(now, camPos)
+	end
 end)
 
 -- Steal: "SAFE!" when you bring a stolen worker home ------------------------------------------------------------
@@ -653,15 +832,20 @@ local function refresh()
 	local on = juiceOn()
 	gui.Enabled = on
 	fxButton.Visible = on and not UITheme.v1 -- (the V1 look has it in Settings instead)
-	if not on then
-		for model in placed do
-			local p = placed[model]
+	local living = livingOn()
+	for _, p in placed do
+		if not (on or living) then
 			releaseAll(p.joints)
-			if p.aura then
-				p.aura:Destroy()
-				p.aura = nil
-			end
 		end
+		if not on and p.aura then
+			p.aura:Destroy()
+			p.aura = nil
+		end
+		if not living then
+			dropProps(p)
+		end
+	end
+	if not on then
 		for model in carried do
 			stopCarried(model)
 		end
@@ -674,5 +858,6 @@ local function refresh()
 	end
 end
 ReplicatedStorage:GetAttributeChangedSignal("JuiceOn"):Connect(refresh)
+ReplicatedStorage:GetAttributeChangedSignal("LivingOn"):Connect(refresh)
 refresh()
 UserInputService.LastInputTypeChanged:Connect(showFxSetting)

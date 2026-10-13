@@ -106,19 +106,27 @@ function WorkerInventory.count(player: Player): (number, number, number, number)
 	return stored, onStations, carried, stored + onStations + carried
 end
 
--- Extra storage slots a player has (Milestone 026 Upgrade Office). 0 unless a system sets a bonus.
-local slotBonus: ((Player) -> number)? = nil
+-- Extra storage slots a player has: the sum of every system's bonus (Milestone 026 Upgrade Office "hub", 033 Extra
+-- Slots pass "pass"). 0 unless a system sets one.
+local slotBonuses: { [string]: (Player) -> number } = {}
 local function slotsFor(player: Player): number
-	local bonus = if slotBonus then slotBonus(player) else 0
-	return INVENTORY_SLOTS + math.max(0, math.floor(bonus))
+	local bonus = 0
+	for _, fn in slotBonuses do
+		bonus += math.max(0, math.floor(fn(player)))
+	end
+	return INVENTORY_SLOTS + bonus
 end
--- Extra stations a player has (Milestone 026 Upgrade Office). 0 unless a system sets a bonus; that
--- system also builds the extra pads, and `stationPrepare` lets it do so before workers are rebuilt.
-local stationBonus: ((Player) -> number)? = nil
-local stationPrepare: ((Player, Model) -> ())? = nil
+-- Extra stations a player has: the sum of every system's bonus (Milestone 026 Upgrade Office "hub", 033 base pads
+-- "pads"). The system that gives a bonus also builds its pads, and its `prepare` lets it do so before workers are
+-- rebuilt.
+local stationBonuses: { [string]: (Player) -> number } = {}
+local stationPrepares: { [string]: (Player, Model) -> () } = {}
 local function stationsFor(player: Player): number
-	local bonus = if stationBonus then stationBonus(player) else 0
-	return STATION_SLOTS + math.max(0, math.floor(bonus))
+	local bonus = 0
+	for _, fn in stationBonuses do
+		bonus += math.max(0, math.floor(fn(player)))
+	end
+	return STATION_SLOTS + bonus
 end
 
 local function push(player: Player)
@@ -328,8 +336,8 @@ local function storeCarried(player: Player, data: Data): (boolean, string)
 	if not (npc and record and record.loc == "carried") then
 		return false, "You're not carrying a worker."
 	end
-	if WorkerInventory.count(player) >= INVENTORY_SLOTS then
-		return false, ("Your inventory is full (%d/%d). Place it on a station instead."):format(INVENTORY_SLOTS, INVENTORY_SLOTS)
+	if WorkerInventory.count(player) >= slotsFor(player) then
+		return false, ("Your inventory is full (%d/%d). Place it on a station instead."):format(slotsFor(player), slotsFor(player))
 	end
 	local detached = NPCCarry.detach(player) -- ends the carry and releases the steal reservation
 	if detached then
@@ -496,8 +504,8 @@ local function onLoaded(player: Player, data: Data)
 	end
 	local plot = PlotService.getPlot(player)
 	if plot and player.Parent and PlayerData.get(player) == data then
-		if stationPrepare then
-			stationPrepare(player, plot) -- must not yield
+		for _, prepare in stationPrepares do
+			prepare(player, plot) -- must not yield
 		end
 		local displaced = {}
 		for _, w in data.workers do
@@ -533,14 +541,31 @@ function WorkerInventory.setBeforePlaced(hook: (Player, Model, BasePart) -> ())
 	beforePlaced = hook
 end
 
--- `bonus(player)` = extra storage slots for that player (Milestone 026 Upgrade Office).
-function WorkerInventory.setSlotBonus(bonus: ((Player) -> number)?)
-	slotBonus = bonus
+-- `bonus(player)` = extra storage slots for that player, from the system `key` (default "hub", the 026 Upgrade Office).
+function WorkerInventory.setSlotBonus(bonus: ((Player) -> number)?, key: string?)
+	slotBonuses[key or "hub"] = bonus :: any
 end
--- Extra stations: how many a player has beyond STATION_SLOTS, and what builds their pads on the
--- player's plot just before saved workers are stood on them.
-function WorkerInventory.setStationBonus(bonus: ((Player) -> number)?, prepare: ((Player, Model) -> ())?)
-	stationBonus, stationPrepare = bonus, prepare
+-- Extra stations from the system `key` (default "hub"): how many a player has beyond STATION_SLOTS, and what builds
+-- their pads on the player's plot just before saved workers are stood on them.
+function WorkerInventory.setStationBonus(bonus: ((Player) -> number)?, prepare: ((Player, Model) -> ())?, key: string?)
+	stationBonuses[key or "hub"] = bonus :: any
+	stationPrepares[key or "hub"] = prepare :: any
+end
+
+-- Storage slots and stations this player has now (with every bonus).
+function WorkerInventory.capacity(player: Player): (number, number)
+	return slotsFor(player), stationsFor(player)
+end
+
+-- The model of a worker of this player that stands on one of their stations, if any.
+function WorkerInventory.placedModel(player: Player, uid: string): Model?
+	local plot = PlotService.getPlot(player)
+	return if plot then findPlacedModel(plot, uid) else nil
+end
+
+-- Why this worker can't be changed right now (e.g. it is being stolen), or nil.
+function WorkerInventory.busyReason(player: Player, record: WorkerRecord): string?
+	return if busyCheck then busyCheck(player, record) else nil
 end
 
 -- Whether the player's loaded workers have been indexed yet (take/give work from then on).

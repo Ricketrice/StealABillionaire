@@ -13,6 +13,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local BaseConfig = require(ReplicatedStorage:WaitForChild("BaseConfig"))
 local HubConfig = require(ReplicatedStorage:WaitForChild("HubConfig"))
 local CashService = require(script.Parent:WaitForChild("CashService"))
 local HubBase = require(script.Parent:WaitForChild("HubBase"))
@@ -142,7 +143,7 @@ function HubShops.buildDecor(player: Player)
 	local mine = Instance.new("Folder")
 	mine.Name = plot.Name
 	local base = CFrame.new(floor.Position.X, floor.Position.Y + floor.Size.Y / 2, floor.Position.Z) * (floor.CFrame - floor.CFrame.Position)
-	for index, spot in HubConfig.DECOR_SPOTS do
+	for index, spot in (if BaseConfig.on("PADS_ENABLED") then BaseConfig.DECOR_SPOTS else HubConfig.DECOR_SPOTS) do -- (033: clear of the new pads)
 		local id = hub.decor[tostring(index)]
 		local build = if hub.owned[id] then builders[id] else nil
 		if build then
@@ -176,7 +177,7 @@ local function upgradeLevel(player: Player, key: string): number
 	return if level == level then math.max(0, math.floor(level)) else 0
 end
 local function extraStations(player: Player): number
-	if not upgradesOpen() then
+	if not upgradesOpen() or BaseConfig.on("PADS_ENABLED") then -- (033: base pads replace the Extra Station upgrade)
 		return 0
 	end
 	return math.min(upgradeLevel(player, "stations"), #items["upgrade:stations"].levels, #HubConfig.EXTRA_STATION_SPOTS)
@@ -292,6 +293,9 @@ function HubShops.buy(player: Player, itemId: any, arg: any): (boolean, string?)
 	end
 	if not nearShop(player, item.shop) then
 		return false, "Come to the shop to buy that."
+	end
+	if item.id == "upgrade:stations" and BaseConfig.on("PADS_ENABLED") then
+		return false, "New pads are bought at your base now." -- (033: base pads replace this upgrade)
 	end
 	local price, apply
 	if item.kind == "upgrade" then

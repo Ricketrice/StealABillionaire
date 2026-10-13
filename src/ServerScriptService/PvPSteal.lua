@@ -27,6 +27,7 @@ local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 local PlotService = require(script.Parent:WaitForChild("PlotService"))
 local PvPBase = require(script.Parent:WaitForChild("PvPBase"))
 local PvPTransfer = require(script.Parent:WaitForChild("PvPTransfer"))
+local StealGuard = require(script.Parent:WaitForChild("StealGuard"))
 local WorkerInventory = require(script.Parent:WaitForChild("WorkerInventory"))
 
 local PvPSteal = {}
@@ -278,6 +279,7 @@ local function finalize(theft, id: string, record: any, info: any)
 	PvPBase.event(thief, "StealEnded", ended)
 	PvPBase.event(owner, "TheftEnded", ended)
 	changed:Fire("delivered", ended)
+	StealGuard.onDelivered(thief, theft.ownerId)
 
 	-- Both saves follow; the journal entries are cleared as each one lands (see onSaved in start).
 	task.spawn(function()
@@ -433,10 +435,17 @@ function PvPSteal.tryBegin(thief: Player, npc: Model): (boolean, string?)
 		return false, "That worker can't be stolen right now."
 	end
 	if PvPBase.isProtected(owner.UserId) then
+		if PvPBase.isBubble(owner.UserId) then
+			return false, ("%s's base has a safety bubble right now."):format(owner.DisplayName)
+		end
 		return false, ("%s is new here and protected for now."):format(owner.DisplayName)
 	end
 	if PvPBase.isLocked(owner.UserId) then
 		return false, ("%s's base is locked."):format(owner.DisplayName)
+	end
+	local unfair = StealGuard.check(thief, owner, uid) -- (033 fair stealing: favourite, same base, victim cap)
+	if unfair then
+		return false, unfair
 	end
 	local room, why = WorkerInventory.canClaim(thief)
 	if not room then
@@ -658,6 +667,7 @@ function PvPSteal.start()
 		return
 	end
 	started = true
+	StealGuard.start()
 
 	for _, plot in PvPBase.plots():GetChildren() do
 		local placed = plot:FindFirstChild("PlacedNPCs")

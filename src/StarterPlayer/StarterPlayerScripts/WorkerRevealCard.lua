@@ -391,22 +391,23 @@ task.spawn(function()
 	end
 end)
 
--- pooled sparkles (reused by every burst)
-local sparkles: { TextLabel } = {}
+-- pooled confetti (reused by every burst). Plain coloured pieces, no font glyph: "✦" has no glyph in the
+-- V1 fonts and drew as black boxes (033 fix).
+local sparkles: { Frame } = {}
 for i = 1, SPARKLES do
-	local s = UIKit.text({
-		Name = "Sparkle",
-		Text = "✦",
-		Role = "Heading",
-		TextSize = 20,
-		AlignX = Enum.TextXAlignment.Center,
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Size = UDim2.fromOffset(34, 34),
-		Truncate = false,
-		Parent = holder,
-	})
+	local s = Instance.new("Frame")
+	s.Name = "Sparkle"
+	s.AnchorPoint = Vector2.new(0.5, 0.5)
+	s.Size = UDim2.fromOffset(12, 12)
+	s.BorderSizePixel = 0
 	s.ZIndex = 10
 	s.Visible = false
+	if i % 2 == 0 then
+		local round = Instance.new("UICorner")
+		round.CornerRadius = UDim.new(0.5, 0)
+		round.Parent = s
+	end
+	s.Parent = holder
 	sparkles[i] = s
 end
 
@@ -500,16 +501,17 @@ local function burst(count: number, color: Color3)
 		local angle = (i / n) * math.pi * 2 + rng:NextNumber(-0.3, 0.3)
 		local dist = rng:NextNumber(150, 260)
 		s.Position = UDim2.new(0.5, 0, 0, STAGE_H * 0.5)
-		s.TextColor3 = if i % 3 == 0 then WHITE else color
-		s.TextSize = rng:NextInteger(16, 30)
-		s.TextTransparency = 0
-		s.Rotation = 0
+		s.BackgroundColor3 = if i % 3 == 0 then WHITE else color
+		local size = rng:NextInteger(8, 16)
+		s.Size = if i % 2 == 0 then UDim2.fromOffset(size, size) else UDim2.fromOffset(size, math.floor(size * 0.55))
+		s.BackgroundTransparency = 0
+		s.Rotation = rng:NextInteger(0, 90)
 		s.Visible = true
-		tw(
-			s,
-			rng:NextNumber(0.6, 1),
-			{ Position = UDim2.new(0.5, math.cos(angle) * dist, 0, STAGE_H * 0.5 + math.sin(angle) * dist), TextTransparency = 1, Rotation = rng:NextInteger(-120, 120) }
-		)
+		tw(s, rng:NextNumber(0.6, 1), {
+			Position = UDim2.new(0.5, math.cos(angle) * dist, 0, STAGE_H * 0.5 + math.sin(angle) * dist),
+			BackgroundTransparency = 1,
+			Rotation = s.Rotation + rng:NextInteger(-180, 180),
+		})
 	end
 end
 

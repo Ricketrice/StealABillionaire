@@ -37,7 +37,7 @@ UIStyle.Rarity = {
 	Legendary = Color3.fromRGB(236, 184, 76),
 	Secret = Color3.fromRGB(236, 98, 156),
 }
-UIStyle.RarityGlyph = { Common = "●", Rare = "◆", Epic = "▲", Legendary = "★", Secret = "✦" }
+UIStyle.RarityGlyph = { Common = "●", Rare = "◆", Epic = "▲", Legendary = "★", Secret = "🌈" } -- (033: "✦" has no glyph in the V1 fonts)
 
 UIStyle.Stats = {
 	Attack = Color3.fromRGB(232, 120, 104),

@@ -12,14 +12,17 @@
 -- cards on screen and all released when the panel closes. Nothing renders while closed.
 -- Display and requests only: the server validates every action, then sends a snapshot + toast.
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
+local BaseConfig = require(ReplicatedStorage:WaitForChild("BaseConfig"))
 local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local InventoryConfig = require(ReplicatedStorage:WaitForChild("InventoryConfig"))
 local UIKit = require(ReplicatedStorage:WaitForChild("UIKit"))
 local UIStyle = require(ReplicatedStorage:WaitForChild("UIStyle"))
+local UITheme = require(ReplicatedStorage:WaitForChild("UITheme"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local WorkerPreview = require(ReplicatedStorage:WaitForChild("WorkerPreview"))
 local WorkerState = require(ReplicatedStorage:WaitForChild("WorkerState"))
@@ -28,6 +31,19 @@ local C, S = UIStyle.Colors, UIStyle.Space
 -- Milestone 029 (V1 look only): sort by rarity or income, and favourite stars (saved on the server,
 -- favourites first within each section).
 local V1 = UIStyle.v1 == true
+local player = Players.LocalPlayer
+
+-- Worker levels (033, BaseConfig): cards show the type icon, $/s at the worker's level and its level.
+local function levelsOn(): boolean
+	return BaseConfig.on("LEVELS_ENABLED")
+end
+local function incomeOf(entry: any): number
+	local worker = WorkerCatalogue.get(entry.id)
+	if not worker then
+		return 0
+	end
+	return if (entry.level or 1) > 1 then BaseConfig.levelIncome(worker.income, entry.level) else worker.income
+end
 local sortMode = "rarity" -- or "income"
 local favs: { [string]: boolean } = {}
 local CAPACITY = InventoryConfig.INVENTORY_SLOTS + InventoryConfig.STATION_SLOTS
@@ -163,7 +179,7 @@ grids.inventory.empty.Text = "Storage is empty. Steal workers on Main Street, th
 -- whole-inventory empty state
 local emptyAll = UIKit.make("Frame", { Name = "EmptyAll", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 150), LayoutOrder = 0, Visible = false, Parent = scroll })
 UIKit.text({
-	Text = "✦",
+	Text = "★",
 	Role = "Display",
 	TextSize = 40,
 	Color = C.Gold,
@@ -249,6 +265,20 @@ dAction, dActionCtl = UIKit.button({
 	Parent = detailContent,
 })
 
+-- (033) Level up, above the action button, while levels are on and shown to this player (D28)
+local dLevelUp, dLevelUpCtl
+dLevelUp, dLevelUpCtl = UIKit.button({
+	Name = "LevelUp",
+	Kind = "Primary",
+	Text = "Level up",
+	Size = UDim2.new(1, -24, 0, 48),
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -64),
+	Parent = detailContent,
+})
+dLevelUp.Visible = false
+local levelBusy = false
+
 -- Cards -------------------------------------------------------------------------------------------
 local cards: { [string]: any } = {} -- uid -> card controller
 local slots: { any } = {} -- empty station placeholders by station index
@@ -306,6 +336,28 @@ local function newCard(uid: string)
 	local locChip, locLabel = UIKit.chip({ Height = 20, AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -6), Parent = stage })
 	local name =
 		UIKit.text({ Name = "WorkerName", Role = "Heading", TextSize = 15, Position = UDim2.fromOffset(10, PREVIEW_H + 12), Size = UDim2.new(1, -20, 0, 20), Parent = card })
+	-- (033) type icon + level, bottom-left of the preview, while levels are on
+	local typeRow = UIKit.make("Frame", {
+		Name = "TypeLevel",
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 6, 1, -4),
+		Size = UDim2.fromOffset(84, 26),
+		Visible = false,
+		ZIndex = 3,
+		Parent = stage,
+	})
+	local typeIcon: GuiObject? = nil
+	local levelLabel = UIKit.text({
+		Name = "Level",
+		Role = "Small",
+		Font = UIStyle.FontBold,
+		Color = C.Gold,
+		Position = UDim2.fromOffset(28, 0),
+		Size = UDim2.fromOffset(56, 26),
+		Parent = typeRow,
+	})
+	levelLabel.ZIndex = 3
 	local star = nil
 	if V1 then
 		star = UIKit.make("TextButton", {
@@ -324,6 +376,16 @@ local function newCard(uid: string)
 		UIStyle.outline(star, C.Outline, 2)
 		star.Activated:Connect(function()
 			local on = not favs[uid]
+			if on and ReplicatedStorage:GetAttribute("FairStealOn") == true then
+				-- (033 fair stealing: one favourite, which can't be stolen; the star moves to this one)
+				table.clear(favs)
+				for _, other in cards do
+					if other ~= ctl then
+						other.paintStar()
+					end
+				end
+				UITheme.toast("success", "Favourite", "Your favourite worker can't be stolen.")
+			end
 			favs[uid] = if on then true else nil
 			ctl.paintStar()
 			ReplicatedStorage:WaitForChild("RewardsAction"):FireServer("Favourite", uid, on)
@@ -394,7 +456,15 @@ local function newCard(uid: string)
 			else color:Lerp(C.PanelRaised, 0.6)
 		ctl.paintBorder()
 		name.Text = worker and worker.name or entry.id
-		local rate = "+" .. CashFormat.format(worker and worker.income or 0) .. "/s"
+		typeRow.Visible = levelsOn() and worker ~= nil
+		if worker and typeRow.Visible and (not typeIcon or typeIcon:GetAttribute("Icon") ~= WorkerCatalogue.ROLE_ICONS[worker.role]) then
+			if typeIcon then
+				typeIcon:Destroy()
+			end
+			typeIcon = UITheme.image({ Icon = WorkerCatalogue.ROLE_ICONS[worker.role], Size = UDim2.fromOffset(26, 26), ZIndex = 3, Parent = typeRow })
+		end
+		levelLabel.Text = "Lv " .. tostring(entry.level or 1)
+		local rate = "+" .. CashFormat.format(incomeOf(entry)) .. "/s"
 		income.Text = if entry.loc == "station"
 			then ('<font color="#%s">%s</font>'):format(C.Cash:ToHex(), rate)
 			else ('<font color="#%s">%s</font> <font color="#%s">when placed</font>'):format(C.TextMuted:ToHex(), rate, C.TextDim:ToHex())
@@ -452,11 +522,28 @@ local function paintDetail()
 	dRole.Text = worker and worker.role or "?"
 	local loc = LOC[entry.loc] or LOC.inventory
 	dLoc.Text, dLoc.TextColor3 = (if entry.loc == "station" and entry.station then loc.text .. " · STATION " .. entry.station else loc.text), loc.color
-	local rate = "+" .. CashFormat.format(worker and worker.income or 0) .. "/s"
+	local rate = "+" .. CashFormat.format(incomeOf(entry)) .. "/s"
 	dIncome.Text = if entry.loc == "station"
 		then ('<font color="#%s">%s</font>  <font color="#%s" size="13">earning now</font>'):format(C.Cash:ToHex(), rate, C.TextMuted:ToHex())
 		else ('<font color="#%s">%s</font>  <font color="#%s" size="13">once on a station</font>'):format(C.TextMuted:ToHex(), rate, C.TextDim:ToHex())
 	dLevel.Text = ("Level %d  ·  %s tier"):format(entry.level or 1, tostring(entry.tier or "Normal"))
+	local level = entry.level or 1
+	local cost = worker and BaseConfig.levelCost(worker.income, level)
+	local canLevel = levelsOn() and player:GetAttribute("LevelsShown") == true and worker ~= nil and entry.loc ~= "carried"
+	dLevelUp.Visible = canLevel
+	dInfo.Size = if canLevel then UDim2.new(1, 0, 0.56, -118) else UDim2.new(1, 0, 0.56, -60)
+	if canLevel and worker then
+		if cost then
+			local next = BaseConfig.levelIncome(worker.income, level + 1) - incomeOf(entry)
+			dLevel.Text = ("Level %d/%d  ·  next level +%s/s"):format(level, BaseConfig.MAX_LEVEL, if next % 1 == 0 then tostring(next) else ("%.1f"):format(next))
+			dLevelUpCtl.setText("Level up  " .. CashFormat.format(cost))
+			dLevelUpCtl.setEnabled(not levelBusy and (player:GetAttribute("Cash") or 0) >= cost, if levelBusy then "…" else "Need " .. CashFormat.format(cost))
+		else
+			dLevel.Text = ("Level %d  ·  top level"):format(level)
+			dLevelUpCtl.setText("Top level")
+			dLevelUpCtl.setEnabled(false, "Top level")
+		end
+	end
 	for _, s in statBars do
 		local v = worker and worker[s.key] or 0
 		s.label.Text = s.short .. "  " .. v
@@ -528,6 +615,28 @@ dAction.Activated:Connect(function()
 end)
 backButton.Activated:Connect(function()
 	selectWorker(nil)
+end)
+dLevelUp.Activated:Connect(function()
+	local uid = selectedUid
+	local request = ReplicatedStorage:FindFirstChild("BaseRequest") :: RemoteFunction?
+	if not (uid and request and dLevelUp.Active) or levelBusy then
+		return
+	end
+	levelBusy = true
+	paintDetail()
+	pcall(function()
+		request:InvokeServer("LevelUp", uid) -- the inventory snapshot that follows repaints the card
+	end)
+	levelBusy = false
+	paintDetail()
+end)
+player:GetAttributeChangedSignal("Cash"):Connect(function()
+	if dLevelUp.Visible then
+		paintDetail()
+	end
+end)
+player:GetAttributeChangedSignal("LevelsShown"):Connect(function()
+	paintDetail()
 end)
 
 -- Preview visibility: only cards inside (or just beyond) the visible list get a live 3D preview.

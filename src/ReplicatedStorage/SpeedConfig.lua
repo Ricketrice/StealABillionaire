@@ -30,10 +30,21 @@ SpeedConfig.TRAILS = {
 	{ id = "gold", name = "Gold Rush Trail", icon = "trail_gold", boost = 0.30, price = 1000000, colour = { 255, 190, 30 } },
 }
 
+-- Trails that can't be bought with cash (033): they come with a pack (ProductConfig). Looks only: never faster than
+-- the cash trail with the same boost. Shown in the Trails tab once owned.
+SpeedConfig.EXCLUSIVE = {
+	{ id = "starter", name = "Starter Sparkle", icon = "sparkle", boost = 0.05, colour = { 255, 160, 235 }, exclusive = true },
+}
+
 SpeedConfig.BY_ID = {}
 for order, trail in SpeedConfig.TRAILS do
 	(trail :: any).order = order
 	SpeedConfig.BY_ID[trail.id] = trail
+end
+for order, trail in SpeedConfig.EXCLUSIVE do
+	(trail :: any).order = #SpeedConfig.TRAILS + order
+	SpeedConfig.BY_ID[trail.id] = trail
+	assert(trail.boost <= SpeedConfig.TRAILS[1].boost, trail.id .. ": a pack trail is never faster than the cheapest cash trail")
 end
 
 -- Boost for an equipped trail id (nil = none), capped.
