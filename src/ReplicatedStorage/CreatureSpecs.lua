@@ -5,7 +5,9 @@
 -- place clones: wander, carry, pad, parade reveal, Index, reveal card, inventory). Ids, rarities, odds and income
 -- live in WorkerCatalogue and are never set here; this file only says how a creature looks.
 --
--- Body = the R15 MysteryNPC rig, recoloured. A prop is a part (or a Blender mesh master from
+-- Body = the classic Roblox NOOB on the R15 MysteryNPC rig (owner LOOK RULE): yellow head + smile face, smooth solid-colour
+-- block torso/arms/legs (the R15 parts become plain blocks), no hair, no skin tones; `skin` is ignored for noobs. Variety =
+-- outfit colours, hat, twist. Non-humanoids set `own = true` (or `hideBody`) and keep their own recoloured shape. A prop is a part (or a Blender mesh master from
 -- ServerStorage.Imports035) welded to a body part, in that part's own space (+X right, +Y up, -Z forward).
 --   anim  = idle motion of the prop, played on the client near the player (CreatureClient):
 --     swing  rotate about `axis` by +-amp degrees (around `pivot`, body-part space)
@@ -44,6 +46,7 @@ export type Spec = {
 	props: { Prop },
 	fx: { Fx }?,
 	light: Color3?,
+	own: boolean?, -- non-humanoid (fish, owl, snail, newt, golem): keeps the recoloured R15 body instead of the noob
 	hideBody: boolean?, -- hide the R15 body (props make the whole creature)
 	halo: Color3?, -- spinning ring on the ground
 	sound: string?,
@@ -446,6 +449,7 @@ local TEAL, NAVY, PEARL, SAND = rgb(40, 170, 180), rgb(30, 70, 120), rgb(250, 24
 local GLASS = Enum.Material.Glass
 
 CreatureSpecs.bubble_fish = { -- Bubble Fish (C): diver in a goldfish-bowl helmet, blows bubbles
+	own = true,
 	skin = SKIN,
 	outfit = outfit({ top = TEAL, waist = NAVY, arms = TEAL, legs = NAVY, feet = rgb(255, 150, 40) }),
 	props = {
@@ -488,6 +492,7 @@ CreatureSpecs.hermit_porter = { -- Hermit Porter (C): a shell backpack stacked w
 }
 
 CreatureSpecs.coral_snail = { -- Coral Snail (C): coral shell, eye stalks on its hat
+	own = true,
 	skin = rgb(255, 180, 190),
 	outfit = outfit({ top = rgb(255, 160, 170), waist = rgb(240, 130, 150), arms = rgb(255, 180, 190), legs = rgb(240, 130, 150), feet = rgb(220, 110, 130) }),
 	props = {
@@ -835,6 +840,7 @@ CreatureSpecs.butler_barnaby = { -- Candle Imp (C): a candle with a flame on its
 }
 
 CreatureSpecs.caddie_gus = { -- Ember Newt (C): a newt with a tail lantern that breathes tiny flame puffs
+	own = true,
 	skin = rgb(255, 150, 70),
 	outfit = outfit({ top = rgb(255, 130, 50), waist = rgb(200, 90, 40), arms = rgb(255, 150, 70), legs = rgb(200, 90, 40), feet = rgb(150, 70, 30) }),
 	props = {
@@ -939,6 +945,7 @@ CreatureSpecs.bookling = { -- Bookling (C): a spellbook that chomps
 }
 
 CreatureSpecs.polo_pro_penny = { -- Ember Owl (R): burning quill, big eyes, flapping wings
+	own = true,
 	skin = rgb(190, 140, 90),
 	outfit = outfit({ top = rgb(150, 100, 60), waist = rgb(120, 80, 50), arms = rgb(150, 100, 60), legs = rgb(120, 80, 50), feet = rgb(255, 170, 60) }),
 	props = {
@@ -999,6 +1006,7 @@ CreatureSpecs.chef_pierre = { -- Fire Apprentice (R): oversized hat, flames from
 }
 
 CreatureSpecs.bodyguard_boris = { -- Rune Golem (E): stone giant with glowing runes
+	own = true,
 	skin = STONE,
 	outfit = outfit({ top = rgb(120, 118, 130), waist = rgb(100, 98, 110), arms = STONE, legs = rgb(100, 98, 110), feet = rgb(90, 88, 100) }),
 	props = {

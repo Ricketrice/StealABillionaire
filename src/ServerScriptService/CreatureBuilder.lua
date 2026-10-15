@@ -21,6 +21,7 @@ CreatureBuilder.TAG = "Creature"
 local PROPS_FOLDER = "CreatureProps"
 
 local rad = math.rad
+local NOOB_YELLOW = Color3.fromRGB(245, 205, 48)
 
 local SPRITES = {
 	spark = "rbxasset://textures/particles/sparkles_main.dds",
@@ -185,10 +186,55 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		end
 	end
 
-	-- body colours
+	-- Noob body (owner LOOK RULE): the R15 meshes become plain blocks of the same size and name (same joints, same
+	-- part count), yellow head, solid colours from the outfit, never a skin tone. Non-humanoids keep their R15 body.
+	local noob = not spec.own and not spec.hideBody
+	if noob then
+		local joints = {}
+		for _, d in model:GetDescendants() do
+			if d:IsA("JointInstance") and d.Part0 and d.Part1 then
+				table.insert(joints, { d, d.Part0.Name, d.Part1.Name })
+			end
+		end
+		for _, old in model:GetChildren() do
+			if old:IsA("MeshPart") and old.Name ~= "Head" and old.Name ~= "HumanoidRootPart" then
+				local p = Instance.new("Part")
+				p.Name, p.Size, p.CFrame = old.Name, old.Size, old.CFrame
+				p.CanCollide, p.CanTouch, p.CanQuery, p.Massless, p.Anchored = old.CanCollide, old.CanTouch, old.CanQuery, old.Massless, old.Anchored
+				p.TopSurface, p.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+				for _, c in old:GetChildren() do
+					c.Parent = p
+				end
+				p.Parent = model
+				old:Destroy()
+			end
+		end
+		for _, j in joints do
+			local a, b = model:FindFirstChild(j[2]), model:FindFirstChild(j[3])
+			if a and b then
+				j[1].Part0, j[1].Part1 = a, b
+			end
+		end
+	end
+	local out = spec.outfit or {}
+	local top = out.UpperTorso or Color3.fromRGB(80, 120, 200)
+	local function pick(name: string, fallback: Color3): Color3 -- skin-toned outfit entries (hands, bare arms) fall back
+		local c = out[name]
+		if not c or c == spec.skin then
+			return fallback
+		end
+		return c
+	end
 	for _, part in model:GetChildren() do
 		if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-			part.Color = (spec.outfit and spec.outfit[part.Name]) or spec.skin
+			if noob then
+				local arm = pick("LeftUpperArm", top)
+				local leg = pick("LeftUpperLeg", out.LowerTorso or top)
+				local fallback = if part.Name:find("Arm") or part.Name:find("Hand") then arm elseif part.Name:find("Leg") or part.Name:find("Foot") then leg else top
+				part.Color = if part.Name == "Head" then NOOB_YELLOW else pick(part.Name, fallback)
+			else
+				part.Color = out[part.Name] or spec.skin
+			end
 			part.Material = Enum.Material.SmoothPlastic
 			if part:IsA("MeshPart") then
 				part.TextureID = ""
