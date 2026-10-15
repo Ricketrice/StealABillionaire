@@ -1,0 +1,970 @@
+{
+ "parts": {
+  "SirIronclad": [
+   {
+    "name": "SirIronclad_Torso",
+    "colour": "steel",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     2.3,
+     1.8,
+     2.2
+    ]
+   },
+   {
+    "name": "SirIronclad_Chest",
+    "colour": "red",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     1.4,
+     0.28,
+     1.9
+    ]
+   },
+   {
+    "name": "SirIronclad_Badge",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     0.691,
+     0.12,
+     0.691
+    ]
+   },
+   {
+    "name": "SirIronclad_Belt",
+    "colour": "leather",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     2.4,
+     1.9,
+     0.32
+    ]
+   },
+   {
+    "name": "SirIronclad_Hips",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     2.5,
+     2.5,
+     0.6
+    ]
+   },
+   {
+    "name": "SirIronclad_Buckle",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     0.354,
+     0.08,
+     0.354
+    ]
+   },
+   {
+    "name": "SirIronclad_Neck",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.819,
+     0.84,
+     0.35
+    ]
+   },
+   {
+    "name": "SirIronclad_Head",
+    "colour": "steel",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     1.821,
+     1.76,
+     1.7
+    ]
+   },
+   {
+    "name": "SirIronclad_Visor",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     1.4,
+     0.28,
+     0.26
+    ]
+   },
+   {
+    "name": "SirIronclad_EyeL",
+    "colour": "eye",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.26,
+     0.08,
+     0.18
+    ]
+   },
+   {
+    "name": "SirIronclad_EarL",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.1,
+     0.4,
+     0.39
+    ]
+   },
+   {
+    "name": "SirIronclad_EyeR",
+    "colour": "eye",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.26,
+     0.08,
+     0.18
+    ]
+   },
+   {
+    "name": "SirIronclad_EarR",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.1,
+     0.4,
+     0.39
+    ]
+   },
+   {
+    "name": "SirIronclad_Smile",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.67,
+     0.07,
+     0.36
+    ]
+   },
+   {
+    "name": "SirIronclad_SirenBase",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.32,
+     0.32,
+     0.18
+    ]
+   },
+   {
+    "name": "SirIronclad_Siren",
+    "colour": "red",
+    "pivot": [
+     0.0,
+     0.0,
+     4.4
+    ],
+    "size": [
+     0.48,
+     1.24,
+     0.68
+    ]
+   },
+   {
+    "name": "SirIronclad_ShoulderL",
+    "colour": "steel",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     1.1,
+     1.04,
+     0.9
+    ]
+   },
+   {
+    "name": "SirIronclad_ArmL",
+    "colour": "steelDark",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.511,
+     0.52,
+     1.2
+    ]
+   },
+   {
+    "name": "SirIronclad_HandL",
+    "colour": "steel",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.806,
+     0.788,
+     0.84
+    ]
+   },
+   {
+    "name": "SirIronclad_LegL",
+    "colour": "steelDark",
+    "pivot": [
+     -0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.68,
+     0.68,
+     1.3
+    ]
+   },
+   {
+    "name": "SirIronclad_FootL",
+    "colour": "steel",
+    "pivot": [
+     -0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     1.0,
+     1.44,
+     0.52
+    ]
+   },
+   {
+    "name": "SirIronclad_ToeL",
+    "colour": "gold",
+    "pivot": [
+     -0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.84,
+     0.32,
+     0.4
+    ]
+   },
+   {
+    "name": "SirIronclad_ShoulderR",
+    "colour": "steel",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     1.1,
+     1.04,
+     0.9
+    ]
+   },
+   {
+    "name": "SirIronclad_ArmR",
+    "colour": "steelDark",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.511,
+     0.52,
+     1.2
+    ]
+   },
+   {
+    "name": "SirIronclad_HandR",
+    "colour": "steel",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.806,
+     0.788,
+     0.84
+    ]
+   },
+   {
+    "name": "SirIronclad_LegR",
+    "colour": "steelDark",
+    "pivot": [
+     0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.68,
+     0.68,
+     1.3
+    ]
+   },
+   {
+    "name": "SirIronclad_FootR",
+    "colour": "steel",
+    "pivot": [
+     0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     1.0,
+     1.44,
+     0.52
+    ]
+   },
+   {
+    "name": "SirIronclad_ToeR",
+    "colour": "gold",
+    "pivot": [
+     0.55,
+     0.0,
+     1.9
+    ],
+    "size": [
+     0.84,
+     0.32,
+     0.4
+    ]
+   },
+   {
+    "name": "SirIronclad_Sword",
+    "colour": "silver",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.34,
+     1.029,
+     2.684
+    ]
+   },
+   {
+    "name": "SirIronclad_SwordHilt",
+    "colour": "gold",
+    "pivot": [
+     1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     1.1,
+     0.397,
+     0.749
+    ]
+   },
+   {
+    "name": "SirIronclad_Shield",
+    "colour": "red",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     1.403,
+     0.745,
+     1.594
+    ]
+   },
+   {
+    "name": "SirIronclad_ShieldRim",
+    "colour": "gold",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     1.541,
+     0.767,
+     1.754
+    ]
+   },
+   {
+    "name": "SirIronclad_ShieldCrest",
+    "colour": "gold",
+    "pivot": [
+     -1.4,
+     0.0,
+     3.75
+    ],
+    "size": [
+     0.651,
+     0.357,
+     0.7
+    ]
+   },
+   {
+    "name": "SirIronclad_LightMount",
+    "colour": "steelDark",
+    "pivot": [
+     1.4,
+     0.0,
+     4.25
+    ],
+    "size": [
+     0.227,
+     0.227,
+     0.25
+    ]
+   },
+   {
+    "name": "SirIronclad_Searchlight",
+    "colour": "wood",
+    "pivot": [
+     1.4,
+     0.0,
+     4.25
+    ],
+    "size": [
+     1.2,
+     0.9,
+     0.2
+    ]
+   },
+   {
+    "name": "SirIronclad_Lens",
+    "colour": "gold",
+    "pivot": [
+     1.4,
+     0.0,
+     4.25
+    ],
+    "size": [
+     0.121,
+     0.2,
+     0.14
+    ]
+   },
+   {
+    "name": "SirIronclad_Pack",
+    "colour": "red",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     2.1,
+     0.408,
+     2.49
+    ]
+   },
+   {
+    "name": "SirIronclad_Charge",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     2.2
+    ],
+    "size": [
+     0.314,
+     0.1,
+     0.317
+    ]
+   }
+  ],
+  "TreasuryDoor": [
+   {
+    "name": "TreasuryDoor_Frame",
+    "colour": "stone",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     4.9,
+     0.6,
+     4.9
+    ]
+   },
+   {
+    "name": "TreasuryDoor_Trim",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     4.24,
+     0.24,
+     4.24
+    ]
+   },
+   {
+    "name": "TreasuryDoor_Rivets",
+    "colour": "steelDark",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     4.671,
+     0.114,
+     4.68
+    ]
+   },
+   {
+    "name": "TreasuryDoor_Door",
+    "colour": "wood",
+    "pivot": [
+     -1.85,
+     0.0,
+     2.4
+    ],
+    "size": [
+     3.64,
+     0.46,
+     3.64
+    ]
+   },
+   {
+    "name": "TreasuryDoor_DoorStar",
+    "colour": "gold",
+    "pivot": [
+     -1.85,
+     0.0,
+     2.4
+    ],
+    "size": [
+     0.72,
+     0.08,
+     0.411
+    ]
+   },
+   {
+    "name": "TreasuryDoor_Hinges",
+    "colour": "steelDark",
+    "pivot": [
+     -1.85,
+     0.0,
+     2.4
+    ],
+    "size": [
+     2.752,
+     0.405,
+     2.5
+    ]
+   },
+   {
+    "name": "TreasuryDoor_Wheel",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     -0.5,
+     2.4
+    ],
+    "size": [
+     1.16,
+     0.3,
+     1.16
+    ]
+   }
+  ],
+  "KeepTower": [
+   {
+    "name": "KeepTower_Body",
+    "colour": "stone",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     3.14,
+     3.14,
+     5.85
+    ]
+   },
+   {
+    "name": "KeepTower_Slits",
+    "colour": "ink",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     0.2,
+     2.6,
+     2.2
+    ]
+   },
+   {
+    "name": "KeepTower_Roof",
+    "colour": "roof",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     3.2,
+     3.2,
+     2.3
+    ]
+   },
+   {
+    "name": "KeepTower_Finial",
+    "colour": "gold",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     0.304,
+     0.32,
+     0.32
+    ]
+   }
+  ],
+  "ShellPalace": [
+   {
+    "name": "ShellPalace_Dome",
+    "colour": "pearl",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     6.0,
+     6.0,
+     4.8
+    ]
+   },
+   {
+    "name": "ShellPalace_Fan",
+    "colour": "shell",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     7.17,
+     0.24,
+     3.854
+    ]
+   },
+   {
+    "name": "ShellPalace_TowerL",
+    "colour": "shell",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.8,
+     1.773,
+     5.0
+    ]
+   },
+   {
+    "name": "ShellPalace_TowerR",
+    "colour": "shell",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.8,
+     1.773,
+     5.0
+    ]
+   },
+   {
+    "name": "ShellPalace_Door",
+    "colour": "teal",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.6,
+     0.12,
+     1.6
+    ]
+   },
+   {
+    "name": "ShellPalace_Pearl",
+    "colour": "pearl",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     0.682,
+     0.7,
+     0.7
+    ]
+   }
+  ],
+  "Coral": [
+   {
+    "name": "Coral_Coral",
+    "colour": "coral",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.139,
+     1.294,
+     2.271
+    ]
+   }
+  ],
+  "Kelp": [
+   {
+    "name": "Kelp_Kelp",
+    "colour": "kelp",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.295,
+     0.14,
+     6.02
+    ]
+   }
+  ],
+  "WizardTower": [
+   {
+    "name": "WizardTower_Body",
+    "colour": "plum",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     2.364,
+     2.4,
+     5.0
+    ]
+   },
+   {
+    "name": "WizardTower_Bands",
+    "colour": "brass",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     2.3,
+     2.3,
+     3.77
+    ]
+   },
+   {
+    "name": "WizardTower_Roof",
+    "colour": "plum",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     2.942,
+     2.9,
+     3.2
+    ]
+   },
+   {
+    "name": "WizardTower_Windows",
+    "colour": "ember",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     2.014,
+     1.859,
+     0.7
+    ]
+   }
+  ],
+  "FireCrystal": [
+   {
+    "name": "FireCrystal_Crystal",
+    "colour": "ember",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     1.168,
+     0.9,
+     1.984
+    ]
+   }
+  ],
+  "Spellbook": [
+   {
+    "name": "Spellbook_Cover",
+    "colour": "bookRed",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     3.997,
+     2.6,
+     0.36
+    ]
+   },
+   {
+    "name": "Spellbook_Pages",
+    "colour": "pages",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     3.74,
+     2.44,
+     0.381
+    ]
+   },
+   {
+    "name": "Spellbook_Rune",
+    "colour": "ember",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "size": [
+     2.77,
+     0.87,
+     0.07
+    ]
+   }
+  ]
+ },
+ "report": {
+  "SirIronclad": {
+   "tris": 7510,
+   "parts": 38
+  },
+  "TreasuryDoor": {
+   "tris": 4212,
+   "parts": 7
+  },
+  "KeepTower": {
+   "tris": 2386,
+   "parts": 4
+  },
+  "ShellPalace": {
+   "tris": 6396,
+   "parts": 6
+  },
+  "Coral": {
+   "tris": 548,
+   "parts": 1
+  },
+  "Kelp": {
+   "tris": 776,
+   "parts": 1
+  },
+  "WizardTower": {
+   "tris": 1790,
+   "parts": 4
+  },
+  "FireCrystal": {
+   "tris": 120,
+   "parts": 1
+  },
+  "Spellbook": {
+   "tris": 1260,
+   "parts": 3
+  }
+ }
+}

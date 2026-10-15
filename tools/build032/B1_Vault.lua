@@ -1,4 +1,7 @@
 -- Studio location: ServerStorage.Build032.B1_Vault (ModuleScript)
+-- 034: call it with "castle" (require(...)("castle")) for the Steal a Boss look: Sir Ironclad + the treasury door from
+-- ServerStorage.Imports034 (tools/blender/build_034_imports.py), castle colours (stone, deep red, gold); the capsule
+-- still comes from Heist032Imports. No argument = the 032 build exactly as before.
 -- Milestone 032 build step (Edit mode, run from the command bar / MCP; re-runnable):
 -- builds ServerStorage.HeistVault032, the Boss Heist template read by HeistService, from the Blender imports
 -- in ServerStorage.Heist032Imports (SecurityBot, VaultDoor, BossCapsule; imported at 100 studs per Blender
@@ -45,7 +48,22 @@ local C = {
 	purple = Color3.fromRGB(155, 90, 240),
 	glass = Color3.fromRGB(190, 230, 255),
 }
-local NEON = { cyan = true, amber = true }
+local NEON = { cyan = true, amber = true, eye = true }
+-- 034 castle theme: the same keys recoloured (stone walls, deep red where navy was, warm gold glow where cyan was)
+local CASTLE = {
+	navy = Color3.fromRGB(150, 36, 44),
+	navyDark = Color3.fromRGB(78, 26, 32),
+	plaster = Color3.fromRGB(176, 168, 156),
+	sandstone = Color3.fromRGB(132, 124, 116),
+	steel = Color3.fromRGB(176, 184, 198),
+	cyan = Color3.fromRGB(255, 196, 90),
+	red = Color3.fromRGB(200, 40, 48),
+	silver = Color3.fromRGB(226, 232, 240),
+	eye = Color3.fromRGB(255, 236, 150),
+	wood = Color3.fromRGB(120, 72, 36),
+	leather = Color3.fromRGB(86, 52, 28),
+	stone = Color3.fromRGB(176, 168, 156),
+}
 
 -- Blender colour key of every imported part (assets/export/032/heist/parts.json)
 local COLOUR = {
@@ -93,11 +111,42 @@ local COLOUR = {
 	Band = "purple",
 	Star = "cream",
 }
+-- Sir Ironclad + the treasury door (assets/export/034/parts.json); keys not listed fall back to COLOUR
+local COLOUR_CASTLE = {
+	Torso = "steel",
+	Chest = "red",
+	Belt = "leather",
+	Buckle = "gold",
+	Head = "steel",
+	EyeL = "eye",
+	EyeR = "eye",
+	Smile = "gold",
+	SirenBase = "gold",
+	Siren = "red",
+	ShoulderL = "steel",
+	ShoulderR = "steel",
+	HandL = "steel",
+	HandR = "steel",
+	FootL = "steel",
+	FootR = "steel",
+	Searchlight = "wood",
+	Pack = "red",
+	Charge = "gold",
+	Sword = "silver",
+	SwordHilt = "gold",
+	Shield = "red",
+	ShieldRim = "gold",
+	ShieldCrest = "gold",
+	Frame = "stone",
+	Rivets = "steelDark",
+	Door = "wood",
+}
+local castle = false -- set per build (see the bottom)
 -- Robot animation groups: Blender pivot (x, y, z) per group; parts not listed are Body (pivot = hips).
 local GROUPS = {
 	Head = { pivot = Vector3.new(0, 0, 4.4), parts = { "Neck", "Head", "Visor", "EyeL", "EyeR", "EarL", "EarR", "Smile", "SirenBase", "Siren" } },
-	ArmL = { pivot = Vector3.new(-1.4, 0, 3.75), parts = { "ShoulderL", "ArmL", "HandL" } },
-	ArmR = { pivot = Vector3.new(1.4, 0, 3.75), parts = { "ShoulderR", "ArmR", "HandR" } },
+	ArmL = { pivot = Vector3.new(-1.4, 0, 3.75), parts = { "ShoulderL", "ArmL", "HandL", "Shield", "ShieldRim", "ShieldCrest" } },
+	ArmR = { pivot = Vector3.new(1.4, 0, 3.75), parts = { "ShoulderR", "ArmR", "HandR", "Sword", "SwordHilt" } },
 	LegL = { pivot = Vector3.new(-0.55, 0, 1.9), parts = { "LegL", "FootL", "ToeL" } },
 	LegR = { pivot = Vector3.new(0.55, 0, 1.9), parts = { "LegR", "FootR", "ToeR" } },
 	Light = { pivot = Vector3.new(1.4, 0, 4.25), parts = { "LightMount", "Searchlight", "Lens" } },
@@ -152,8 +201,8 @@ local function fit(source: Model, s: number, origin: Vector3, place: CFrame, nam
 			p.CFrame = place * CFrame.new(rel)
 			p.Name = key
 			p.Anchored = true
-			local colour = COLOUR[key] or "steel"
-			p.Color = C[colour]
+			local colour = (castle and COLOUR_CASTLE[key]) or COLOUR[key] or "steel"
+			p.Color = (castle and CASTLE[colour]) or C[colour]
 			p.Material = if NEON[colour] then Enum.Material.Neon elseif colour == "steelDark" then Enum.Material.Metal else Enum.Material.SmoothPlastic
 			p.Transparency = if colour == "glass" then 0.35 else 0
 			p:SetAttribute("Local", rel)
@@ -179,11 +228,34 @@ local function folder(parent: Instance, name: string): Folder
 	return f
 end
 
-return function()
+return function(theme: string?)
+	castle = theme == "castle"
+	local saved = {}
+	if castle then -- the shell, bay and signs use C directly: recolour them for this build
+		for k, v in CASTLE do
+			saved[k] = C[k] or false
+			C[k] = v
+		end
+	end
 	local imports = ServerStorage:FindFirstChild("Heist032Imports")
 	assert(imports, "ServerStorage.Heist032Imports is missing (import the 032 FBX files first)")
-	local botSrc, doorSrc, capSrc = imports:FindFirstChild("SecurityBot"), imports:FindFirstChild("VaultDoor"), imports:FindFirstChild("BossCapsule")
-	assert(botSrc and doorSrc and capSrc, "need SecurityBot, VaultDoor and BossCapsule in Heist032Imports")
+	local botName, doorName = "SecurityBot", "VaultDoor"
+	local botSrc, doorSrc, capSrc = imports:FindFirstChild(botName), imports:FindFirstChild(doorName), imports:FindFirstChild("BossCapsule")
+	if castle then
+		local imports034 = ServerStorage:FindFirstChild("Imports034")
+		assert(imports034, "ServerStorage.Imports034 is missing (import assets/export/034 first)")
+		botName, doorName = "SirIronclad", "TreasuryDoor"
+		botSrc, doorSrc = imports034:FindFirstChild(botName), imports034:FindFirstChild(doorName)
+	end
+	assert(botSrc and doorSrc and capSrc, "need the robot, the door and BossCapsule")
+	local old034 = if castle then ServerStorage:FindFirstChild("HeistVault032") else nil
+	if old034 and not old034:GetAttribute("Castle") then -- keep the 032 build once (rollback)
+		local parked = ServerStorage:FindFirstChild("_Parked034") or Instance.new("Folder")
+		parked.Name = "_Parked034"
+		parked.Parent = ServerStorage
+		old034.Name = "HeistVault032_SecurityBot"
+		old034.Parent = parked
+	end
 
 	local old = ServerStorage:FindFirstChild("HeistVault032")
 	if old then
@@ -251,7 +323,7 @@ return function()
 		parent = shell,
 	})
 	-- door frame + door + wheel (the door swings out toward +X about the Hinge, on the client)
-	local doorOrigin = doorSrc:FindFirstChild("VaultDoor_Frame") :: BasePart
+	local doorOrigin = doorSrc:FindFirstChild(doorName .. "_Frame") :: BasePart
 	local dO = doorOrigin.Position - Vector3.new(0, 240, 15) -- Blender (0, 0.15, 2.4) is the frame's centre
 	local doorPlace = CFrame.new(DOOR_X, FLOOR, DOOR_Z) * CFrame.Angles(0, math.rad(-90), 0)
 	local door = fit(doorSrc, S_DOOR, dO, doorPlace, "Door")
@@ -398,7 +470,7 @@ return function()
 	part({ name = "GuardSpot", size = Vector3.new(2, 1, 2), cf = GUARD, ghost = true, parent = root })
 
 	-- Robot ------------------------------------------------------------------------------------------------
-	local torso = botSrc:FindFirstChild("SecurityBot_Torso") :: BasePart
+	local torso = botSrc:FindFirstChild(botName .. "_Torso") :: BasePart
 	local minY = math.huge
 	for _, p in botSrc:GetDescendants() do
 		if p:IsA("BasePart") then
@@ -452,6 +524,7 @@ return function()
 		end
 	end
 	door:SetAttribute("Parts", swingCount)
+	root:SetAttribute("Castle", castle)
 	root.Parent = ServerStorage
 	local count = 0
 	for _, p in root:GetDescendants() do
@@ -459,5 +532,8 @@ return function()
 			count += 1
 		end
 	end
-	return ("HeistVault032 built: %d parts (robot %d)"):format(count, #robot:GetChildren())
+	for k, v in saved do
+		C[k] = if v then v else nil
+	end
+	return ("HeistVault032 built%s: %d parts (robot %d)"):format(if castle then " (castle)" else "", count, #robot:GetChildren())
 end
