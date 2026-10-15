@@ -113,6 +113,7 @@ CreatureSpecs.broke_bob = { -- Rookie Squire (C): helmet too big, he keeps pushi
 	},
 }
 
+local SCROLL_WOBBLE = { kind = "swing", axis = "X", amp = 10, speed = 2.0, pivot = cf(0, -0.5, -0.6) }
 CreatureSpecs.delivery_dave = { -- Scroll Page (C): a long scroll he unrolls
 	skin = SKIN,
 	outfit = outfit({ top = rgb(70, 160, 90), waist = rgb(60, 50, 40), arms = rgb(70, 160, 90), legs = rgb(190, 160, 110), feet = rgb(90, 60, 40) }),
@@ -126,16 +127,42 @@ CreatureSpecs.delivery_dave = { -- Scroll Page (C): a long scroll he unrolls
 			color = rgb(250, 240, 220),
 			anim = { kind = "swing", axis = "Z", amp = 8, speed = 2.4 },
 		},
-		{ n = "ScrollTube", on = "UpperTorso", shape = "Cylinder", size = v3(0.55, 2.3, 0.55), at = cf(0.25, 0.1, 0.7) * CFrame.Angles(0, 0, rad(18)), color = rgb(190, 140, 80) },
-		{ n = "ScrollCap", on = "UpperTorso", shape = "Cylinder", size = v3(0.62, 0.16, 0.62), at = cf(-0.1, 1.2, 0.7) * CFrame.Angles(0, 0, rad(18)), color = rgb(190, 40, 40) },
-		{ n = "ScrollRoll", on = "LeftHand", shape = "Cylinder", size = v3(0.5, 1.4, 0.5), at = cf(0, -0.35, -0.5) * CFrame.Angles(rad(90), 0, 0), color = rgb(250, 240, 210) },
+		-- a rolled parchment held out in front: cream tube, brown end caps, red ribbon (not a blade)
 		{
-			n = "ScrollPaper",
+			n = "ScrollRoll",
 			on = "LeftHand",
-			size = v3(0.9, 0.04, 2.4),
-			at = cf(0, -0.7, -1.9) * CFrame.Angles(rad(-18), 0, 0),
-			color = rgb(252, 244, 220),
-			anim = { kind = "swing", axis = "X", amp = 14, speed = 2.0, pivot = cf(0, -0.5, -0.6) },
+			shape = "Cylinder",
+			size = v3(0.8, 1.7, 0.8),
+			at = cf(0, -0.5, -0.6) * CFrame.Angles(0, 0, rad(90)),
+			color = rgb(250, 238, 200),
+			anim = SCROLL_WOBBLE,
+		},
+		{
+			n = "ScrollCapL",
+			on = "LeftHand",
+			shape = "Cylinder",
+			size = v3(0.95, 0.16, 0.95),
+			at = cf(0, -0.5, -0.6) * CFrame.Angles(0, 0, rad(90)) * cf(0, 0.9, 0),
+			color = rgb(120, 78, 40),
+			anim = SCROLL_WOBBLE,
+		},
+		{
+			n = "ScrollCapR",
+			on = "LeftHand",
+			shape = "Cylinder",
+			size = v3(0.95, 0.16, 0.95),
+			at = cf(0, -0.5, -0.6) * CFrame.Angles(0, 0, rad(90)) * cf(0, -0.9, 0),
+			color = rgb(120, 78, 40),
+			anim = SCROLL_WOBBLE,
+		},
+		{
+			n = "ScrollRibbon",
+			on = "LeftHand",
+			shape = "Cylinder",
+			size = v3(0.88, 0.14, 0.88),
+			at = cf(0, -0.5, -0.6) * CFrame.Angles(0, 0, rad(90)),
+			color = rgb(190, 40, 40),
+			anim = SCROLL_WOBBLE,
 		},
 	},
 }
