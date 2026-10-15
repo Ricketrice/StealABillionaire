@@ -75,4 +75,4 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - Boss: `Build032.B1_Vault("castle")` builds `ServerStorage.HeistVault032` from `ServerStorage.Imports034` (SirIronclad, TreasuryDoor); 032 build parked in `_Parked034.HeistVault032_SecurityBot`. Meshes: `tools/blender/build_034_imports.py` -> `assets/export/034`.
 - Teammate gates: `ZoneConfig.READY.<id>` (FoodCourt, BeachBoardwalk, ToyTown, NeonDowntown); `ZoneConfig.forSale/isReady`. Sunken gate/NPC area: `World.FutureZones.Our_SunkenKingdom`, `Workspace.Zones.SunkenKingdom`.
 - Money sign: `CashFormat.SYMBOL` (the only "$" in the code). Battle stats in UI: `WorkerCatalogue.SHOW_BATTLE_STATS`.
-
+- Test runs (034): `tools/test_guard.sh` can miss a test's SUMMARY when the test log was created before its marker (base033:save, base033:duo): read the newest `*_last.log` for `@@<TAG>|SUMMARY` before assuming a hang. `pvp022` expects ServerStorage `StudioPvPStealing` / `StudioWeaponCombat` off at start. Tags: lane030 `T030`, spellrun034 `T034S`, heist032 `T032`, base033 `T033`, pvp022 `T022`.

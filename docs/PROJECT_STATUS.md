@@ -1,7 +1,7 @@
 # Project Status
 _Keep under ~60 lines. Replace sections at each milestone end; don't append history._
 
-**Current milestone:** 034 — Steal a Boss (D41-D44), branch `milestone-034`: built; the multi-client tests are still to run (memory, see Tests). **Last finished:** 033 — Core loop + monetization.
+**Current milestone:** 034 — Steal a Boss (D41-D44), branch `milestone-034`: built and tested except `pvp022` (pending) and 2 open items (Spell Run limit, lane030 rank strings), see Tests. **Last finished:** 033 — Core loop + monetization.
 **Save schema:** 3 (optional fields: 029 `hub.daily/play/seen/offline/index/settings/favs`; 030 `hub.peak`; 031 `hub.race`; 032 `hub.heist/speed`; 033 `hub.pads/intro/receipts/passes/starter/born` + the worker record's `level`). **Map:** `Workspace.World` (`SkyCity` = base area + lane from `tools/build027`; `HideoutCamp`, `KnightsKeep`, `SunkenKingdom`, `EmberAcademy` from `tools/build034`).
 
 ## Built
@@ -18,7 +18,7 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
 - **Passed:** `base033:solo` (1 client) **130/130** (26 SIM). `heist032:solo` (1 client) **108/108** (3 SIM; with Sir Ironclad + treasury; the 032 stomp jump-dodge now passes). `base033:save` (1 client, REAL Studio DataStore) **19/19** (4 SIM). `lane030` sections that ran before the memory watchdog: HUD layout 4/4, teammate portals T4-T7 39/39.
 - **Old save (SIM: Play Solo, a separate copy of the save modules, in-memory store):** the real pre-027 record `backups/player_453701778_pre027.json` (schema 1, 8 workers) loads as schema 3, coins 94,511 kept, all 8 = Rookie Squire $5 / Scroll Page $6 / Apple Archer $9 / Shield Knight $22 / Golden Paladin $100 (same incomes).
 - **Measured (Play Solo, 1 player, real client physics):** Spell Run 55.7 / 55.9 s (27 jumps, 0 falls, finished 1st Gold) → limit 90 s. Run-home at carry speed 13.6 to the safe line: T1 far catch spot 14.1 s, T2 far spawn 29.8 s, T3 far spawn 51.2 s. Parts: workspace 2,807 (start of 034) → 2,841 (Hideout Camp 265, Knight's Keep 319, Sunken Kingdom 131, Ember Academy 330 incl. Spell Run 95); 1,480 parked parts in `ServerStorage._Parked034` (none in Workspace).
-- **Pending (need memory):** `lane030` (2 clients), `spellrun034` (2, new: replaces `race031`), `heist032:duo` (2), `base033:duo` (2), `pvp022` main (3). Two `lane030` launches were stopped by the memory watchdog (swap free < 5 GB at 77 s / 201 s): Studio's web views + Brave + Telegram sit in swap. Quit Brave + Telegram fully, restart Studio, then run them.
+- **Multi-client (2026-10-15, same Studio session, Brave/Telegram still open):** `spellrun034` (2) **64/65** (5 SIM): course, sign, odds, eligibility, both racers run the whole course (40.1 s 1st Gold, 67.1 s 2nd Silver, 0 falls), one Ember creature each + hub.race, fall pop-back to the gate, Leave = nothing; FAIL: the 90 s cap is only 1.34x the slowest 2-client run (67.1 s; 2x = 134 s) -> owner decision (raise the 90 s max, or keep). `heist032:duo` (2) **17/17**. `base033:duo` (2) **17/17**. `lane030` (2) **94/97**: the 3 FAILs are the test still expecting the old rank name "CEO" (game shows "Captain", same rank) -> test strings to update. `pvp022` (3) **stopped by the memory watchdog** at 102 s (RAM 0 MB) after 118 checks with 26 FAILs, starting at "flags off: no flags published" (likely cause, unverified: Studio attrs `StudioPvPStealing` + `StudioWeaponCombat` were already on; the test expects them off) -> pending: rerun with both attrs off, Studio restarted, Brave/Telegram quit.
 - 033 (2026-10-14): base033 solo 130/130, duo 17/17, save 19/19; pvp022 330/330; lane030 63/63. Earlier: see git history.
 
 ## Not built
@@ -37,6 +37,6 @@ Merge, gear tiers, other zone bosses (Aquaris, Ignis: updates), rebirth, base vi
 ## By-hand list for owner
 - Save the place in Studio. Local backup of the state before this session's changes: `backups/pre034b.rbxl`.
 - Creator Dashboard renames (ids stay): 2x Cash → 2x Coins; Cash Stack / Cash Bag / Cash Vault → Coin Stack / Coin Bag / Coin Chest. Game name + description at launch.
-- Quit Brave + Telegram, restart Studio, then ask me to run the pending multi-client tests.
+- Decide the Spell Run limit (90 s cap vs a 67 s 2-client run). Quit Brave + Telegram, restart Studio, turn StudioPvPStealing / StudioWeaponCombat off, then ask me to rerun `pvp022`.
 - Play-check 034 (StudioRace / StudioHeist on): walk the lane, Spell Run on a phone-size window, the treasury chase.
 - With a second (non-creator) account, buy one pass in the live game or a Team Test and check its perk.
