@@ -337,6 +337,7 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 	end
 	model:SetAttribute("CreatureId", id)
 	model:SetAttribute("CreatureScale", scale)
+	model:SetAttribute("SoundHook", spec.sound) -- Legendary / Secret: a name for the audio pass (no asset yet)
 	CollectionService:AddTag(model, CreatureBuilder.TAG)
 	return model
 end

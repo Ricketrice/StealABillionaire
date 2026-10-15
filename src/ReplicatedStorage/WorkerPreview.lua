@@ -50,12 +50,17 @@ local function newViewport(): ViewportFrame
 	return vp
 end
 
-local function frame(model: Model, cam: Camera)
+-- Fits the whole model (head to boots, wings, staff) in the view for the container's shape; a rotating model is fitted
+-- by its widest side so it never clips as it turns.
+local function frame(model: Model, cam: Camera, aspect: number)
 	local cf, size = model:GetBoundingBox()
-	local height = math.max(size.Y, size.X * 0.9)
-	local dist = (height / 2) / math.tan(math.rad(FOV / 2)) * 1.12
-	local target = cf.Position + Vector3.new(0, size.Y * 0.02, 0)
-	cam.CFrame = CFrame.lookAt(target + Vector3.new(0, size.Y * 0.06, dist), target)
+	local tanHalf = math.tan(math.rad(FOV / 2))
+	local wide = math.max(size.X, size.Z)
+	local needV = (size.Y / 2) / tanHalf
+	local needH = (wide / 2) / (tanHalf * math.max(aspect, 0.3))
+	local dist = math.max(needV, needH) * 1.2 + wide / 2
+	local target = cf.Position
+	cam.CFrame = CFrame.lookAt(target + Vector3.new(0, size.Y * 0.05, dist), target)
 end
 
 local function ensureSpinLoop()
@@ -144,7 +149,9 @@ function WorkerPreview.mount(container: GuiObject, workerId: string, opts: { rot
 		local creature = creatures and creatures:FindFirstChild(id)
 		local templ = creature or (avatars and avatars:FindFirstChild(id)) or (custom and custom:FindFirstChild(id)) or templates:FindFirstChild(id)
 		if not templ then
-			if vp then vp.Visible = false end
+			if vp then
+				vp.Visible = false
+			end
 			fallback = placeholder(container, id)
 			return
 		end
@@ -175,7 +182,8 @@ function WorkerPreview.mount(container: GuiObject, workerId: string, opts: { rot
 			animating[handle] = state
 			ensureAnimLoop()
 		end
-		frame(model, vp.CurrentCamera)
+		local abs = container.AbsoluteSize
+		frame(model, vp.CurrentCamera, if abs.Y > 0 then abs.X / abs.Y else 1)
 		vp.Parent = container
 	end
 

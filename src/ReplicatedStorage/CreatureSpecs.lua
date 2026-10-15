@@ -1259,4 +1259,715 @@ CreatureSpecs.the_trillionaire = {
 	light = FIRE,
 }
 
+-- ================================ POLISH PASS (owner: every creature) ================================
+-- Shared kit: every list below returns props; POLISH[id] (bottom) says which pieces each creature gets, so the look
+-- stays data-driven. Rules: dark base + ONE bright accent + metal trim, never one colour head to toe; hands and feet get
+-- their own colour (gloves, boots); faces stay visible (helmets are open caps, visors sit on the forehead).
+local Kit = {}
+local INK = rgb(26, 28, 40)
+
+local function lay(cfr: CFrame): CFrame -- a standing cylinder laid along the hand's forward axis
+	return cfr * CFrame.Angles(rad(90), 0, 0)
+end
+
+function Kit.scarf(color: Color3): { Prop }
+	return {
+		P("ScarfBand", "UpperTorso", "Block", v3(2.1, 0.32, 1.12), cf(0, 0.72, 0), color),
+		P(
+			"ScarfTail",
+			"UpperTorso",
+			"Block",
+			v3(0.42, 1.2, 0.12),
+			cf(0.5, 0.15, 0.6),
+			color,
+			{ anim = { kind = "swing", axis = "X", amp = 8, speed = 2.4, pivot = cf(0.5, 0.7, 0.6) } }
+		),
+	}
+end
+
+function Kit.sash(color: Color3): { Prop }
+	return { P("Sash", "UpperTorso", "Block", v3(2.6, 0.34, 0.1), cf(0, 0.05, -0.54) * CFrame.Angles(0, 0, rad(38)), color) }
+end
+
+function Kit.belt(color: Color3, buckle: Color3): { Prop }
+	return {
+		P("Belt", "LowerTorso", "Block", v3(2.08, 0.34, 1.08), cf(0, -0.02, 0), color),
+		P("Buckle", "LowerTorso", "Block", v3(0.42, 0.3, 0.1), cf(0, -0.02, -0.56), buckle, { mat = METAL }),
+	}
+end
+
+function Kit.badge(color: Color3): { Prop }
+	return { P("Badge", "UpperTorso", "Disc", v3(0.42, 0.42, 0.08), cf(0.58, 0.38, -0.54), color, { mat = METAL }) }
+end
+
+function Kit.pads(color: Color3): { Prop }
+	return {
+		P("PadL", "LeftUpperArm", "Ball", v3(1.2, 0.7, 1.2), cf(0, 0.42, 0), color),
+		P("PadR", "RightUpperArm", "Ball", v3(1.2, 0.7, 1.2), cf(0, 0.42, 0), color),
+	}
+end
+
+-- A flowing cape in three widening tiers with a bright hem (stepped blocks that sway).
+function Kit.cape(color: Color3, hem: Color3, w: number, h: number): { Prop }
+	local out: { Prop } = {}
+	local step = h / 3
+	for i = 1, 3 do
+		table.insert(
+			out,
+			P(
+				"Cape" .. i,
+				"UpperTorso",
+				"Block",
+				v3(w * (0.82 + 0.16 * i), step, 0.1),
+				cf(0, 0.6 - step * (i - 0.5), 0.62 + 0.07 * i),
+				color,
+				{ anim = { kind = "swing", axis = "X", amp = 3 + 3 * i, speed = 1.8, phase = i * 0.4, pivot = cf(0, 0.7, 0.62) } }
+			)
+		)
+	end
+	table.insert(
+		out,
+		P(
+			"CapeHem",
+			"UpperTorso",
+			"Block",
+			v3(w * 1.3, 0.16, 0.12),
+			cf(0, 0.6 - h, 0.62 + 0.28),
+			hem,
+			{ anim = { kind = "swing", axis = "X", amp = 12, speed = 1.8, phase = 1.6, pivot = cf(0, 0.7, 0.62) } }
+		)
+	)
+	return out
+end
+
+-- A real sword on the right hand: grip, pommel, crossguard with drooping ends, tapered blade with a diamond tip and an
+-- optional Neon fuller. Returns the props and a trail emitter for the swing.
+function Kit.sword(o: { name: string, len: number, w: number, blade: Color3, edge: Color3?, guard: Color3, grip: Color3, amp: number?, speed: number? }): ({ Prop }, Fx)
+	local anim = { kind = "swing", axis = "X", amp = o.amp or 40, speed = o.speed or 2.0 }
+	local y = -0.25
+	local out: { Prop } = {
+		P("Grip", "RightHand", "Cylinder", v3(0.22, 0.85, 0.22), lay(cf(0, y, 0.1)), o.grip, { anim = anim }),
+		P("Pommel", "RightHand", "Ball", v3(0.34, 0.34, 0.34), cf(0, y, 0.55), o.guard, { mat = METAL, anim = anim }),
+		P("Guard", "RightHand", "Block", v3(1.15, 0.16, 0.2), cf(0, y, -0.4), o.guard, { mat = METAL, anim = anim }),
+		P("GuardL", "RightHand", "Block", v3(0.16, 0.5, 0.2), cf(-0.58, y - 0.14, -0.4), o.guard, { mat = METAL, anim = anim }),
+		P("GuardR", "RightHand", "Block", v3(0.16, 0.5, 0.2), cf(0.58, y - 0.14, -0.4), o.guard, { mat = METAL, anim = anim }),
+		P(o.name, "RightHand", "Block", v3(0.14, o.w, o.len), cf(0, y, -0.5 - o.len / 2), o.blade, { mat = METAL, anim = anim }),
+		P("BladeTip", "RightHand", "Block", v3(0.14, o.w * 0.72, o.w * 0.72), cf(0, y, -0.5 - o.len) * CFrame.Angles(rad(45), 0, 0), o.blade, { mat = METAL, anim = anim }),
+	}
+	if o.edge then
+		table.insert(out, P("BladeEdge", "RightHand", "Block", v3(0.18, o.w * 0.22, o.len * 0.92), cf(0, y, -0.5 - o.len / 2), o.edge, { neon = true, anim = anim }))
+	end
+	return out, { on = o.name, kind = "spark", color = o.edge or o.blade, rate = 9, at = v3(0, 0, -o.len / 2), size = 0.8 }
+end
+
+-- A shield on the left forearm: rim, face, emblem disc and a boss.
+function Kit.shield(o: { w: number, h: number, face: Color3, rim: Color3, emblem: Color3, at: CFrame, neon: boolean? }): { Prop }
+	local anim = { kind = "push", axis = "Z", amp = 0.5, speed = 1.5 }
+	return {
+		P("ShieldRim", "LeftLowerArm", "Block", v3(o.w + 0.35, o.h + 0.35, 0.2), o.at * cf(0, 0, 0.06), o.rim, { mat = METAL, anim = anim }),
+		P("Shield", "LeftLowerArm", "Block", v3(o.w, o.h, 0.26), o.at, o.face, { anim = anim }),
+		P("ShieldEmblem", "LeftLowerArm", "Disc", v3(o.w * 0.55, o.w * 0.55, 0.1), o.at * cf(0, 0, -0.16), o.emblem, { neon = o.neon, mat = METAL, anim = anim }),
+		P("ShieldBoss", "LeftLowerArm", "Ball", v3(0.42, 0.42, 0.3), o.at * cf(0, 0, -0.24), o.rim, { mat = METAL, anim = anim }),
+	}
+end
+
+-- Hammer: grooved head with Neon grooves and glowing strike faces, brass caps and handle rings.
+function Kit.hammer(o: { head: Color3, glow: Color3, brass: Color3, handle: Color3 }): ({ Prop }, Fx)
+	local anim = { kind = "swing", axis = "X", amp = 55, speed = 2.3 }
+	local y = 2.0
+	local out: { Prop } = {
+		P("HammerHandle", "RightHand", "Cylinder", v3(0.28, 2.7, 0.28), cf(0, 0.65, -0.3), o.handle, { anim = anim }),
+		P("HandleRingA", "RightHand", "Cylinder", v3(0.36, 0.14, 0.36), cf(0, 0.1, -0.3), o.brass, { mat = METAL, anim = anim }),
+		P("HandleRingB", "RightHand", "Cylinder", v3(0.36, 0.14, 0.36), cf(0, 1.2, -0.3), o.brass, { mat = METAL, anim = anim }),
+		P("HammerHead", "RightHand", "Block", v3(1.9, 1.05, 1.05), cf(0, y, -0.3), o.head, { mat = METAL, anim = anim }),
+		P("GrooveA", "RightHand", "Block", v3(0.1, 1.12, 1.12), cf(-0.4, y, -0.3), o.glow, { neon = true, anim = anim }),
+		P("GrooveB", "RightHand", "Block", v3(0.1, 1.12, 1.12), cf(0.4, y, -0.3), o.glow, { neon = true, anim = anim }),
+		P("HammerCapL", "RightHand", "Block", v3(0.3, 1.3, 1.3), cf(-1.05, y, -0.3), o.brass, { mat = METAL, anim = anim }),
+		P("HammerCapR", "RightHand", "Block", v3(0.3, 1.3, 1.3), cf(1.05, y, -0.3), o.brass, { mat = METAL, anim = anim }),
+		P("HammerGlow", "RightHand", "Block", v3(0.12, 0.8, 0.8), cf(-1.25, y, -0.3), o.glow, { neon = true, anim = anim }),
+	}
+	return out, { on = "HammerHead", kind = "spark", color = o.glow, rate = 8, at = v3(0, 0, 0), size = 1 }
+end
+
+-- Layered armour. groups picks pieces: helm shoulders chest belt gauntlets boots cape. tier 1 = Epic, 2 = Legendary, 3 = Secret
+-- (more spikes, bigger crest). Helmets are open caps: the face and its smile stay visible.
+export type Armor = {
+	main: Color3,
+	trim: Color3,
+	accent: Color3,
+	glow: Color3,
+	tier: number,
+	crest: string?, -- plume horns fins spikes none
+	crestColor: Color3?,
+	cape: Color3?,
+	capeHem: Color3?,
+	helmName: string?,
+	groups: { string }?,
+	belt: Color3?,
+}
+
+function Kit.armor(o: Armor): { Prop }
+	local out: { Prop } = {}
+	local groups = {}
+	local wanted: { string } = o.groups or { "helm", "shoulders", "chest", "belt", "gauntlets", "boots", "cape" }
+	for _, g in wanted do
+		groups[g] = true
+	end
+	local function add(p: Prop)
+		table.insert(out, p)
+	end
+	local t = o.tier
+	local crestColor = o.crestColor or o.trim
+	if groups.helm then
+		add(P(o.helmName or "HelmCap", "Head", "Ball", v3(1.42, 0.95, 1.42), cf(0, 0.62, 0.02), o.main, { mat = METAL }))
+		add(P("HelmBrim", "Head", "Cylinder", v3(1.46, 0.14, 1.46), cf(0, 0.3, 0.02), o.trim, { mat = METAL }))
+		add(P("CheekL", "Head", "Block", v3(0.14, 0.7, 0.5), cf(-0.66, 0, 0.12), o.main, { mat = METAL }))
+		add(P("CheekR", "Head", "Block", v3(0.14, 0.7, 0.5), cf(0.66, 0, 0.12), o.main, { mat = METAL }))
+		add(P("VisorGlow", "Head", "Block", v3(0.9, 0.09, 0.1), cf(0, 0.44, -0.7), o.glow, { neon = true }))
+		local crest = o.crest or "plume"
+		if crest == "plume" then
+			add(P("Plume", "Head", "Block", v3(0.22, 0.7 + 0.25 * t, 1.3), cf(0, 1.2, 0.1), crestColor, { anim = { kind = "swing", axis = "X", amp = 9, speed = 2.2 } }))
+			add(P("PlumeBase", "Head", "Block", v3(0.3, 0.3, 0.6), cf(0, 1.05, -0.1), o.trim, { mat = METAL }))
+		elseif crest == "horns" then
+			for _, s in { -1, 1 } do
+				add(P("HornBase" .. s, "Head", "Block", v3(0.3, 0.55, 0.3), cf(s * 0.58, 0.95, 0) * CFrame.Angles(0, 0, rad(-s * 25)), crestColor))
+				add(P("HornTip" .. s, "Head", "Wedge", v3(0.26, 0.5 + 0.2 * t, 0.3), cf(s * 0.9, 1.4 + 0.08 * t, 0) * CFrame.Angles(0, 0, rad(-s * 50)), crestColor))
+			end
+		elseif crest == "fins" then
+			add(
+				P(
+					"Fin",
+					"Head",
+					"Block",
+					v3(0.18, 1.1, 0.9),
+					cf(0, 1.0, 0.45) * CFrame.Angles(rad(-25), 0, 0),
+					crestColor,
+					{ anim = { kind = "swing", axis = "X", amp = 5, speed = 2.0 } }
+				)
+			)
+			for _, s in { -1, 1 } do
+				add(P("FinSide" .. s, "Head", "Block", v3(0.14, 0.7, 0.6), cf(s * 0.7, 0.7, 0.4) * CFrame.Angles(rad(-20), 0, rad(-s * 25)), crestColor))
+			end
+		elseif crest == "spikes" then
+			for i = -1, 1 do
+				add(P("HelmSpike" .. i, "Head", "Wedge", v3(0.26, 0.6 + 0.15 * t, 0.36), cf(0, 1.12, i * 0.38), crestColor))
+			end
+		end
+	end
+	if groups.shoulders then
+		for _, s in { -1, 1 } do
+			local side = if s < 0 then "Left" else "Right"
+			add(P("Pauldron" .. s, side .. "UpperArm", "Ball", v3(1.3 + 0.12 * t, 0.9 + 0.08 * t, 1.3 + 0.12 * t), cf(0, 0.4, 0), o.main, { mat = METAL }))
+			add(P("PauldronRim" .. s, side .. "UpperArm", "Cylinder", v3(1.3 + 0.12 * t, 0.12, 1.3 + 0.12 * t), cf(0, 0.12, 0), o.trim, { mat = METAL }))
+			add(P("PauldronSpike" .. s, side .. "UpperArm", "Wedge", v3(0.3, 0.55 + 0.2 * t, 0.3), cf(0, 0.95 + 0.06 * t, 0), o.trim, { mat = METAL }))
+			if t >= 2 then
+				add(
+					P(
+						"PauldronSpikeB" .. s,
+						side .. "UpperArm",
+						"Wedge",
+						v3(0.28, 0.5, 0.28),
+						cf(s * 0.62, 0.8, 0) * CFrame.Angles(0, 0, rad(-s * 45)),
+						o.accent,
+						{ neon = t >= 3 }
+					)
+				)
+			end
+		end
+	end
+	if groups.chest then
+		add(P("ChestPlate", "UpperTorso", "Block", v3(2.15, 1.5, 1.25), cf(0, 0.05, 0), o.main, { mat = METAL }))
+		add(P("Collar", "UpperTorso", "Block", v3(2.2, 0.26, 1.3), cf(0, 0.72, 0), o.trim, { mat = METAL }))
+		add(P("Emblem", "UpperTorso", "Disc", v3(0.8, 0.8, 0.1), cf(0, 0.15, -0.66), o.accent, { neon = t >= 2, mat = METAL }))
+		add(P("ChestStripeL", "UpperTorso", "Block", v3(0.14, 1.3, 0.12), cf(-0.75, 0.05, -0.66), o.trim, { mat = METAL }))
+		add(P("ChestStripeR", "UpperTorso", "Block", v3(0.14, 1.3, 0.12), cf(0.75, 0.05, -0.66), o.trim, { mat = METAL }))
+		if t >= 2 then
+			add(P("BackSpikeL", "UpperTorso", "Wedge", v3(0.3, 0.8, 0.3), cf(-0.6, 0.5, 0.75) * CFrame.Angles(rad(30), 0, 0), o.trim, { mat = METAL }))
+			add(P("BackSpikeR", "UpperTorso", "Wedge", v3(0.3, 0.8, 0.3), cf(0.6, 0.5, 0.75) * CFrame.Angles(rad(30), 0, 0), o.trim, { mat = METAL }))
+		end
+	end
+	if groups.belt then
+		for _, p in Kit.belt(o.belt or INK, o.trim) do
+			add(p)
+		end
+		add(P("TassetL", "LowerTorso", "Block", v3(0.85, 0.9, 0.18), cf(-0.55, -0.5, -0.5), o.main, { mat = METAL }))
+		add(P("TassetR", "LowerTorso", "Block", v3(0.85, 0.9, 0.18), cf(0.55, -0.5, -0.5), o.main, { mat = METAL }))
+	end
+	if groups.gauntlets then
+		for _, s in { "Left", "Right" } do
+			add(P("Gauntlet" .. s, s .. "LowerArm", "Block", v3(1.18, 0.95, 1.18), cf(0, -0.05, 0), o.main, { mat = METAL }))
+			add(P("GauntletRim" .. s, s .. "LowerArm", "Cylinder", v3(1.24, 0.12, 1.24), cf(0, 0.42, 0), o.trim, { mat = METAL }))
+		end
+	end
+	if groups.boots then
+		for _, s in { "Left", "Right" } do
+			add(P("Boot" .. s, s .. "Foot", "Block", v3(1.15, 0.55, 1.4), cf(0, 0.1, -0.1), o.main, { mat = METAL }))
+			add(P("Greave" .. s, s .. "LowerLeg", "Block", v3(1.15, 1.0, 1.15), cf(0, 0, 0), o.main, { mat = METAL }))
+			if t >= 2 then
+				add(P("Knee" .. s, s .. "UpperLeg", "Ball", v3(0.95, 0.95, 0.95), cf(0, -0.45, -0.4), o.trim, { mat = METAL }))
+			end
+		end
+	end
+	if groups.cape and o.cape then
+		for _, p in Kit.cape(o.cape, o.capeHem or o.trim, 1.9 + 0.1 * t, 3.0 + 0.4 * t) do
+			add(p)
+		end
+	end
+	return out
+end
+
+local function sharkTeeth(): { Prop }
+	local out: { Prop } = {}
+	for i = -2, 2 do
+		table.insert(out, P("Tooth" .. i, "Head", "Wedge", v3(0.16, 0.28, 0.16), cf(i * 0.22, 0.27, -0.68), rgb(255, 255, 255)))
+	end
+	return out
+end
+
+type Polish = {
+	outfit: { top: Color3?, waist: Color3?, arms: Color3?, hands: Color3?, legs: Color3?, feet: Color3? }?,
+	skin: Color3?,
+	drop: { string }?,
+	recolor: { [string]: any }?, -- name -> Color3 or { color, neon }
+	tweak: { [string]: { [string]: any } }?,
+	add: { { Prop } }?,
+	fx: { Fx }?,
+	set: { [string]: any }?, -- spec fields: light, halo, sound
+}
+
+local YELLOW = rgb(245, 205, 48)
+local NEON_CYAN = rgb(80, 255, 230)
+
+local function sword(name: string, len: number, w: number, blade: Color3, edge: Color3?, guard: Color3, grip: Color3, amp: number?): ({ Prop }, Fx)
+	return Kit.sword({ name = name, len = len, w = w, blade = blade, edge = edge, guard = guard, grip = grip, amp = amp })
+end
+local function swordParts(...: any): { Prop }
+	local props = sword(...)
+	return props
+end
+
+local function polishList(): { [string]: Polish }
+	local L: { [string]: Polish } = {}
+	local WHITE = rgb(255, 255, 255)
+
+	-- ===== KNIGHT'S KEEP =====
+	L.broke_bob = { -- Rookie Squire: blue tunic, yellow scarf, practice sword, open helmet
+		outfit = { top = rgb(60, 110, 210), waist = rgb(70, 50, 40), arms = rgb(60, 110, 210), hands = rgb(120, 80, 44), legs = rgb(50, 56, 80), feet = rgb(34, 30, 40) },
+		drop = { "SwordBlade", "SwordGuard", "BeltBuckle" },
+		tweak = { Helmet = { size = v3(1.5, 1.0, 1.5), at = cf(0, 0.62, 0.04) }, HelmetRim = { at = cf(0, 0.3, 0.04) } },
+		add = { Kit.scarf(rgb(255, 200, 50)), Kit.belt(rgb(70, 46, 30), GOLD), swordParts("SwordBlade", 2.1, 0.42, rgb(205, 212, 226), nil, GOLD, LEATHER, 28) },
+	}
+	L.delivery_dave = { -- Scroll Page: green tunic, indigo legs, red boots, shaped beret, ribbon scroll
+		outfit = { top = rgb(40, 160, 110), waist = rgb(60, 50, 40), arms = rgb(40, 160, 110), hands = rgb(245, 240, 225), legs = rgb(60, 56, 100), feet = rgb(200, 60, 60) },
+		drop = { "PageCap" },
+		add = {
+			{
+				P("PageCap", "Head", "Ball", v3(1.55, 0.65, 1.55), cf(0, 0.62, 0.02), rgb(60, 90, 200)),
+				P("BeretStalk", "Head", "Block", v3(0.14, 0.25, 0.14), cf(0.1, 0.98, 0), rgb(255, 200, 50)),
+			},
+			Kit.belt(rgb(120, 70, 30), GOLD),
+			Kit.badge(GOLD),
+		},
+	}
+	L.training_dummy = { -- Training Dummy: red patched shirt, denim legs, straw hat with a band
+		outfit = { top = rgb(180, 60, 50), waist = rgb(60, 90, 150), arms = rgb(180, 60, 50), hands = rgb(235, 205, 100), legs = rgb(60, 90, 150), feet = rgb(60, 44, 36) },
+		tweak = { SackHat = { shape = "Cylinder", size = v3(1.9, 0.14, 1.9) }, SackHatTop = { shape = "Ball", size = v3(1.0, 0.8, 1.0) } },
+		recolor = { SackHat = rgb(230, 195, 85), SackHatTop = rgb(230, 195, 85) },
+		add = {
+			{ P("SackBand", "Head", "Cylinder", v3(1.04, 0.14, 1.04), cf(0, 0.75, 0), rgb(60, 170, 90)) },
+			Kit.scarf(rgb(60, 180, 90)),
+			Kit.belt(rgb(200, 160, 70), rgb(150, 60, 40)),
+		},
+	}
+	L.street_hustler = { -- Apple Archer (R)
+		outfit = { top = rgb(34, 120, 70), waist = rgb(70, 50, 36), arms = rgb(34, 120, 70), hands = rgb(210, 170, 60), legs = rgb(56, 60, 80), feet = rgb(48, 34, 28) },
+		add = { Kit.sash(rgb(230, 60, 50)), Kit.pads(rgb(120, 76, 40)), Kit.belt(rgb(70, 50, 36), GOLD) },
+		fx = { { on = "Apple", kind = "spark", color = rgb(255, 90, 80), rate = 2 } },
+	}
+	L.business_betty = { -- Banner Bearer (R)
+		outfit = { top = rgb(200, 44, 52), waist = rgb(240, 200, 60), arms = rgb(200, 44, 52), hands = rgb(255, 210, 70), legs = rgb(40, 50, 110), feet = rgb(30, 30, 50) },
+		add = { Kit.pads(rgb(255, 200, 60)), Kit.cape(rgb(40, 50, 130), GOLD, 1.8, 2.2), Kit.badge(WHITE) },
+		fx = { { on = "FlagStar", kind = "spark", color = rgb(255, 230, 120), rate = 3 } },
+	}
+	do
+		local blade, trail = sword("Sword", 2.6, 0.5, rgb(225, 232, 242), rgb(90, 200, 255), rgb(205, 212, 226), LEATHER, 35)
+		local shield = Kit.shield({ w = 2.2, h = 3.0, face = rgb(40, 100, 220), rim = rgb(205, 212, 226), emblem = WHITE, at = cf(-0.5, 0.4, -1.15) })
+		L.security_sam = { -- Shield Knight (E)
+			outfit = { top = rgb(38, 48, 90), waist = rgb(28, 32, 60), arms = rgb(38, 48, 90), hands = STEEL, legs = rgb(28, 34, 62), feet = STEEL_D },
+			drop = { "Helm", "HelmTop", "Visor", "Crest", "PauldronL", "PauldronR", "ChestPlate", "ChestStripe", "ShieldBorder", "Shield", "ShieldBoss", "Sword", "SwordGuard" },
+			add = {
+				Kit.armor({
+					main = rgb(44, 56, 104),
+					trim = rgb(205, 212, 226),
+					accent = rgb(60, 170, 255),
+					glow = rgb(90, 200, 255),
+					tier = 1,
+					crest = "plume",
+					crestColor = rgb(60, 170, 255),
+					cape = rgb(30, 70, 170),
+					capeHem = rgb(205, 212, 226),
+				}),
+				shield,
+				blade,
+			},
+			fx = { trail },
+			set = { halo = rgb(80, 180, 255) },
+		}
+	end
+	do
+		local hammer, trail = Kit.hammer({ head = rgb(60, 62, 74), glow = rgb(255, 130, 30), brass = rgb(205, 160, 70), handle = rgb(110, 70, 40) })
+		L.crypto_carl = { -- Forge Master (E)
+			outfit = { top = rgb(46, 44, 52), waist = rgb(30, 28, 34), arms = rgb(86, 52, 40), hands = rgb(205, 160, 70), legs = rgb(34, 34, 42), feet = rgb(205, 160, 70) },
+			drop = { "Goggles", "LensL", "LensR", "Apron", "ApronPocket", "Beard", "HammerHandle", "HammerHead", "HammerGlow" },
+			add = {
+				Kit.armor({
+					main = rgb(52, 50, 60),
+					trim = rgb(205, 160, 70),
+					accent = rgb(255, 110, 30),
+					glow = rgb(255, 140, 40),
+					tier = 1,
+					crest = "horns",
+					crestColor = rgb(205, 160, 70),
+				}),
+				{
+					P("Goggles", "Head", "Block", v3(1.3, 0.2, 0.12), cf(0, 0.55, -0.76), rgb(70, 50, 40)),
+					P("LensL", "Head", "Disc", v3(0.36, 0.36, 0.1), cf(-0.3, 0.55, -0.82), rgb(255, 170, 60), { neon = true }),
+					P("LensR", "Head", "Disc", v3(0.36, 0.36, 0.1), cf(0.3, 0.55, -0.82), rgb(255, 170, 60), { neon = true }),
+					P("Apron", "LowerTorso", "Block", v3(1.5, 1.4, 0.15), cf(0, -0.7, -0.6), rgb(112, 62, 40)),
+				},
+				hammer,
+			},
+			fx = { trail },
+			set = { halo = rgb(255, 120, 30) },
+		}
+	end
+	do
+		local blade, trail = sword("Blade", 3.6, 0.7, rgb(250, 250, 255), rgb(255, 230, 130), GOLD, rgb(120, 24, 36), 45)
+		L.ceo_chad = { -- Golden Paladin (L): gold plate over dark-red and white under-layers
+			outfit = { top = rgb(120, 24, 36), waist = rgb(90, 18, 30), arms = rgb(236, 232, 224), hands = GOLD, legs = rgb(120, 24, 36), feet = GOLD },
+			drop = { "Helm", "HelmTop", "Visor", "Plume", "PauldronL", "PauldronR", "ChestPlate", "Emblem", "Cape", "Blade", "BladeGuard" },
+			add = {
+				Kit.armor({
+					main = GOLD,
+					trim = rgb(245, 245, 250),
+					accent = rgb(220, 40, 50),
+					glow = rgb(255, 240, 160),
+					tier = 2,
+					crest = "plume",
+					crestColor = rgb(220, 40, 50),
+					cape = rgb(150, 24, 36),
+					capeHem = GOLD,
+					belt = rgb(90, 18, 30),
+				}),
+				blade,
+			},
+			fx = { trail },
+			set = { sound = "legendary_chime" },
+		}
+	end
+	do
+		local blade, trail = sword("Blade", 4.8, 0.95, rgb(205, 212, 226), rgb(255, 110, 30), rgb(150, 158, 175), rgb(60, 40, 40), 35)
+		local shield = Kit.shield({ w = 2.7, h = 3.6, face = rgb(100, 18, 28), rim = rgb(150, 158, 175), emblem = rgb(255, 110, 30), at = cf(-0.7, 0.4, -1.36), neon = true })
+		L.mystery_millionaire = { -- Sir Ironclad (S): dark iron, lava accents, horns
+			outfit = { top = rgb(40, 42, 54), waist = rgb(28, 30, 40), arms = rgb(40, 42, 54), hands = rgb(30, 30, 36), legs = rgb(30, 32, 42), feet = rgb(20, 20, 26) },
+			drop = {
+				"Helm",
+				"HelmTop",
+				"VisorGlow",
+				"Plume",
+				"PauldronL",
+				"PauldronR",
+				"ChestPlate",
+				"ChestCrest",
+				"Cape",
+				"ShieldRim",
+				"Shield",
+				"ShieldStar",
+				"Blade",
+				"BladeGuard",
+			},
+			add = {
+				Kit.armor({
+					main = rgb(52, 55, 70),
+					trim = rgb(150, 158, 175),
+					accent = rgb(255, 100, 30),
+					glow = rgb(255, 120, 40),
+					tier = 3,
+					crest = "horns",
+					crestColor = rgb(200, 200, 210),
+					cape = rgb(110, 18, 26),
+					capeHem = rgb(255, 100, 30),
+				}),
+				shield,
+				blade,
+			},
+			fx = { trail },
+			set = { sound = "boss_roar" },
+		}
+	end
+
+	-- ===== SUNKEN KINGDOM =====
+	L.bubble_fish = {
+		skin = YELLOW,
+		outfit = { top = rgb(30, 160, 170), waist = rgb(20, 60, 110), arms = rgb(30, 160, 170), hands = rgb(255, 150, 40), legs = rgb(20, 60, 110), feet = rgb(255, 150, 40) },
+		add = { Kit.scarf(rgb(255, 150, 40)), Kit.belt(rgb(250, 200, 40), WHITE) },
+	}
+	L.hermit_porter = {
+		outfit = { top = rgb(40, 110, 160), waist = rgb(30, 40, 90), arms = rgb(40, 110, 160), hands = rgb(240, 140, 40), legs = rgb(30, 40, 90), feet = rgb(40, 36, 50) },
+		recolor = { HatBrim = rgb(250, 200, 40), HatTop = rgb(250, 200, 40), Shell = rgb(240, 130, 90), ShellStripe = rgb(255, 240, 210) },
+		add = { Kit.sash(rgb(240, 120, 40)), Kit.belt(rgb(40, 40, 60), GOLD), Kit.badge(WHITE) },
+	}
+	L.coral_snail = {
+		skin = rgb(255, 190, 200),
+		outfit = { top = rgb(255, 110, 130), waist = rgb(255, 200, 60), arms = rgb(255, 110, 130), hands = rgb(255, 230, 230), legs = rgb(40, 160, 170), feet = rgb(40, 160, 170) },
+		recolor = { Shell = rgb(255, 150, 70), ShellSwirl = rgb(150, 80, 200) },
+		add = { Kit.belt(rgb(150, 80, 200), GOLD) },
+	}
+	L.puffer_guard = {
+		outfit = { top = rgb(35, 70, 140), waist = rgb(30, 40, 100), arms = rgb(35, 70, 140), hands = rgb(255, 200, 60), legs = rgb(30, 40, 100), feet = rgb(240, 120, 40) },
+		add = { Kit.pads(rgb(240, 120, 40)), Kit.belt(rgb(30, 40, 100), rgb(255, 200, 60)) },
+		fx = { { on = "Belly", kind = "bubble", color = rgb(255, 235, 150), rate = 2 } },
+	}
+	L.mermaid_mage = {
+		outfit = { top = rgb(130, 70, 200), waist = TEAL, arms = rgb(130, 70, 200), hands = rgb(250, 230, 255), legs = rgb(30, 90, 130), feet = TEAL },
+		drop = { "Hair" },
+		add = { Kit.cape(rgb(40, 170, 190), PEARL, 1.6, 2.0), Kit.badge(PEARL) },
+		fx = { { on = "StaffPearl", kind = "spark", color = rgb(255, 245, 255), rate = 3 } },
+	}
+	do
+		local blade, trail = sword("Blade", 2.8, 0.5, rgb(215, 232, 245), rgb(70, 220, 255), rgb(200, 212, 226), rgb(40, 60, 90), 40)
+		local fx: { Fx } = { trail }
+		L.shark_knight = { -- Shark Knight (E)
+			outfit = { top = rgb(34, 52, 84), waist = rgb(24, 36, 60), arms = rgb(34, 52, 84), hands = rgb(190, 205, 220), legs = rgb(24, 38, 64), feet = rgb(190, 205, 220) },
+			drop = { "SharkHood", "Snout", "Teeth", "EyeL", "EyeR", "DorsalHead", "PauldronL", "PauldronR", "Chest", "BackFin", "Blade", "Guard" },
+			add = {
+				Kit.armor({
+					main = rgb(60, 86, 124),
+					trim = rgb(200, 212, 226),
+					accent = rgb(70, 220, 255),
+					glow = rgb(70, 220, 255),
+					tier = 1,
+					crest = "fins",
+					crestColor = rgb(90, 112, 140),
+					cape = rgb(24, 70, 110),
+					capeHem = rgb(70, 220, 255),
+					helmName = "SharkHood",
+				}),
+				sharkTeeth(),
+				{
+					P("SharkEyeL", "Head", "Disc", v3(0.22, 0.22, 0.1), cf(-0.4, 0.78, -0.62), rgb(70, 220, 255), { neon = true }),
+					P("SharkEyeR", "Head", "Disc", v3(0.22, 0.22, 0.1), cf(0.4, 0.78, -0.62), rgb(70, 220, 255), { neon = true }),
+				},
+				blade,
+			},
+			fx = fx,
+			set = { halo = rgb(70, 200, 255) },
+		}
+	end
+	L.pearl_seahorse = {
+		recolor = {
+			Belly = rgb(240, 110, 170),
+			Neck = rgb(235, 100, 160),
+			Snout = rgb(245, 130, 180),
+			Tail1 = rgb(235, 100, 160),
+			Tail2 = rgb(235, 100, 160),
+			Tail3 = rgb(235, 100, 160),
+			Dorsal = rgb(60, 210, 210),
+			Eye = { rgb(80, 255, 230), true },
+		},
+		add = {
+			{
+				P("BellyPlate1", "LowerTorso", "Block", v3(0.8, 0.22, 0.5), cf(0, 0.3, -0.5), GOLD, { mat = METAL }),
+				P("BellyPlate2", "LowerTorso", "Block", v3(0.75, 0.22, 0.5), cf(0, -0.1, -0.52), GOLD, { mat = METAL }),
+				P("BellyPlate3", "LowerTorso", "Block", v3(0.7, 0.22, 0.5), cf(0, -0.5, -0.46), GOLD, { mat = METAL }),
+				P("DorsalSpikeA", "LowerTorso", "Wedge", v3(0.2, 0.5, 0.3), cf(0, 0.9, 0.5), rgb(60, 210, 210), { neon = true }),
+				P("DorsalSpikeB", "LowerTorso", "Wedge", v3(0.2, 0.5, 0.3), cf(0, 0.4, 0.62), rgb(60, 210, 210), { neon = true }),
+				P("DorsalSpikeC", "LowerTorso", "Wedge", v3(0.2, 0.5, 0.3), cf(0, -0.1, 0.62), rgb(60, 210, 210), { neon = true }),
+			},
+		},
+		set = { halo = rgb(255, 200, 235) },
+	}
+	do
+		local tips = {}
+		local tipAnim = { kind = "swing", axis = "X", amp = 6, speed = 1.5 }
+		for i, d in { { 0, 5.95 }, { -0.5, 5.6 }, { 0.5, 5.6 } } do
+			table.insert(tips, P("TridentTip" .. i, "RightHand", "Block", v3(0.16, 0.55, 0.16), cf(d[1], d[2], -0.45), rgb(90, 230, 255), { neon = true, anim = tipAnim }))
+		end
+		L.tide_warden = { -- Tide Warden (L)
+			outfit = { top = rgb(16, 70, 110), waist = rgb(10, 44, 76), arms = rgb(16, 70, 110), hands = GOLD, legs = rgb(12, 50, 86), feet = GOLD },
+			drop = { "Helm", "HelmTop", "Visor", "Chest", "Kelp" },
+			recolor = { ShellPauldronL = rgb(255, 150, 130), ShellPauldronR = rgb(255, 150, 130) },
+			add = {
+				Kit.armor({
+					main = rgb(16, 70, 110),
+					trim = GOLD,
+					accent = rgb(255, 110, 100),
+					glow = rgb(90, 230, 255),
+					tier = 2,
+					crest = "none",
+					cape = rgb(20, 110, 90),
+					capeHem = rgb(255, 215, 100),
+					groups = { "helm", "chest", "belt", "gauntlets", "boots", "cape" },
+				}),
+				tips,
+			},
+			set = { sound = "legendary_chime" },
+		}
+	end
+
+	-- ===== EMBER ACADEMY =====
+	L.butler_barnaby = {
+		outfit = { top = rgb(235, 70, 55), waist = rgb(60, 40, 80), arms = rgb(235, 70, 55), hands = rgb(250, 235, 200), legs = rgb(60, 40, 80), feet = rgb(255, 170, 40) },
+		add = { Kit.scarf(rgb(255, 215, 60)), Kit.belt(rgb(255, 200, 40), WHITE) },
+	}
+	L.caddie_gus = {
+		skin = rgb(255, 140, 60),
+		outfit = { top = rgb(255, 120, 40), waist = rgb(40, 100, 110), arms = rgb(255, 120, 40), hands = rgb(255, 220, 80), legs = rgb(40, 100, 110), feet = rgb(40, 60, 80) },
+		add = { Kit.belt(rgb(40, 200, 210), WHITE) },
+	}
+	L.bookling = {
+		outfit = { top = rgb(110, 60, 150), waist = rgb(80, 40, 110), arms = rgb(110, 60, 150), hands = rgb(255, 210, 70), legs = rgb(60, 60, 130), feet = rgb(255, 210, 70) },
+		add = { { P("Bookmark", "UpperTorso", "Block", v3(0.3, 1.2, 0.1), cf(0.6, -0.5, -1.0), rgb(255, 200, 60)) }, Kit.belt(rgb(255, 200, 60), WHITE) },
+	}
+	L.polo_pro_penny = {
+		skin = rgb(150, 100, 170),
+		outfit = { top = rgb(110, 70, 150), waist = rgb(90, 50, 120), arms = rgb(110, 70, 150), hands = rgb(255, 160, 40), legs = rgb(255, 160, 40), feet = rgb(255, 160, 40) },
+		add = { { P("OwlBelly", "UpperTorso", "Ball", v3(1.5, 1.4, 0.4), cf(0, -0.1, -0.5), rgb(250, 230, 190)) }, Kit.scarf(rgb(255, 160, 40)), Kit.pads(rgb(255, 160, 40)) },
+	}
+	L.chef_pierre = {
+		outfit = { top = rgb(210, 50, 50), waist = rgb(255, 200, 70), arms = rgb(210, 50, 50), hands = rgb(255, 150, 40), legs = rgb(46, 38, 70), feet = rgb(255, 170, 40) },
+		add = { Kit.pads(rgb(255, 200, 70)), Kit.cape(rgb(110, 30, 120), rgb(255, 150, 40), 1.7, 2.0) },
+	}
+	L.bodyguard_boris = { -- Rune Golem (E)
+		skin = rgb(78, 74, 92),
+		outfit = { top = rgb(86, 82, 102), waist = rgb(60, 58, 76), arms = rgb(78, 74, 92), hands = rgb(255, 190, 60), legs = rgb(60, 58, 76), feet = rgb(40, 40, 52) },
+		recolor = {
+			TorsoRock = rgb(70, 66, 86),
+			HeadRock = rgb(90, 86, 106),
+			ShoulderL = rgb(96, 92, 112),
+			ShoulderR = rgb(96, 92, 112),
+			FistL = rgb(60, 58, 76),
+			FistR = rgb(60, 58, 76),
+			EyeL = { NEON_CYAN, true },
+			EyeR = { NEON_CYAN, true },
+			ChestRune = { NEON_CYAN, true },
+			RuneArmL = { NEON_CYAN, true },
+			RuneArmR = { NEON_CYAN, true },
+			BackCrystal = { NEON_CYAN, true },
+		},
+		add = {
+			{
+				P("SpikeShoulderL", "LeftUpperArm", "Wedge", v3(0.4, 0.9, 0.4), cf(0, 1.0, 0), GOLD, { mat = METAL }),
+				P("SpikeShoulderR", "RightUpperArm", "Wedge", v3(0.4, 0.9, 0.4), cf(0, 1.0, 0), GOLD, { mat = METAL }),
+				P("GoldBelt", "LowerTorso", "Block", v3(2.3, 0.4, 1.3), cf(0, 0, 0), GOLD, { mat = METAL }),
+				P("KnuckleL", "LeftHand", "Block", v3(1.2, 0.3, 1.2), cf(0, -0.1, 0), GOLD, { mat = METAL }),
+				P("KnuckleR", "RightHand", "Block", v3(1.2, 0.3, 1.2), cf(0, -0.1, 0), GOLD, { mat = METAL }),
+			},
+		},
+		set = { halo = NEON_CYAN },
+	}
+	L.hedge_fund_hank = { -- Phoenix (E)
+		add = { { P("Core", "LowerTorso", "Ball", v3(0.8, 0.8, 0.5), cf(0, 0.4, -0.6), rgb(255, 250, 200), { neon = true, anim = { kind = "pulse", amp = 0.2, speed = 4 } }) } },
+		set = { halo = FLAME },
+	}
+	L.oil_baron_oswald = { -- Flame Archmage (L)
+		outfit = { top = rgb(58, 30, 92), waist = rgb(255, 200, 70), arms = rgb(58, 30, 92), hands = rgb(255, 200, 70), legs = rgb(36, 22, 60), feet = rgb(255, 200, 70) },
+		drop = { "Beard" },
+		recolor = { Brim = rgb(44, 26, 78), Hat1 = rgb(58, 30, 92), Hat2 = rgb(58, 30, 92), Hat3 = rgb(58, 30, 92), Skirt = rgb(58, 30, 92) },
+		add = {
+			Kit.armor({
+				main = rgb(44, 26, 78),
+				trim = GOLD,
+				accent = FIRE,
+				glow = FLAME,
+				tier = 2,
+				groups = { "shoulders", "gauntlets", "belt", "cape" },
+				cape = rgb(36, 18, 64),
+				capeHem = FIRE,
+				belt = rgb(44, 26, 78),
+			}),
+			{ P("Beard", "Head", "Block", v3(0.9, 0.7, 0.3), cf(0, -0.95, -0.45), rgb(245, 245, 250)) },
+		},
+		set = { sound = "legendary_chime" },
+	}
+	L.the_trillionaire = { -- Ignis (S)
+		outfit = { top = rgb(40, 16, 30), waist = rgb(255, 170, 40), arms = rgb(40, 16, 30), hands = rgb(255, 170, 40), legs = rgb(30, 12, 22), feet = rgb(255, 170, 40) },
+		recolor = {
+			Brim = rgb(40, 14, 34),
+			Hat1 = rgb(60, 20, 44),
+			Hat2 = rgb(60, 20, 44),
+			Hat3 = rgb(60, 20, 44),
+			Hat4 = rgb(60, 20, 44),
+			Cape = rgb(90, 16, 24),
+			Robe = rgb(40, 16, 30),
+		},
+		add = { Kit.armor({ main = rgb(40, 16, 30), trim = GOLD, accent = FIRE, glow = FLAME, tier = 3, groups = { "shoulders", "gauntlets", "belt" }, belt = rgb(40, 16, 30) }) },
+		set = { sound = "boss_roar" },
+	}
+	return L
+end
+
+local function applyPolish()
+	for id, pol in polishList() do
+		local spec = CreatureSpecs[id]
+		if not spec then
+			warn("[CreatureSpecs] polish for unknown creature", id)
+			continue
+		end
+		if pol.skin then
+			spec.skin = pol.skin
+		end
+		if pol.outfit then
+			spec.outfit = outfit(pol.outfit)
+		end
+		local props = spec.props
+		if pol.drop then
+			local gone = {}
+			for _, n in pol.drop do
+				gone[n] = true
+			end
+			local kept = {}
+			for _, p in props do
+				if not gone[p.n or p.on] then
+					table.insert(kept, p)
+				end
+			end
+			props = kept
+		end
+		for _, p in props do
+			local name = p.n or p.on
+			local c = pol.recolor and pol.recolor[name]
+			if c then
+				if typeof(c) == "table" then
+					p.color, p.neon = c[1], c[2]
+				else
+					p.color = c
+				end
+			end
+			local tw = pol.tweak and pol.tweak[name]
+			if tw then
+				for k, v in tw do
+					(p :: any)[k] = v
+				end
+			end
+		end
+		for _, list in pol.add or {} do
+			for _, p in list do
+				table.insert(props, p)
+			end
+		end
+		spec.props = props
+		if pol.fx then
+			spec.fx = spec.fx or {}
+			for _, f in pol.fx do
+				table.insert(spec.fx, f)
+			end
+		end
+		for k, v in pol.set or {} do
+			(spec :: any)[k] = v
+		end
+	end
+end
+applyPolish()
+
 return CreatureSpecs

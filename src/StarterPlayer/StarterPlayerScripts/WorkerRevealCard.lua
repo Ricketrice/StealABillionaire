@@ -233,6 +233,12 @@ panel.ClipsDescendants = true
 local stroke = panel:FindFirstChildOfClass("UIStroke") :: UIStroke
 stroke.Thickness = 2.5
 
+local ZONE_THEME = {
+	MainStreet = { top = Color3.fromRGB(96, 78, 130), floor = Color3.fromRGB(38, 34, 52) }, -- Knight's Keep: castle dusk
+	SunkenKingdom = { top = Color3.fromRGB(40, 150, 190), floor = Color3.fromRGB(8, 40, 84) }, -- underwater
+	BillionaireHills = { top = Color3.fromRGB(120, 60, 150), floor = Color3.fromRGB(44, 20, 52) }, -- Ember Academy: magic library
+}
+
 local stage =
 	UIKit.make("Frame", { Name = "Stage", Size = UDim2.new(1, 0, 0, STAGE_H), BackgroundColor3 = C.PanelDark, BorderSizePixel = 0, ClipsDescendants = true, Parent = panel })
 UIStyle.corner(stage, UDim.new(0, 20))
@@ -733,7 +739,10 @@ local function show(workerId: string)
 	-- colours for this rarity
 	rarityTag.set(rarity)
 	stroke.Color = color:Lerp(C.Panel, if rarity == "Common" then 0.6 else 0.15)
-	backdrop.Color = ColorSequence.new(color:Lerp(C.PanelDark, if rarity == "Common" then 0.8 elseif tier.banner then 0.4 else 0.55), C.PanelDark)
+	-- 035: no city skyline; a zone-themed gradient (castle dusk / deep sea / magic library) in the rarity colour
+	local theme = ZONE_THEME[worker.zone] or { top = C.PanelDark, floor = C.PanelDark }
+	local top = color:Lerp(C.PanelDark, if rarity == "Common" then 0.8 elseif tier.banner then 0.4 else 0.55)
+	backdrop.Color = ColorSequence.new(top:Lerp(theme.top, 0.45), theme.floor)
 	local glyph = UIStyle.RarityGlyph[rarity] or ""
 	bannerText.Text = if art and art.banner then string.upper(rarity) else glyph .. "  " .. string.upper(rarity) .. "  " .. glyph -- the plate has its own ornaments
 	bannerText.TextColor3 = color
