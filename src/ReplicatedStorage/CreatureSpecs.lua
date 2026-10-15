@@ -735,7 +735,7 @@ CreatureSpecs.tide_warden = { -- Tide Warden (L): Aquaris's champion; coral crow
 -- on the ground, big finger-boned wings with glowing membrane panels (they flap), a spiked tail that sways. The rig only walks it.
 -- DRAGON_MESHES: false = every piece from plain parts; true = the Blender head, wings and tail tip from ServerStorage.Imports035.
 local DragonKit = require(script.Parent:WaitForChild("DragonKit"))
-local DRAGON_MESHES = false
+local DRAGON_MESHES = true
 local function aquaris(): Spec
 	local props, fx = DragonKit.build({ u = 1, colors = DragonKit.WATER, meshes = DRAGON_MESHES })
 	return {

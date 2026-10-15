@@ -191,6 +191,10 @@ local function makeModelParts(prop: any, body: BasePart): { BasePart }
 	local k = fit.size / (if fit.axis == "X" then ext.X elseif fit.axis == "Y" then ext.Y else ext.Z)
 	for _, m in meshes do
 		local key = m.Name:match("_(.+)$") or m.Name
+		local look: any = prop.colors and prop.colors[key]
+		if look and type(look) == "table" and look.skip then
+			continue -- a mesh part the spec replaces with plain parts
+		end
 		local part = m:Clone()
 		for _, c in part:GetChildren() do
 			if not (c:IsA("SpecialMesh") or c:IsA("SurfaceAppearance")) then
@@ -202,7 +206,6 @@ local function makeModelParts(prop: any, body: BasePart): { BasePart }
 		local rel = anchor.CFrame:ToObjectSpace(m.CFrame)
 		local offset = prop.at * CFrame.new(rel.Position * k) * rel.Rotation
 		part.CFrame = body.CFrame * offset
-		local look: any = prop.colors and prop.colors[key]
 		if typeof(look) == "Color3" then
 			look = { color = look }
 		end

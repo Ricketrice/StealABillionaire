@@ -27,6 +27,10 @@ export type Colors = {
 	dark: Color3,
 }
 
+-- The first Blender export built its spike pieces wrongly (teeth, crest, claw, tail spikes); until the corrected FBX files are
+-- imported those four pieces are skipped and made from plain parts. Set true after re-importing assets/export/035.
+DragonKit.SPIKES_FIXED = false
+
 DragonKit.WATER = {
 	back = rgb(18, 84, 176),
 	back2 = rgb(30, 110, 205),
@@ -63,7 +67,10 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 	local function P(x: number, y: number, z: number): Vector3 -- design point -> rig space
 		return v3(x * u, G + (y + 2.25) * u, z * u)
 	end
-	local function S(x: number, y: number, z: number): Vector3
+	local function D(x: number, y: number, z: number): Vector3 -- an offset (may be negative)
+		return v3(x * u, y * u, z * u)
+	end
+	local function S(x: number, y: number, z: number): Vector3 -- a part size
 		return v3(math.max(x * u, 0.05), math.max(y * u, 0.05), math.max(z * u, 0.05))
 	end
 	local function add(n: string, shape: string, size: Vector3, at: CFrame, color: Color3, extra: { [string]: any }?)
@@ -122,13 +129,13 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			Skull = c.back,
 			Snout = c.back2,
 			Jaw = c.belly,
-			Teeth = rgb(250, 250, 255),
+			Teeth = { color = rgb(250, 250, 255), skip = not DragonKit.SPIKES_FIXED },
 			Nostrils = c.dark,
 			Horns = { color = c.gold, mat = METAL },
 			CheekFins = { color = c.membrane, neon = true, trans = 0.3 },
 			Sockets = c.dark,
 			Eyes = { color = c.eye, neon = true },
-			Crest = { color = c.gold, mat = METAL },
+			Crest = { color = c.gold, mat = METAL, skip = not DragonKit.SPIKES_FIXED },
 		}
 		table.insert(props, {
 			n = "HeadMesh",
@@ -139,27 +146,32 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			colors = col,
 			partAnim = { Jaw = { kind = "swing", axis = "X", amp = 11, speed = 1.6, pivot = cf(H0 + v3(0, 0.1 * u, -0.25 * u)) } },
 		})
+		if not DragonKit.SPIKES_FIXED then
+			for i = 1, 3 do
+				spikeUp("Crest" .. i, H0 + D(0, 1.0, -0.15 + i * 0.4), 0.55 - i * 0.08, 0.2, c.gold)
+			end
+		end
 	else
-		add("Head", "Ball", S(1.1, 1.0, 1.2), cf(H0 + S(0, 0.5, -0.5)), c.back)
-		add("Snout", "Block", S(0.72, 0.55, 1.7), cf(H0 + S(0, 0.42, -1.6)), c.back2)
-		add("SnoutTip", "Block", S(0.52, 0.4, 0.4), cf(H0 + S(0, 0.38, -2.55)), c.back2)
+		add("Head", "Ball", S(1.1, 1.0, 1.2), cf(H0 + D(0, 0.5, -0.5)), c.back)
+		add("Snout", "Block", S(0.72, 0.55, 1.7), cf(H0 + D(0, 0.42, -1.6)), c.back2)
+		add("SnoutTip", "Block", S(0.52, 0.4, 0.4), cf(H0 + D(0, 0.38, -2.55)), c.back2)
 		add(
 			"Jaw",
 			"Block",
 			S(0.56, 0.2, 1.9),
-			cf(H0 + S(0, 0.08, -1.45)),
+			cf(H0 + D(0, 0.08, -1.45)),
 			c.belly,
-			{ anim = { kind = "swing", axis = "X", amp = 11, speed = 1.6, pivot = cf(H0 + S(0, 0.1, -0.25)) } }
+			{ anim = { kind = "swing", axis = "X", amp = 11, speed = 1.6, pivot = cf(H0 + D(0, 0.1, -0.25)) } }
 		)
 		for _, s in { -1, 1 } do
-			add("Nostril" .. s, "Ball", S(0.12, 0.1, 0.1), cf(H0 + S(s * 0.15, 0.63, -2.72)), c.dark)
-			add("Eye" .. s, "Ball", S(0.3, 0.3, 0.3), cf(H0 + S(s * 0.5, 0.65, -0.85)), c.eye, { neon = true })
-			limb("HornA" .. s, H0 + S(s * 0.33, 1.0, -0.15), H0 + S(s * 0.5, 1.4, 0.7), 0.26, c.gold, { mat = METAL })
-			limb("HornB" .. s, H0 + S(s * 0.5, 1.4, 0.7), H0 + S(s * 0.66, 1.3, 1.65), 0.16, c.gold, { mat = METAL })
-			add("CheekFin" .. s, "Block", S(0.06, 0.6, 0.9), cf(H0 + S(s * 0.7, 0.2, 0.05)) * CFrame.Angles(0, rad(-s * 20), 0), c.membrane, { neon = true, trans = 0.3 })
+			add("Nostril" .. s, "Ball", S(0.12, 0.1, 0.1), cf(H0 + D(s * 0.15, 0.63, -2.72)), c.dark)
+			add("Eye" .. s, "Ball", S(0.3, 0.3, 0.3), cf(H0 + D(s * 0.5, 0.65, -0.85)), c.eye, { neon = true })
+			limb("HornA" .. s, H0 + D(s * 0.33, 1.0, -0.15), H0 + D(s * 0.5, 1.4, 0.7), 0.26, c.gold, { mat = METAL })
+			limb("HornB" .. s, H0 + D(s * 0.5, 1.4, 0.7), H0 + D(s * 0.66, 1.3, 1.65), 0.16, c.gold, { mat = METAL })
+			add("CheekFin" .. s, "Block", S(0.06, 0.6, 0.9), cf(H0 + D(s * 0.7, 0.2, 0.05)) * CFrame.Angles(0, rad(-s * 20), 0), c.membrane, { neon = true, trans = 0.3 })
 		end
 		for i = 1, 3 do
-			spikeUp("Crest" .. i, H0 + S(0, 1.0, -0.15 + i * 0.4), 0.55 - i * 0.08, 0.2, c.gold)
+			spikeUp("Crest" .. i, H0 + D(0, 1.0, -0.15 + i * 0.4), 0.55 - i * 0.08, 0.2, c.gold)
 		end
 	end
 	fx[#fx + 1] = { on = "Snout", kind = "puff", color = rgb(170, 235, 255), rate = 20, size = 2.0 * u, at = v3(0, 0, -(if meshes then 1.2 else 0.85) * u), aura = true }
@@ -173,17 +185,20 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			table.insert(props, {
 				n = "Wing" .. side,
 				on = "LowerTorso",
-				model = "DragonWing" .. side,
+				model = if s > 0 then "DragonWingL" else "DragonWingR", -- (Blender's X arrives mirrored: the ...L file reaches toward +X)
 				at = cf(S0),
 				fit = { axis = "X", size = 6.4 * u },
 				anim = flapAnim,
 				colors = {
 					Bones = c.bone,
-					Claw = { color = c.gold, mat = METAL },
+					Claw = { color = c.gold, mat = METAL, skip = not DragonKit.SPIKES_FIXED },
 					Membrane = { color = c.membrane, neon = true, trans = 0.35 },
 					Edge = { color = c.edge, neon = true },
 				},
 			})
+			if not DragonKit.SPIKES_FIXED then
+				add("WingClaw" .. side, "Wedge", S(0.2, 0.5, 0.25), cf(S0 + D(s * 3.95, 2.4, -0.85)), c.gold, { mat = METAL, anim = flapAnim })
+			end
 		else
 			local E = P(s * 2.7, 2.45, 0.4)
 			local W = P(s * 4.6, 3.15, -0.7)
@@ -197,7 +212,7 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			for i, t in T do
 				limb("WingFinger" .. side .. i, W, t, 0.15, c.bone, { anim = anim() })
 			end
-			add("WingClaw" .. side, "Wedge", S(0.2, 0.5, 0.25), cf(W + S(s * 0.15, 0.3, -0.35)), c.gold, { mat = METAL, anim = anim() })
+			add("WingClaw" .. side, "Wedge", S(0.2, 0.5, 0.25), cf(W + D(s * 0.15, 0.3, -0.35)), c.gold, { mat = METAL, anim = anim() })
 			local mem = { neon = true, trans = 0.35, anim = anim() }
 			tri("Membrane" .. side .. 1, W, T[1], T[2], c.membrane, mem)
 			tri("Membrane" .. side .. 2, W, T[2], T[3], c.membrane, mem)
@@ -247,14 +262,21 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			at = cf(tailPts[tailN]),
 			fit = { axis = "Z", size = 3.2 * u },
 			anim = sway(14, 1.2, 2.2, pivot0),
-			colors = { Segments = c.back, Fin = { color = c.membrane, neon = true, trans = 0.25 }, Spikes = { color = c.gold, mat = METAL } },
+			colors = { Segments = c.back, Fin = { color = c.membrane, neon = true, trans = 0.25 }, Spikes = { color = c.gold, mat = METAL, skip = not DragonKit.SPIKES_FIXED } },
 		})
+		if not DragonKit.SPIKES_FIXED then
+			local a = sway(14, 1.2, 2.2, pivot0)
+			add("TailTipSpike", "Wedge", S(0.26, 0.3, 0.9), cf(tailPts[tailN] + D(0, 0, 3.3)) * CFrame.Angles(rad(90), 0, 0), c.gold, { mat = METAL, anim = a })
+			for i = 1, 3 do
+				add("TipSpike" .. i, "Wedge", S(0.2, 0.45, 0.3), cf(tailPts[tailN] + D(0, 0.4, 0.5 + i * 0.7)), c.gold, { mat = METAL, anim = a })
+			end
+		end
 	else
 		local tip = tailPts[8]
 		local a = sway(14, 1.2, 3.3, pivot0)
-		add("TailFinV", "Block", S(0.06, 1.7, 1.5), cf(tip + S(0, 0, 0.85)), c.membrane, { neon = true, trans = 0.25, anim = a })
-		add("TailFinH", "Block", S(1.8, 0.06, 1.5), cf(tip + S(0, 0, 0.85)), c.membrane, { neon = true, trans = 0.25, anim = a })
-		add("TailTipSpike", "Wedge", S(0.26, 0.3, 0.9), cf(tip + S(0, 0, 1.8)) * CFrame.Angles(rad(90), 0, 0), c.gold, { mat = METAL, anim = a })
+		add("TailFinV", "Block", S(0.06, 1.7, 1.5), cf(tip + D(0, 0, 0.85)), c.membrane, { neon = true, trans = 0.25, anim = a })
+		add("TailFinH", "Block", S(1.8, 0.06, 1.5), cf(tip + D(0, 0, 0.85)), c.membrane, { neon = true, trans = 0.25, anim = a })
+		add("TailTipSpike", "Wedge", S(0.26, 0.3, 0.9), cf(tip + D(0, 0, 1.8)) * CFrame.Angles(rad(90), 0, 0), c.gold, { mat = METAL, anim = a })
 	end
 
 	-- dorsal fins down the back (glowing), and the water glow underfoot
@@ -276,7 +298,7 @@ end
 
 -- The Dragon Pup: the same dragon at about a third of the size in warm colours.
 function DragonKit.pup(meshes: boolean?): any
-	local props, fx = DragonKit.build({ u = 0.4, colors = DragonKit.EMBER, meshes = meshes == true, flap = 22 })
+	local props, fx = DragonKit.build({ u = 0.4, colors = DragonKit.EMBER, meshes = meshes ~= false, flap = 22 })
 	return { hideBody = true, scale = 1, skin = DragonKit.EMBER.back, props = props, fx = fx, light = Color3.fromRGB(255, 190, 120) }
 end
 

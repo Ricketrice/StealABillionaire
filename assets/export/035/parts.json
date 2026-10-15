@@ -111,19 +111,19 @@
  },
  "report": {
   "DragonHead": {
-   "tris": 788,
+   "tris": 860,
    "parts": 11
   },
   "DragonWingR": {
-   "tris": 260,
+   "tris": 264,
    "parts": 5
   },
   "DragonWingL": {
-   "tris": 260,
+   "tris": 264,
    "parts": 5
   },
   "DragonTail": {
-   "tris": 104,
+   "tris": 120,
    "parts": 4
   }
  }

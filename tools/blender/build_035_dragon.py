@@ -98,15 +98,8 @@ def cone(loc, r, h, rot=(0, 0, 0), verts=6, r2=0.0):
 
 
 def spike(base, tip, r=0.1, verts=5):
-    """A cone from `base` to `tip`."""
-    d = tip - base
-    o = cone((base + tip) / 2, r, d.length, verts=verts)
-    o.rotation_euler = Vector((0, 0, 1)).rotation_difference(d.normalized()).to_euler()
-    bpy.ops.object.select_all(action="DESELECT")
-    o.select_set(True)
-    bpy.context.view_layer.objects.active = o
-    bpy.ops.object.transform_apply(rotation=True)
-    return o
+    """A four-sided spike from `base` to `tip` (a tapering bar: no rotation maths, so it lands exactly)."""
+    return bar(base, tip, r * 2, r * 2, 0.02, 0.02)
 
 
 def join(objs):
