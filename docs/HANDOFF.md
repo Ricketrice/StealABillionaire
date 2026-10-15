@@ -24,7 +24,9 @@ Purchases (live IDs): passes 2x Cash 2033726439 (349 R$), Extra Slots 2032784431
 Decisions log: `docs/GAME_DESIGN.md` → Decisions. Order: `docs/ROADMAP.md`.
 
 ## Where we are now
-**034 Steal a Boss world — at Checkpoint 1, approved by the planner, waiting to be pasted to the builder:**
+**034 in progress.** Checkpoint 1 approved and logged (D43); `backups/pre034.rbxl` made. Phases 1–3 written in code only (commit `00ff261` on `milestone-034`, "not yet checked in Studio"): lane order + gate prices, Coming-soon flags, Sunken roster + training_dummy/bookling, zone builders, Spell Run. Not yet pushed into Studio or tested. Left: run the builders in Studio, worker→creature text, Phase 4 (Sir Ironclad + reskin), all tests, measurements. Was blocked by a lost Studio MCP connection (fix: Studio open + plugin on, `/mcp` → reconnect `roblox-studio`).
+
+Original Checkpoint 1 approval (already applied, for reference):
 ```
 Checkpoint 1 approved:
 1. Roster 3C/2R/2E/1L/1S per zone; add training_dummy ($5) and bookling ($500).
