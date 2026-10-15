@@ -195,7 +195,7 @@ local podiumScale = Instance.new("UIScale")
 podiumScale.Parent = podium
 local podiumTitle = UITheme.text({
 	Name = "Title",
-	Text = "RACE RESULTS",
+	Text = "SPELL RUN RESULTS",
 	Role = "Title",
 	TextSize = 24,
 	Color = GOLD,
@@ -489,7 +489,7 @@ local function signText(folder: Instance): string
 	local now = serverNow()
 	local ready = folder:GetAttribute("Ready") or now
 	if state == "Countdown" then
-		return ("Join the race! %d"):format(math.max(0, math.ceil((folder:GetAttribute("GoAt") or now) - now)))
+		return ("Join the Spell Run! %d"):format(math.max(0, math.ceil((folder:GetAttribute("GoAt") or now) - now)))
 	elseif state == "Racing" then
 		return "Race in progress"
 	elseif now < ready then
@@ -512,7 +512,7 @@ local function padText(folder: Instance): (string, string)
 	elseif now < ready then
 		status = "Next race in " .. clock(ready - now)
 	else
-		status = "Join the race!"
+		status = "Join the Spell Run!"
 	end
 	if type(block) == "string" and block ~= "" then
 		return block, status

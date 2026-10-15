@@ -231,6 +231,9 @@ function WorkerCatalogue.getStats(workerId: string, level: number, tier: string)
 end
 
 -- Worker type icon (033 cards): the role's icon name in UITheme.ICONS.
+-- 034 (D42): V1 shows only income ($/s) and level. Attack/speed/defence stay in the data, hidden, for battles later.
+WorkerCatalogue.SHOW_BATTLE_STATS = false
+
 WorkerCatalogue.ROLE_ICONS = { Earner = "coin", Fighter = "bolt", Tank = "shield", ["All-rounder"] = "star" }
 
 -- `perMille` (optional) replaces the normal odds for one roll, e.g. the Golden Parade's (Milestone 028).

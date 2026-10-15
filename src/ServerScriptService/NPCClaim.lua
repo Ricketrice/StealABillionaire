@@ -45,7 +45,7 @@ local MESSAGE_ALREADY_CLAIMED = "Someone else already stole this one!"
 local MESSAGE_UNAVAILABLE = "This NPC is no longer available."
 local MESSAGE_NOT_ALIVE = "You can't steal right now."
 local MESSAGE_TOO_FAR = "Get closer to steal it."
-local MESSAGE_BUSY = "You already have a worker in hand. Place or store it first."
+local MESSAGE_BUSY = "You already have a creature in hand. Place or store it first."
 local MESSAGE_CANCELLED = "Steal cancelled."
 
 local function getOrCreate(parent: Instance, className: string, name: string): Instance

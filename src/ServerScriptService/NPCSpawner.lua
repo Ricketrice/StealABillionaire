@@ -35,10 +35,10 @@ NPCClaim.setReserveCheck(function(player, _npc, zone)
 	local zoneId = zone.folder.Name
 	local district = ZoneConfig.get(zoneId)
 	if not district then
-		return false, "These workers can't be collected."
+		return false, "These creatures can't be collected."
 	end
 	if not ZoneProgress.isUnlocked(player, zoneId) then
-		return false, ("Unlock %s to steal its workers."):format(district.name)
+		return false, ("Unlock %s to steal its creatures."):format(district.name)
 	end
 	return true
 end)

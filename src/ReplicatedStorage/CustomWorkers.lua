@@ -17,24 +17,24 @@ local CustomWorkers = {}
 CustomWorkers.ENABLED = true
 
 CustomWorkers.WORKERS = {
-	-- Main Street
-	broke_bob = { name = "Broke Bob", rig = "avatar" },
-	delivery_dave = { name = "Coupon Carl", rig = "avatar" },
-	street_hustler = { name = "Hustle Hannah", rig = "avatar" },
-	business_betty = { name = "Influencer Ivy", rig = "avatar" },
-	security_sam = { name = "Landlord Larry", rig = "avatar" },
-	crypto_carl = { name = "Stonks Steve", rig = "avatar" },
-	ceo_chad = { name = "CEO Chad", rig = "avatar" },
-	mystery_millionaire = { name = "Old Money Margaret", rig = "avatar" },
-	-- Velocity Royale (zone id BillionaireHills)
-	butler_barnaby = { name = "Pit Crew Pete", rig = "avatar" },
-	caddie_gus = { name = "Flag Marshal Fiona", rig = "avatar" },
-	polo_pro_penny = { name = "Paparazzi Paz", rig = "avatar" },
-	chef_pierre = { name = "Valet Vince", rig = "avatar" },
-	bodyguard_boris = { name = "Team Boss Bianca", rig = "avatar" },
-	hedge_fund_hank = { name = "Turbo Taylor", rig = "avatar" },
-	oil_baron_oswald = { name = "Garage Baron Gideon", rig = "avatar" },
-	the_trillionaire = { name = "The Trillionaire", rig = "avatar" },
+	-- Knight's Keep (zone id MainStreet; 034 creature names, D43)
+	broke_bob = { name = "Rookie Squire", rig = "avatar" },
+	delivery_dave = { name = "Scroll Page", rig = "avatar" },
+	street_hustler = { name = "Apple Archer", rig = "avatar" },
+	business_betty = { name = "Banner Bearer", rig = "avatar" },
+	security_sam = { name = "Shield Knight", rig = "avatar" },
+	crypto_carl = { name = "Forge Master", rig = "avatar" },
+	ceo_chad = { name = "Golden Paladin", rig = "avatar" },
+	mystery_millionaire = { name = "Sir Ironclad", rig = "avatar" },
+	-- Ember Academy (zone id BillionaireHills)
+	butler_barnaby = { name = "Candle Imp", rig = "avatar" },
+	caddie_gus = { name = "Ember Newt", rig = "avatar" },
+	polo_pro_penny = { name = "Ember Owl", rig = "avatar" },
+	chef_pierre = { name = "Fire Apprentice", rig = "avatar" },
+	bodyguard_boris = { name = "Rune Golem", rig = "avatar" },
+	hedge_fund_hank = { name = "Phoenix", rig = "avatar" },
+	oil_baron_oswald = { name = "Flame Archmage", rig = "avatar" },
+	the_trillionaire = { name = "Ignis the Pyromancer", rig = "avatar" },
 }
 
 -- The custom entry for a worker, or nil when it uses its original look.

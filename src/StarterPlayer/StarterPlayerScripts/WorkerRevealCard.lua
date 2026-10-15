@@ -48,7 +48,7 @@ local HALO = { 0.3, 0.18, 0.1 } -- opacity of the three glow layers at full stre
 -- size: card scale; build: anticipation seconds; hold: seconds the finished card stays;
 -- dim / dimAfter: backdrop transparency during the build-up / after the impact (lower = darker).
 local TIER = {
-	Common = { size = 0.82, build = 0, hold = 1.3, sound = "pop", eyebrow = "NEW WORKER" },
+	Common = { size = 0.82, build = 0, hold = 1.3, sound = "pop", eyebrow = "NEW CREATURE" },
 	Rare = { size = 0.9, build = 0, hold = 2, sound = "chime", eyebrow = "RARE CATCH", ring = true, shine = true },
 	Epic = {
 		size = 1,
@@ -255,8 +255,16 @@ local body = UIKit.make("Frame", { BackgroundTransparency = 1, Position = UDim2.
 local bodyPad = UIKit.padding(body, 16, 10)
 bodyPad.PaddingTop = UDim.new(0, 22) -- room for the rarity badge on the seam
 UIKit.list(body, Enum.FillDirection.Vertical, 4, Enum.HorizontalAlignment.Center)
-local eyebrow =
-	UIKit.text({ Text = "NEW WORKER", Role = "Micro", Font = UIStyle.FontBold, TextSize = 13, Color = C.Gold, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 1, Parent = body })
+local eyebrow = UIKit.text({
+	Text = "NEW CREATURE",
+	Role = "Micro",
+	Font = UIStyle.FontBold,
+	TextSize = 13,
+	Color = C.Gold,
+	AlignX = Enum.TextXAlignment.Center,
+	LayoutOrder = 1,
+	Parent = body,
+})
 local nameLabel = UIKit.text({
 	Name = "WorkerName",
 	Role = "Display",
@@ -595,7 +603,9 @@ local function impact(token: number)
 	end
 
 	-- impact
-	secondary.Text = ("%s  ·  ATK %d  ·  SPD %d  ·  DEF %d"):format(worker.role, worker.attack, worker.speed, worker.defence)
+	secondary.Text = if WorkerCatalogue.SHOW_BATTLE_STATS
+		then ("%s  ·  ATK %d  ·  SPD %d  ·  DEF %d"):format(worker.role, worker.attack, worker.speed, worker.defence)
+		else ("%s  ·  +%s/s"):format(worker.role, CashFormat.format(worker.income))
 	incomeLabel.Text = ""
 	if teased then
 		pop.Scale = tier.size * 1.12
@@ -876,7 +886,7 @@ if RunService:IsStudio() and not UIStyle.v1 then
 		})
 	end
 	-- which zone's workers (and so which artwork) the rarity buttons preview
-	local PREVIEW_ZONES = { { id = "MainStreet", label = "Main Street" }, { id = "BillionaireHills", label = "Velocity Royale" }, { id = "", label = "Plain card" } }
+	local PREVIEW_ZONES = { { id = "MainStreet", label = "Knight's Keep" }, { id = "BillionaireHills", label = "Ember Academy" }, { id = "", label = "Plain card" } }
 	local zoneIndex = 1
 	local function pick(rarity: string): string?
 		for _, id in WorkerCatalogue.ZONES[PREVIEW_ZONES[zoneIndex].id] or {} do

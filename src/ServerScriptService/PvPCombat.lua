@@ -121,7 +121,7 @@ function PvPCombat.equip(player: Player): (boolean, string?)
 		return false, nil
 	end
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("HeistCarrying") == true then
-		return false, "You can't use your bat while carrying a worker."
+		return false, "You can't use your bat while carrying a creature."
 	end
 	if PvPCombat.isEquipped(player) then
 		return true, nil
@@ -221,7 +221,7 @@ local function canAttack(player: Player): (boolean, BasePart?, string?)
 		return false, nil, nil
 	end
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("HeistCarrying") == true then
-		return false, nil, "You can't attack while carrying a worker."
+		return false, nil, "You can't attack while carrying a creature."
 	end
 	if PvPBase.isSafe(root.Position) then
 		return false, nil, "No fighting in the safe zone."

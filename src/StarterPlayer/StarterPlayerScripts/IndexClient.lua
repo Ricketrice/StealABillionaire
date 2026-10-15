@@ -68,7 +68,7 @@ for i, tier in RewardsConfig.INDEX_TIERS do
 	local card = UITheme.card({ Name = "Tier" .. i, Size = UDim2.new(1, 0, 0, 72), Position = UDim2.fromOffset(0, 64 + (i - 1) * 76), ZIndex = 13, Parent = side })
 	local label = UITheme.text({
 		Name = "Label",
-		Text = ("%d%%: +%d%% cash%s"):format(math.floor(tier.share * 100 + 0.5), math.floor(tier.bonus * 100 + 0.5), if tier.badge then " + badge" else ""),
+		Text = ("%d%%: +%d%% coins%s"):format(math.floor(tier.share * 100 + 0.5), math.floor(tier.bonus * 100 + 0.5), if tier.badge then " + badge" else ""),
 		Role = "Small",
 		Font = UITheme.Fonts.Display,
 		TextSize = 15,
@@ -188,7 +188,7 @@ local function paint()
 	bonusText.Visible = bonusOn
 	if bonusOn then
 		local total = state.index.bonus or 0
-		bonusText.Text = if total > 0 then ("Your index bonus: +%d%% cash"):format(math.floor(total * 100 + 0.5)) else "Fill pages to earn more cash!"
+		bonusText.Text = if total > 0 then ("Your index bonus: +%d%% coins"):format(math.floor(total * 100 + 0.5)) else "Fill pages to earn more coins!"
 	end
 	claimPage = page
 	for i, c in tierCards do

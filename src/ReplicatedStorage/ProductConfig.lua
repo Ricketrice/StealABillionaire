@@ -25,7 +25,7 @@ ProductConfig.STARTER_DAYS = 3 -- the Starter Pack shows for this many days afte
 -- kind = "pass" (gamepass, owned forever) | "product" (developer product, bought each time)
 ProductConfig.TABS = {
 	{ key = "passes", title = "Passes", icon = "vip" },
-	{ key = "cash", title = "Cash", icon = "cash" },
+	{ key = "cash", title = "Coins", icon = "cash" },
 	{ key = "starter", title = "Starter", icon = "gift" },
 }
 
@@ -37,9 +37,9 @@ ProductConfig.ITEMS = {
 			id = 2033726439,
 			image = 75660006931436,
 			robux = 349, -- (design range 300-500)
-			name = "2x Cash",
+			name = "2x Coins",
 			icon = "x2",
-			text = "All your workers earn double cash, forever.",
+			text = "All your creatures earn double coins, forever.",
 			income = 2, -- income multiplier
 		},
 		{
@@ -61,15 +61,15 @@ ProductConfig.ITEMS = {
 			robux = 399, -- (design range 300-600)
 			name = "VIP",
 			icon = "vip",
-			text = "Gold VIP name tag, [VIP] in chat and +10% cash from your workers.",
+			text = "Gold VIP name tag, [VIP] in chat and +10% coins from your creatures.",
 			income = 1.1,
 		},
 	},
 	cash = {
 		-- Cash = this many minutes of the player's income right now (D20), never less than `min`.
-		{ key = "cash_s", kind = "product", id = 3718403577, image = 99179613562978, robux = 25, minutes = 10, min = 5000, name = "Cash Stack", icon = "cash" },
-		{ key = "cash_m", kind = "product", id = 3718403637, image = 75217757280784, robux = 75, minutes = 40, min = 20000, name = "Cash Bag", icon = "coin" },
-		{ key = "cash_l", kind = "product", id = 3718403689, image = 86309227105014, robux = 199, minutes = 120, min = 75000, name = "Cash Vault", icon = "cash" },
+		{ key = "cash_s", kind = "product", id = 3718403577, image = 99179613562978, robux = 25, minutes = 10, min = 5000, name = "Coin Stack", icon = "cash" },
+		{ key = "cash_m", kind = "product", id = 3718403637, image = 75217757280784, robux = 75, minutes = 40, min = 20000, name = "Coin Bag", icon = "coin" },
+		{ key = "cash_l", kind = "product", id = 3718403689, image = 86309227105014, robux = 199, minutes = 120, min = 75000, name = "Coin Chest", icon = "cash" },
 	},
 	starter = {
 		{

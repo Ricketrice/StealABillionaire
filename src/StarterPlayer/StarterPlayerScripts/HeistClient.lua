@@ -683,7 +683,7 @@ local function slow()
 			setSign(folder, "OPEN! Grab one: " .. clock(left), GOLD)
 		else
 			local wait = (folder:GetAttribute("OpensAt") or t) - t
-			pillText.Text = "Vault " .. clock(wait)
+			pillText.Text = "Treasury " .. clock(wait)
 			pillText.TextColor3 = T.Text
 			pill.BackgroundColor3 = T.Panel
 			setSign(folder, "Opens in " .. clock(wait), Color3.new(1, 1, 1))
@@ -731,7 +731,7 @@ event.OnClientEvent:Connect(function(kind: string, info: any)
 	if kind == "Open" then
 		playSiren()
 		if player:GetAttribute("HeistCarrying") ~= true then
-			say("THE VAULT IS OPEN!", GOLD, 2.5)
+			say("THE TREASURY IS OPEN!", GOLD, 2.5)
 		end
 	elseif kind == "Attack" then
 		startWarning(info)
@@ -741,7 +741,7 @@ event.OnClientEvent:Connect(function(kind: string, info: any)
 			laserUntil = info.hitAt + 0.5
 		end
 		if info.targetId == player.UserId then
-			say(if info.kind == "Stomp" then "JUMP!" elseif info.kind == "Laser" then "Stay off the red line!" else "Get out of the light!", RED, 1.4)
+			say(if info.kind == "Stomp" then "SHIELD SLAM! JUMP!" elseif info.kind == "Laser" then "SWORD SWEEP! Step aside!" else "ARROWS! Get out of the circle!", RED, 1.4)
 		end
 	elseif kind == "Lock" then
 		local w = warnings[info.id]
@@ -793,11 +793,11 @@ event.OnClientEvent:Connect(function(kind: string, info: any)
 		end
 		if info.userId == player.UserId then
 			local text = if info.reason == "time"
-				then "Out of time! The capsule flew back to the vault."
-				elseif info.reason == "fell" then "Oops! The capsule flew back to the vault."
-				elseif info.reason == "shortcut" then "No shortcuts! The capsule flew back to the vault."
-				else "Caught! The capsule flew back to the vault."
-			say(text .. " You kept all your cash.", RED, 3)
+				then "Out of time! The capsule flew back to the treasury."
+				elseif info.reason == "fell" then "Oops! The capsule flew back to the treasury."
+				elseif info.reason == "shortcut" then "No shortcuts! The capsule flew back to the treasury."
+				else "Caught! The capsule flew back to the treasury."
+			say(text .. " You kept all your coins.", RED, 3)
 		end
 	elseif kind == "Safe" then
 		local r = targetRoot(info.userId)

@@ -87,7 +87,7 @@ local function statRow(order: number, label: string): TextLabel
 end
 local priceValue = statRow(4, "PRICE")
 priceValue.TextColor3 = C.Gold
-local cashValue = statRow(5, "YOUR CASH")
+local cashValue = statRow(5, "YOUR COINS")
 cashValue.TextColor3 = C.Cash
 local _, meter = UIKit.meter({ LayoutOrder = 6, Parent = panel })
 
@@ -159,7 +159,7 @@ function refresh()
 	elseif cash < zone.price then
 		status.Text = ("You need %s more."):format(CashFormat.format(zone.price - cash))
 		meter.set(cash / zone.price, C.Gold)
-		buy.setEnabled(false, "NOT ENOUGH CASH")
+		buy.setEnabled(false, "NOT ENOUGH COINS")
 	elseif pending then
 		meter.set(1, C.Cash)
 		buy.setEnabled(false, "UNLOCKING...")

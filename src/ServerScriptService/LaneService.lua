@@ -40,7 +40,7 @@ function LaneService.blocked(player: Player, recheck: boolean?): string?
 		return "Wait until you're back on your feet."
 	end
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true then
-		return "You're carrying a worker! Run it home first."
+		return "You're carrying a creature! Run it home first."
 	end
 	if player:GetAttribute("HeistCarrying") == true then
 		return "You're carrying a Boss Capsule! Run it home first."

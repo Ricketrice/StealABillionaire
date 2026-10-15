@@ -218,7 +218,7 @@ local function openShop(id: string)
 	if not (shop and flag("HubShops") and (shop.flag == nil or flag("HubUpgrades"))) then
 		return
 	end
-	openPanel(id, shop.title, "Prices are in game cash. " .. (if id == "UpgradeOffice" then "" else "Looks only."), function()
+	openPanel(id, shop.title, "Prices are in game coins. " .. (if id == "UpgradeOffice" then "" else "Looks only."), function()
 		local hub = state.hub or {}
 		local owned, upgrades = hub.owned or {}, hub.upgrades or {}
 		for _, item in shop.items do
@@ -446,9 +446,9 @@ local function padUnderfoot(): Instance?
 	return nil
 end
 local function openPicker()
-	openPanel("Arena", "PICK A WORKER TO BATTLE", "Nobody loses a worker. The winner earns cash and a trophy point.", function()
+	openPanel("Arena", "PICK A CREATURE TO BATTLE", "Nobody loses a creature. The winner earns coins and a trophy point.", function()
 		if queuedWorker then
-			row(queuedWorker .. " is in the queue", "Waiting for a worker of similar power...", "LEAVE QUEUE", true, function()
+			row(queuedWorker .. " is in the queue", "Waiting for a creature of similar power...", "LEAVE QUEUE", true, function()
 				send("ArenaLeave")
 			end)
 			return
@@ -467,7 +467,7 @@ local function openPicker()
 			end
 		end
 		if listed == 0 then
-			row("No workers yet", "Steal a worker on Main Street first.", nil, false, nil)
+			row("No creatures yet", "Steal a creature in Knight's Keep first.", nil, false, nil)
 		end
 	end)
 end

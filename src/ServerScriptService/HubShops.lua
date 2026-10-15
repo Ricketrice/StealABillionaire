@@ -302,7 +302,7 @@ function HubShops.buy(player: Player, itemId: any, arg: any): (boolean, string?)
 		local level
 		if item.perWorker then
 			if not (type(arg) == "string" and WorkerInventory.getRecord(player, arg)) then
-				return false, "Pick one of your workers to train."
+				return false, "Pick one of your creatures to train."
 			end
 			level = tonumber(hub.upgrades.training[arg]) or 0
 			apply = function()

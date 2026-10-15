@@ -230,7 +230,7 @@ function WorkerInventory.canClaim(player: Player): (boolean, string?)
 		return false, "You need a base first."
 	end
 	if NPCCarry.getCarried(player) then
-		return false, "You already have a worker in hand. Place or store it first."
+		return false, "You already have a creature in hand. Place or store it first."
 	end
 	if player:GetAttribute("HeistCarrying") == true then
 		return false, "Bring your Boss Capsule home first."
@@ -293,7 +293,7 @@ end
 -- Each transfer validates everything first and only then changes state; none of them yield.
 local function store(player: Player, data: Data, record: WorkerRecord): (boolean, string)
 	if record.loc ~= "station" then
-		return false, "That worker isn't on a station."
+		return false, "That creature isn't on a station."
 	end
 	if WorkerInventory.count(player) >= slotsFor(player) then
 		return false, ("Your inventory is full (%d/%d)."):format(slotsFor(player), slotsFor(player))
@@ -309,10 +309,10 @@ end
 
 local function equip(player: Player, data: Data, record: WorkerRecord): (boolean, string)
 	if record.loc ~= "inventory" then
-		return false, "That worker isn't in your inventory."
+		return false, "That creature isn't in your inventory."
 	end
 	if not WorkerCatalogue.get(record.id) then
-		return false, "That worker can't be equipped."
+		return false, "That creature can't be equipped."
 	end
 	local plot = PlotService.getPlot(player)
 	if not plot then
@@ -321,10 +321,10 @@ local function equip(player: Player, data: Data, record: WorkerRecord): (boolean
 	local index = freeStationIndex(data, stationsFor(player))
 	local station = index and findStation(plot, index)
 	if not (station and station:GetAttribute("Occupied") ~= true) then
-		return false, ("All %d stations are full. Store a worker first."):format(stationsFor(player))
+		return false, ("All %d stations are full. Store a creature first."):format(stationsFor(player))
 	end
 	if not spawnOnStation(record, plot, station) then
-		return false, "That worker can't be equipped."
+		return false, "That creature can't be equipped."
 	end
 	record.loc, record.station = "station", index
 	return true, ("%s is working on station %d."):format(workerName(record), index :: number)
@@ -334,7 +334,7 @@ local function storeCarried(player: Player, data: Data): (boolean, string)
 	local npc = NPCCarry.getCarried(player)
 	local record = npc and byUid[player][npc:GetAttribute("WorkerUid")]
 	if not (npc and record and record.loc == "carried") then
-		return false, "You're not carrying a worker."
+		return false, "You're not carrying a creature."
 	end
 	if WorkerInventory.count(player) >= slotsFor(player) then
 		return false, ("Your inventory is full (%d/%d). Place it on a station instead."):format(slotsFor(player), slotsFor(player))

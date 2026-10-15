@@ -320,7 +320,7 @@ function RaceService.eligible(player: Player): (boolean, string?)
 		return false, ("Unlock %s to race"):format((ZoneConfig.get(RaceConfig.ZONE) :: any).name)
 	end
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true or player:GetAttribute("HeistCarrying") == true then
-		return false, "Drop your worker first"
+		return false, "Drop your creature first"
 	end
 	if not WorkerInventory.hasRoom(player) then
 		return false, "Your base is full"
@@ -472,7 +472,7 @@ local function step(r: Race, racer: Racer, dt: number)
 		return
 	end
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true then
-		out(r, racer, "Racers can't carry workers.")
+		out(r, racer, "Racers can't carry creatures.")
 		return
 	end
 	local humanoid = racer.character:FindFirstChildOfClass("Humanoid")

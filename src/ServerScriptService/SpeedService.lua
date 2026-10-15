@@ -163,7 +163,7 @@ function SpeedService.handle(player: Player, action: any, id: any): any
 		end
 		if not CashService.trySpend(player, trail.price) then
 			SpeedService.stats.refused += 1
-			return state(player, false, "Not enough cash yet")
+			return state(player, false, "Not enough coins yet")
 		end
 		table.insert(s.owned, trail.id)
 		s.on = trail.id

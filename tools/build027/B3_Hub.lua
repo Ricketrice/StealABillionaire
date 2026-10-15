@@ -132,7 +132,7 @@ return function(): string
 		title.Size = UDim2.fromScale(1, 0.26)
 		title.Font = Enum.Font.FredokaOne
 		title.TextScaled = true
-		title.Text = "TOP BILLIONAIRES"
+		title.Text = "TOP BOSSES"
 		title.TextColor3 = C.Trim
 		title.Parent = gui
 		for i = 1, 5 do

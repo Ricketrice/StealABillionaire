@@ -308,7 +308,7 @@ local function sunkenZone(zLanding: number, y: number, zS: number, _zN: number):
 				elseif p.BrickColor == BrickColor.new("Earth blue") then
 					p.Color = SEA.deep
 				end
-			elseif p:IsA("TextLabel") and p.Text:find("BILLIONAIRE HILLS") then
+			elseif p:IsA("TextLabel") and p.Text:find("^ZONE ") then
 				p.Text = "ZONE 2 · SUNKEN KINGDOM"
 			end
 		end

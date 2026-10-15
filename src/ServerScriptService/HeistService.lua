@@ -137,7 +137,7 @@ local function dressSigns(folder: Folder)
 	local sign = vault and vault:FindFirstChild("Sign")
 	if sign and sign:IsA("BasePart") then
 		local gui = surface(sign)
-		label(gui, "Title", "BOSS VAULT", 0.04, 0.24, GOLD_TEXT, Enum.Font.FredokaOne)
+		label(gui, "Title", "ROYAL TREASURY", 0.04, 0.24, GOLD_TEXT, Enum.Font.FredokaOne)
 		label(gui, "Status", "", 0.3, 0.32, WHITE, Enum.Font.GothamBlack)
 		label(gui, "Odds", "Boss Capsule: " .. HeistConfig.oddsText(), 0.66, 0.14, GOLD_TEXT, Enum.Font.GothamBold)
 		label(gui, "Rule", "Grab one, run it to the SAFE ZONE!", 0.82, 0.13, WHITE, Enum.Font.GothamBold)
@@ -151,7 +151,7 @@ local function dressSigns(folder: Folder)
 	local bay = folder:FindFirstChild("Bay")
 	local baySign = bay and bay:FindFirstChild("BaySign")
 	if baySign and baySign:IsA("BasePart") then
-		label(surface(baySign), "Title", "SECURITY BOT", 0.05, 0.9, GOLD_TEXT, Enum.Font.FredokaOne)
+		label(surface(baySign), "Title", "SIR IRONCLAD", 0.05, 0.9, GOLD_TEXT, Enum.Font.FredokaOne)
 	end
 end
 
@@ -188,7 +188,7 @@ local function build(): boolean
 	local p = Instance.new("ProximityPrompt")
 	p.Name = "GrabPrompt"
 	p.ActionText = "Grab Boss Capsule"
-	p.ObjectText = "Boss Vault"
+	p.ObjectText = "Royal Treasury"
 	p.HoldDuration = 0.4
 	p.MaxActivationDistance = 12
 	p.RequiresLineOfSight = false
@@ -389,7 +389,7 @@ end
 function HeistService.canGrab(player: Player): (boolean, string?)
 	local o = opening
 	if not (isOpen() and o) then
-		return false, ("The vault is closed. It opens in %s."):format(clock(nextOpen - serverNow()))
+		return false, ("The treasury is closed. It opens in %s."):format(clock(nextOpen - serverNow()))
 	end
 	if not PlayerData.isLoaded(player) then
 		return false, "Loading your data, one moment"
@@ -403,7 +403,7 @@ function HeistService.canGrab(player: Player): (boolean, string?)
 		return false, ("One capsule per opening! Next one in %s."):format(clock(nextOpen - serverNow()))
 	end
 	if NPCCarry.getCarried(player) or NPCClaim.getReservation(player) or player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true then
-		return false, "Drop your worker first"
+		return false, "Drop your creature first"
 	end
 	if player:GetAttribute("Racing") == true then
 		return false, "Finish your race first"

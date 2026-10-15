@@ -423,13 +423,13 @@ function RewardsService.claimIndex(player: Player, zone: any): (boolean, string)
 	local n, total = zoneProgress(player, zone)
 	local reached = tierReached(n, total)
 	if reached <= claimed then
-		return false, "Collect more workers from this page first."
+		return false, "Collect more creatures from this page first."
 	end
 	claims[zone] = reached
 	refreshIncome(player)
 	local tier = RewardsConfig.INDEX_TIERS[reached]
 	clientEvent:FireClient(player, "Claimed", { kind = "index", zone = zone, tier = reached, bonus = tier.bonus, badge = tier.badge == true })
-	return true, ("Index bonus claimed: +%d%% cash!"):format(math.floor(tier.bonus * 100 + 0.5))
+	return true, ("Index bonus claimed: +%d%% coins!"):format(math.floor(tier.bonus * 100 + 0.5))
 end
 
 function RewardsService.setSettings(player: Player, values: any): (boolean, string)

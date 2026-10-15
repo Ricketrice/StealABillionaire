@@ -29,14 +29,34 @@ local gui = UIKit.screen("PvPAlerts", UIStyle.DisplayOrder.Inventory + 1)
 local root = UIKit.root(gui)
 
 local function bar(name: string, position: UDim2, accent: Color3): (Frame, TextLabel, TextLabel, UIStroke)
-	local frame = UIKit.panel({ Name = name, AnchorPoint = Vector2.new(0.5, 0), Position = position, Size = UDim2.fromOffset(380, 0), AutomaticSize = Enum.AutomaticSize.Y, BorderColor = accent, BorderThickness = 2.5, Parent = root })
+	local frame = UIKit.panel({
+		Name = name,
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = position,
+		Size = UDim2.fromOffset(380, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BorderColor = accent,
+		BorderThickness = 2.5,
+		Parent = root,
+	})
 	frame.Visible = false
 	frame.Active = false
 	UIKit.padding(frame, 14, 8)
 	UIKit.list(frame, Enum.FillDirection.Vertical, 0, Enum.HorizontalAlignment.Center)
 	UIKit.scaled(frame, 0.7, 1.15, root)
 	local title = UIKit.text({ Name = "Title", Role = "Title", Color = accent, AlignX = Enum.TextXAlignment.Center, LayoutOrder = 1, Parent = frame })
-	local detail = UIKit.text({ Name = "Detail", Role = "Body", Color = C.Text, AlignX = Enum.TextXAlignment.Center, Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 2, Parent = frame })
+	local detail = UIKit.text({
+		Name = "Detail",
+		Role = "Body",
+		Color = C.Text,
+		AlignX = Enum.TextXAlignment.Center,
+		Wrap = true,
+		Truncate = false,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 2,
+		Parent = frame,
+	})
 	return frame, title, detail, frame:FindFirstChildOfClass("UIStroke") :: UIStroke
 end
 
@@ -60,7 +80,7 @@ local function updateAlarm()
 		alarmKey, beeps, nextBeep = key, 0, 0
 		alarmBar.Visible = on
 		if on then
-			alarmDetail.Text = ("%s is stealing %s. Hit them with your bat!"):format(thief, if type(worker) == "string" then worker else "a worker")
+			alarmDetail.Text = ("%s is stealing %s. Hit them with your bat!"):format(thief, if type(worker) == "string" then worker else "a creature")
 		end
 		gui:SetAttribute("Alarm", if on then alarmDetail.Text else nil)
 	end
@@ -95,10 +115,24 @@ end
 player:GetAttributeChangedSignal("CarryingStolen"):Connect(updateStolen)
 
 -- Banners -------------------------------------------------------------------------------------------
-local banner = UIKit.make("Frame", { Name = "Banner", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.3), Size = UDim2.fromOffset(520, 96), BackgroundTransparency = 1, Visible = false, Active = false, Parent = root }) :: Frame
+local banner = UIKit.make(
+	"Frame",
+	{
+		Name = "Banner",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.3),
+		Size = UDim2.fromOffset(520, 96),
+		BackgroundTransparency = 1,
+		Visible = false,
+		Active = false,
+		Parent = root,
+	}
+) :: Frame
 UIKit.scaled(banner, 0.6, 1.25, root)
-local bannerTitle = UIKit.text({ Name = "Title", Role = "Display", TextSize = 44, AlignX = Enum.TextXAlignment.Center, Size = UDim2.new(1, 0, 0, 56), Truncate = false, Parent = banner })
-local bannerDetail = UIKit.text({ Name = "Detail", Role = "Heading", AlignX = Enum.TextXAlignment.Center, Position = UDim2.fromOffset(0, 60), Size = UDim2.new(1, 0, 0, 26), Parent = banner })
+local bannerTitle =
+	UIKit.text({ Name = "Title", Role = "Display", TextSize = 44, AlignX = Enum.TextXAlignment.Center, Size = UDim2.new(1, 0, 0, 56), Truncate = false, Parent = banner })
+local bannerDetail =
+	UIKit.text({ Name = "Detail", Role = "Heading", AlignX = Enum.TextXAlignment.Center, Position = UDim2.fromOffset(0, 60), Size = UDim2.new(1, 0, 0, 26), Parent = banner })
 UIStyle.outline(bannerDetail)
 local pop = UIKit.make("UIScale", { Parent = bannerTitle }) :: UIScale
 local bannerSeq = 0
@@ -130,7 +164,7 @@ clientEvent.OnClientEvent:Connect(function(kind, info)
 	if type(info) ~= "table" then
 		return
 	end
-	local worker = if type(info.worker) == "string" then info.worker else "The worker"
+	local worker = if type(info.worker) == "string" then info.worker else "The creature"
 	if kind == "StealEnded" and info.outcome == "delivered" then
 		showBanner("STEAL SUCCESSFUL", worker .. " is yours now!", C.Gold, "epic")
 	elseif kind == "TheftEnded" and info.outcome == "tagged" then

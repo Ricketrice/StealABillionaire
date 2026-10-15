@@ -273,7 +273,7 @@ local function paintOffline()
 	local away = o.away or 0
 	local h, m = math.floor(away / 3600), math.floor(away % 3600 / 60)
 	local awayText = if h > 0 then ("%dh %dm"):format(h, m) else ("%d min"):format(m)
-	offline.body.Text = ("Your workers earned %s while you were away! (%s)"):format(CashFormat.format(o.pending), awayText)
+	offline.body.Text = ("Your creatures earned %s while you were away! (%s)"):format(CashFormat.format(o.pending), awayText)
 	if not offlineShown and UITheme.openScreenName() == nil then
 		offlineShown = true -- once per visit; uncollected cash waits for the next one
 		task.delay(1.5, function()

@@ -10,12 +10,12 @@ RankConfig.INCOME_SECONDS = 300
 RankConfig.INTERVAL = 2 -- seconds between rank checks
 
 RankConfig.RANKS = {
-	{ name = "Broke", from = 0, color = Color3.fromRGB(190, 190, 200) },
-	{ name = "Intern", from = 1000, color = Color3.fromRGB(120, 205, 255) },
-	{ name = "Manager", from = 25000, color = Color3.fromRGB(110, 230, 140) },
-	{ name = "CEO", from = 250000, color = Color3.fromRGB(255, 170, 60) },
-	{ name = "Millionaire", from = 1000000, color = Color3.fromRGB(200, 120, 255) },
-	{ name = "Billionaire", from = 100000000, color = Color3.fromRGB(255, 220, 60) },
+	{ name = "Peasant", from = 0, color = Color3.fromRGB(190, 190, 200) },
+	{ name = "Squire", from = 1000, color = Color3.fromRGB(120, 205, 255) },
+	{ name = "Knight", from = 25000, color = Color3.fromRGB(110, 230, 140) },
+	{ name = "Captain", from = 250000, color = Color3.fromRGB(255, 170, 60) },
+	{ name = "Lord", from = 1000000, color = Color3.fromRGB(200, 120, 255) },
+	{ name = "Boss", from = 100000000, color = Color3.fromRGB(255, 220, 60) },
 } :: { { name: string, from: number, color: Color3 } }
 
 function RankConfig.worth(cash: number, income: number): number

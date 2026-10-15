@@ -256,7 +256,7 @@ local function addPrompt(npc: Model)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = PROMPT_NAME
 	prompt.ActionText = "Catch " .. CashFormat.format(ParadeConfig.CATCH_PRICE)
-	prompt.ObjectText = "Mystery Worker"
+	prompt.ObjectText = "Mystery Creature"
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = ParadeConfig.PROMPT_DISTANCE
 	prompt.RequiresLineOfSight = false
@@ -492,7 +492,7 @@ function ParadeService.tryCatch(player: Player, npc: Model): (boolean, string?)
 	local goldenOdds = golden or credit == "goldenCatches"
 	local price = if golden then ParadeConfig.GOLDEN_PRICE else ParadeConfig.CATCH_PRICE
 	if not free and not credit and price > 0 and CashService.get(player) < price then
-		return false, ("You need %s to catch a parade worker. Your workers earn cash on your pads!"):format(CashFormat.format(price))
+		return false, ("You need %s to catch a parade creature. Your creatures earn coins on your pads!"):format(CashFormat.format(price))
 	end
 	local playerRoot = livingRoot(player)
 	if not playerRoot then

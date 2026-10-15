@@ -259,7 +259,7 @@ local function showPage(index: number)
 		end
 	end
 	pageTitle.Text = if #ids > 0 then ("%s  ·  %d/%d caught"):format(def.title, have, #ids) else def.title
-	totalLabel.Text = ("%d of %d workers caught"):format(count(caught), TOTAL)
+	totalLabel.Text = ("%d of %d creatures caught"):format(count(caught), TOTAL)
 	soon.Visible = #ids == 0
 	for i, button in tabButtons do
 		UITheme.paint(button, if i == index then "Primary" else "Ghost")

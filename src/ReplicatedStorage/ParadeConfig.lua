@@ -84,9 +84,9 @@ ParadeConfig.Juice = {
 -- book or owned), "pads" (workers working on stations), "zone" (district unlocked), "book" (book
 -- entries in total). Zone goals show the cash progress towards the price.
 ParadeConfig.GOALS = {
-	{ kind = "catch", goal = 1, text = "Catch your first worker", icon = "🎁" },
-	{ kind = "pads", goal = 1, text = "Put a worker on a pad", icon = "⭐" },
-	{ kind = "catch", goal = 3, text = "Catch 3 workers", icon = "🎁" },
+	{ kind = "catch", goal = 1, text = "Catch your first creature", icon = "🎁" },
+	{ kind = "pads", goal = 1, text = "Put a creature on a pad", icon = "⭐" },
+	{ kind = "catch", goal = 3, text = "Catch 3 creatures", icon = "🎁" },
 	{ kind = "pads", goal = 6, text = "Fill 6 pads", icon = "⭐" },
 	{ kind = "zone", zone = "SunkenKingdom", text = "Unlock the Sunken Kingdom", icon = "🔓" },
 	{ kind = "zone", zone = "BillionaireHills", text = "Unlock Ember Academy", icon = "🔥" },

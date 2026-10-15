@@ -78,7 +78,7 @@ HubConfig.Shops = {
 			{
 				id = "upgrade:storage",
 				name = "Storage Crate",
-				note = "+5 worker storage slots per level",
+				note = "+5 creature storage slots per level",
 				kind = "upgrade",
 				key = "storage",
 				levels = { 25000, 100000, 400000 },
@@ -87,12 +87,19 @@ HubConfig.Shops = {
 			{
 				id = "upgrade:training",
 				name = "Arena Training",
-				note = "+10% battle stats for one worker per level",
+				note = "+10% battle stats for one creature per level",
 				kind = "upgrade",
 				levels = { 10000, 40000, 150000 },
 				perWorker = true,
 			},
-			{ id = "upgrade:stations", name = "Extra Station", note = "+1 worker station on your lot per level", kind = "upgrade", key = "stations", levels = { 150000, 750000 } },
+			{
+				id = "upgrade:stations",
+				name = "Extra Station",
+				note = "+1 creature station on your lot per level",
+				kind = "upgrade",
+				key = "stations",
+				levels = { 150000, 750000 },
+			},
 		},
 	},
 }
@@ -103,51 +110,51 @@ HubConfig.SHOP_REACH = 40 -- studs from a shop's counter within which its shop c
 HubConfig.Quests = {
 	PER_DAY = 3,
 	POOL = {
-		{ id = "steal3", text = "Steal 3 workers", event = "steal", goal = 3, reward = 1500 }, -- PROPOSED rewards
-		{ id = "rare1", text = "Steal a Rare or better worker", event = "stealRare", goal = 1, reward = 2500 },
-		{ id = "place2", text = "Put 2 workers to work on your stations", event = "place", goal = 2, reward = 1000 },
+		{ id = "steal3", text = "Steal 3 creatures", event = "steal", goal = 3, reward = 1500 }, -- PROPOSED rewards
+		{ id = "rare1", text = "Steal a Rare or better creature", event = "stealRare", goal = 1, reward = 2500 },
+		{ id = "place2", text = "Put 2 creatures to work on your stations", event = "place", goal = 2, reward = 1000 },
 		{ id = "earn5k", text = "Collect $5,000", event = "earn", goal = 5000, reward = 2000 },
 		{ id = "arena1", text = "Win a battle at the Battle Arena", event = "arenaWin", goal = 1, reward = 3000, needs = "ARENA_ENABLED" },
-		{ id = "defend1", text = "Defend your base: knock a stolen worker loose", event = "defend", goal = 1, reward = 3000, needs = "PVP" },
+		{ id = "defend1", text = "Defend your base: knock a stolen creature loose", event = "defend", goal = 1, reward = 3000, needs = "PVP" },
 	},
 }
 
 -- People and their lines (all dialogue lives here) ------------------------------------------------------
 HubConfig.NPCs = {
-	Guide = { name = "Mentor Mae", hello = { "Welcome to Billionaire City! I'm Mae. Need a hand?", "Back again? Ask me anything!" } },
-	QuestBoard = { name = "Quest Board", hello = { "Three new jobs every day. Finish them for cash!" } },
+	Guide = { name = "Mentor Mae", hello = { "Welcome to Hideout Camp! I'm Mae. Need a hand?", "Back again? Ask me anything!" } },
+	QuestBoard = { name = "Quest Board", hello = { "Three new jobs every day. Finish them for coins!" } },
 	BatBoutique = { name = "Slugger Sal", hello = { "Fresh bats! Looks only, kid: they all hit the same.", "A shiny bat says 'this base is defended'." } },
 	LotAndDecor = { name = "Daisy Decor", hello = { "Let's make your lot the prettiest on the lane!", "A statue here, a planter there... perfect." } },
 	UpgradeOffice = { name = "Mr. Ledger", hello = { "Paperwork, crates and training plans. How may I help?", "Good investments start at this desk." } },
 }
 HubConfig.Story = {
-	"Billionaire City was built by the legendary Trillionaire.",
+	"Every great boss thief started out right here in Hideout Camp.",
 	"One day, the Trillionaire simply vanished.",
 	"Legend says whoever builds the richest empire...",
 	"...will be the one to open the Golden Vault in the plaza!",
 }
 HubConfig.Tips = {
-	"Rarer workers earn more. Keep your best six on your stations.",
-	"Storage is safe. Workers on stations can be stolen once PvP is on!",
+	"Rarer creatures earn more. Keep your best six on your stations.",
+	"Storage is safe. Creatures on stations can be stolen once PvP is on!",
 	"Lock your base when you see the robbery alarm.",
-	"Workers of similar power are matched at the Battle Arena.",
-	"Check the Quest Board every day for extra cash.",
+	"Creatures of similar power are matched at the Battle Arena.",
+	"Check the Quest Board every day for extra coins.",
 }
 -- Tutorial steps. `wait` = what the player has to do before the step ticks off by itself
 -- ("carry", "place", "cash") or nil for a step that only needs reading.
 HubConfig.Tutorial = {
 	{
 		title = "Steal",
-		text = "Turn round and walk through the MAIN STREET arch, then hold E on a worker to steal it.",
-		paradeText = "Mystery workers are walking down the red lane! Walk up to one and press E to catch it. Your first one is FREE!", -- shown while the Worker Parade (028) is on
+		text = "Turn round and walk through the KNIGHT'S KEEP gate, then hold E on a creature to steal it.",
+		paradeText = "Mystery creatures are walking down the red lane! Walk up to one and press E to catch it. Your first one is FREE!", -- shown while the Worker Parade (028) is on
 		wait = "carry",
 	},
 	{ title = "Reveal", text = "The card shows who you caught and how rare they are.", wait = nil },
-	{ title = "Carry", text = "Carry your worker to your own lot: follow the gold YOUR BASE beam.", wait = nil },
-	{ title = "Place", text = "Stand by a round pad on your lot and press E to put the worker to work.", wait = "place" },
-	{ title = "Collect", text = "Workers on pads earn cash every second. Watch it grow!", wait = "cash" },
-	{ title = "Defend", text = "Other players may try to steal placed workers. Lock your base or use your bat!", wait = nil },
-	{ title = "Arena", text = "The Battle Arena is in the plaza by the Golden Vault: step on a pad to battle a worker for cash.", wait = nil },
+	{ title = "Carry", text = "Carry your creature to your own lot: follow the gold YOUR BASE beam.", wait = nil },
+	{ title = "Place", text = "Stand by a round pad on your lot and press E to put the creature to work.", wait = "place" },
+	{ title = "Collect", text = "Creatures on pads earn coins every second. Watch it grow!", wait = "cash" },
+	{ title = "Defend", text = "Other players may try to steal placed creatures. Lock your base or use your bat!", wait = nil },
+	{ title = "Arena", text = "The Battle Arena is in the plaza by the Golden Vault: step on a pad to battle a creature for coins.", wait = nil },
 }
 
 return HubConfig

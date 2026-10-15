@@ -77,7 +77,7 @@ function StealGuard.check(thief: Player, owner: Player, uid: string): string?
 		return nil
 	end
 	if StealGuard.favourite(owner) == uid then
-		return ("That's %s's favourite worker: it can't be stolen."):format(owner.DisplayName)
+		return ("That's %s's favourite creature: it can't be stolen."):format(owner.DisplayName)
 	end
 	local t = now()
 	local last = lastSteal[thief.UserId .. ":" .. owner.UserId]

@@ -197,7 +197,7 @@ local function buildSign()
 		sg.Parent = board
 		UITheme.text({
 			Name = "Title",
-			Text = "🎁 WORKER PARADE 🎁",
+			Text = "🎁 CREATURE PARADE 🎁",
 			Role = "Display",
 			TextSize = 46,
 			Position = UDim2.fromOffset(0, 4),
@@ -417,7 +417,7 @@ ProximityPromptService.PromptShown:Connect(function(prompt)
 	end
 	local golden = isGolden(now())
 	prompt.ActionText = priceText(golden)
-	prompt.ObjectText = if golden then "Golden Mystery Worker" else "Mystery Worker"
+	prompt.ObjectText = if golden then "Golden Mystery Creature" else "Mystery Creature"
 	shownPrompt = prompt
 	fillOdds(golden or usesTicket(golden))
 	odds.Adornee = prompt.Parent

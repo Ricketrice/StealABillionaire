@@ -135,7 +135,7 @@ hintButton.Activated:Connect(function()
 end)
 
 local HINTS = {
-	levels = { icon = "plus", text = "Level up your workers! Stand by a worker on your base, or tap one in Workers." },
+	levels = { icon = "plus", text = "Level up your creatures! Stand by a creature on your base, or tap one in Creatures." },
 	pads = { icon = "base", text = "Your pads are full. Unlock a new pad on the glowing spot at your base!" },
 }
 local function showHint(what: string)

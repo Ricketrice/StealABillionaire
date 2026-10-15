@@ -26,7 +26,7 @@ local window = UITheme.window({
 })
 UITheme.text({
 	Name = "Note",
-	Text = "Travel to a zone's start. Not while carrying a worker!",
+	Text = "Travel to a zone's start. Not while carrying a creature!",
 	Role = "Body",
 	TextSize = 17,
 	TextWrapped = true,

@@ -107,11 +107,11 @@ function HubArena.join(player: Player, uid: any): (boolean, string?)
 	end
 	local entry = HubArena.statsOf(player, uid)
 	if not entry then
-		return false, "Pick a worker from your stations or storage."
+		return false, "Pick a creature from your stations or storage."
 	end
 	table.insert(queue, entry)
 	HubBase.event(player, "ArenaQueue", { queued = true, worker = entry.name, power = entry.power })
-	return true, ("%s (power %d) is in the queue. Waiting for a worker of similar power..."):format(entry.name, entry.power)
+	return true, ("%s (power %d) is in the queue. Waiting for a creature of similar power..."):format(entry.name, entry.power)
 end
 
 -- Stand-in model of a worker on a platform, with a name and a health bar above it.
@@ -213,7 +213,7 @@ local function finish(f: any, winner: Entry, loser: Entry, reason: string)
 		won:Fire(winner.player, loser.player)
 	end
 	if loser.player.Parent then
-		HubBase.notify(loser.player, false, if reason == "left" then "You left the battle." else ("%s lost this one. Your worker is safe at home."):format(loser.name), TITLE)
+		HubBase.notify(loser.player, false, if reason == "left" then "You left the battle." else ("%s lost this one. Your creature is safe at home."):format(loser.name), TITLE)
 	end
 	HubBase.broadcast("ArenaEnd", { winner = winner.player.UserId, loser = loser.player.UserId, worker = winner.name, cash = cash, reason = reason })
 	scoreboard(("WINNER\n%s  (%s)"):format(winner.name, winner.player.DisplayName))
@@ -222,7 +222,7 @@ local function finish(f: any, winner: Entry, loser: Entry, reason: string)
 			f.folder:Destroy()
 		end
 		if fight == nil then
-			scoreboard("WORKER BATTLES\nstep on a pad to join")
+			scoreboard("CREATURE BATTLES\nstep on a pad to join")
 		end
 	end)
 end
@@ -338,13 +338,13 @@ function HubArena.start()
 			for i = #queue, 1, -1 do
 				HubArena.leave(queue[i].player, true)
 			end
-			scoreboard("WORKER BATTLES\ncoming soon")
+			scoreboard("CREATURE BATTLES\ncoming soon")
 		else
-			scoreboard("WORKER BATTLES\nstep on a pad to join")
+			scoreboard("CREATURE BATTLES\nstep on a pad to join")
 		end
 	end)
 	if HubBase.flag("ARENA_ENABLED") then
-		scoreboard("WORKER BATTLES\nstep on a pad to join")
+		scoreboard("CREATURE BATTLES\nstep on a pad to join")
 	end
 	task.spawn(function()
 		while true do

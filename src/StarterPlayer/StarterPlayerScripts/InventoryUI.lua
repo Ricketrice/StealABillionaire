@@ -174,7 +174,7 @@ end
 section("carried", "Carrying", 1)
 section("station", "On stations · earning", 2)
 section("inventory", "Storage", 3)
-grids.inventory.empty.Text = "Storage is empty. Steal workers on Main Street, then store them here."
+grids.inventory.empty.Text = "Storage is empty. Steal creatures in Knight's Keep, then store them here."
 
 -- whole-inventory empty state
 local emptyAll = UIKit.make("Frame", { Name = "EmptyAll", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 150), LayoutOrder = 0, Visible = false, Parent = scroll })
@@ -189,9 +189,9 @@ UIKit.text({
 	Stroke = false,
 	Parent = emptyAll,
 })
-UIKit.text({ Text = "No workers yet", Role = "Title", TextSize = 20, AlignX = Enum.TextXAlignment.Center, Position = UDim2.fromOffset(0, 62), Parent = emptyAll })
+UIKit.text({ Text = "No creatures yet", Role = "Title", TextSize = 20, AlignX = Enum.TextXAlignment.Center, Position = UDim2.fromOffset(0, 62), Parent = emptyAll })
 UIKit.text({
-	Text = "Steal a mystery worker on Main Street and bring it home to start earning.",
+	Text = "Steal a mystery creature in Knight's Keep and bring it home to start earning.",
 	Role = "Body",
 	Color = C.TextMuted,
 	AlignX = Enum.TextXAlignment.Center,
@@ -206,7 +206,7 @@ UIKit.text({
 local detail = UIKit.panel({ Name = "Detail", Color = C.PanelDark, Radius = UIStyle.Radius.L, Size = UDim2.fromOffset(DETAIL_W, 300), Parent = body })
 detail.ClipsDescendants = true
 local detailEmpty = UIKit.text({
-	Text = "Select a worker to see its details.",
+	Text = "Select a creature to see its details.",
 	Role = "Body",
 	Color = C.TextDim,
 	AlignX = Enum.TextXAlignment.Center,
@@ -250,6 +250,7 @@ local dLevel = UIKit.text({ Role = "Small", Color = C.TextMuted, LayoutOrder = 4
 local statBars = {}
 for i, s in { { "ATK", "attack", UIStyle.Stats.Attack }, { "SPD", "speed", UIStyle.Stats.Speed }, { "DEF", "defence", UIStyle.Stats.Defence } } do
 	local row = UIKit.make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), LayoutOrder = 4 + i, Parent = dInfo })
+	row.Visible = WorkerCatalogue.SHOW_BATTLE_STATS -- (034, D42: hidden in V1)
 	local label = UIKit.text({ Role = "Micro", Font = UIStyle.FontBold, Color = s[3], Size = UDim2.new(0, 64, 1, 0), Parent = row })
 	local _, meter = UIKit.meter({ Size = UDim2.new(1, -70, 0, 8), Position = UDim2.new(0, 70, 0.5, -4), Color = s[3], Parent = row })
 	statBars[i] = { key = s[2], short = s[1], label = label, meter = meter }
@@ -384,7 +385,7 @@ local function newCard(uid: string)
 						other.paintStar()
 					end
 				end
-				UITheme.toast("success", "Favourite", "Your favourite worker can't be stolen.")
+				UITheme.toast("success", "Favourite", "Your favourite creature can't be stolen.")
 			end
 			favs[uid] = if on then true else nil
 			ctl.paintStar()

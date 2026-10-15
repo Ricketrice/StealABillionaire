@@ -34,8 +34,20 @@ local LOCK_COLOR, SHIELD_COLOR, ALARM_COLOR = rgb(236, 190, 84), rgb(110, 180, 2
 local ATTACK_FX = {
 	basic = { color = rgb(240, 232, 214), swing = { "action_jump.mp3", 1.9, 0.35 }, hit = { "action_jump_land.mp3", 1.5, 0.6 }, sparks = 10 },
 	charged = { color = rgb(255, 196, 96), swing = { "action_jump.mp3", 1.15, 0.5 }, hit = { "impact_explosion_03.mp3", 2.1, 0.4 }, sparks = 22 },
-	shockwave = { color = rgb(130, 200, 255), warn = { "action_get_up.mp3", 0.8, 0.5 }, blast = { "impact_explosion_03.mp3", 0.95, 0.55 }, hit = { "action_jump_land.mp3", 1.0, 0.6 }, sparks = 18 },
-	burst = { color = rgb(255, 150, 90), warn = { "action_get_up.mp3", 1.25, 0.5 }, blast = { "impact_water.mp3", 1.35, 0.6 }, hit = { "action_jump_land.mp3", 1.2, 0.6 }, sparks = 18 },
+	shockwave = {
+		color = rgb(130, 200, 255),
+		warn = { "action_get_up.mp3", 0.8, 0.5 },
+		blast = { "impact_explosion_03.mp3", 0.95, 0.55 },
+		hit = { "action_jump_land.mp3", 1.0, 0.6 },
+		sparks = 18,
+	},
+	burst = {
+		color = rgb(255, 150, 90),
+		warn = { "action_get_up.mp3", 1.25, 0.5 },
+		blast = { "impact_water.mp3", 1.35, 0.6 },
+		hit = { "action_jump_land.mp3", 1.2, 0.6 },
+		sparks = 18,
+	},
 }
 
 local fxFolder = Instance.new("Folder")
@@ -339,7 +351,8 @@ local function onTelegraph(info)
 		place = function(a: number)
 			local length = def.range * a
 			local look = root.CFrame.LookVector * Vector3.new(1, 0, 1)
-			local base = CFrame.lookAt(root.Position - Vector3.new(0, 2.6, 0), root.Position - Vector3.new(0, 2.6, 0) + (if look.Magnitude > 0.01 then look.Unit else Vector3.new(0, 0, -1)))
+			local base =
+				CFrame.lookAt(root.Position - Vector3.new(0, 2.6, 0), root.Position - Vector3.new(0, 2.6, 0) + (if look.Magnitude > 0.01 then look.Unit else Vector3.new(0, 0, -1)))
 			for index, part in parts do
 				local angle = (index - 3) / 2 * half
 				part.Size = Vector3.new(0.5, 0.25, math.max(length, 0.1))
@@ -463,7 +476,18 @@ Players.PlayerRemoving:Connect(function(other)
 end)
 
 -- Bases: barrier, countdown and robbery alarm on every plot ------------------------------------------------
-type PlotFx = { holder: Folder, walls: { BasePart }, sign: BillboardGui, label: TextLabel, beacon: Part, light: PointLight, state: string, beeps: number, nextBeep: number, alarmKey: string }
+type PlotFx = {
+	holder: Folder,
+	walls: { BasePart },
+	sign: BillboardGui,
+	label: TextLabel,
+	beacon: Part,
+	light: PointLight,
+	state: string,
+	beeps: number,
+	nextBeep: number,
+	alarmKey: string,
+}
 local plotFx: { [Instance]: PlotFx } = {}
 local WALL_HEIGHT = 9
 
@@ -544,7 +568,7 @@ local function updatePlots()
 		end
 		local lines = {}
 		if alarm then
-			table.insert(lines, ('<font color="#ff5a4c">ROBBERY! %s has %s</font>'):format(thief, if type(worker) == "string" then worker else "a worker"))
+			table.insert(lines, ('<font color="#ff5a4c">ROBBERY! %s has %s</font>'):format(thief, if type(worker) == "string" then worker else "a creature"))
 		end
 		if barrier == "lock" then
 			table.insert(lines, ('<font color="#ecbe54">LOCKED %s</font>'):format(clockText(locked)))

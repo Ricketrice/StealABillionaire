@@ -534,10 +534,10 @@ function BaseService.levelUp(player: Player, uid: any, pad: BasePart?): (boolean
 	end
 	local worker = WorkerCatalogue.get(record.id)
 	if not worker then
-		return false, "That worker can't level up."
+		return false, "That creature can't level up."
 	end
 	if record.loc == "carried" then
-		return false, "Put your worker down first."
+		return false, "Put your creature down first."
 	end
 	local busy = WorkerInventory.busyReason(player, record)
 	if busy then

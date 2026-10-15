@@ -190,8 +190,8 @@ local function abort(theft, reason: string, by: Player?)
 		say(thief, false, ("%s left the game, so the steal was cancelled."):format(owner.DisplayName))
 	else
 		local text = if reason == "teleported"
-			then "No shortcuts with a stolen worker! %s went back to %s."
-			elseif reason == "safe zone" then "No hiding in the safe zone with a stolen worker! %s went back to %s."
+			then "No shortcuts with a stolen creature! %s went back to %s."
+			elseif reason == "safe zone" then "No hiding in the safe zone with a stolen creature! %s went back to %s."
 			elseif reason == "timeout" then "Too slow! %s went back to %s."
 			elseif reason == "dropped" then "You dropped %s. It went back to %s."
 			else "The steal didn't go through. %s went back to %s."
@@ -408,7 +408,7 @@ function PvPSteal.tryBegin(thief: Player, npc: Model): (boolean, string?)
 	local owner = plot and PvPBase.ownerOf(plot)
 	local uid = npc:GetAttribute("WorkerUid")
 	if not (plot and owner and type(uid) == "string") then
-		return false, "That worker can't be stolen."
+		return false, "That creature can't be stolen."
 	end
 	if owner == thief then
 		return false, nil
@@ -422,7 +422,7 @@ function PvPSteal.tryBegin(thief: Player, npc: Model): (boolean, string?)
 		return false, "Get closer to steal it."
 	end
 	if theftByThief[thief] or NPCCarry.getCarried(thief) or NPCClaim.getReservation(thief) then
-		return false, "You already have a worker in hand. Place or store it first."
+		return false, "You already have a creature in hand. Place or store it first."
 	end
 	if thief:GetAttribute("HeistCarrying") == true then
 		return false, "Bring your Boss Capsule home first."
@@ -432,7 +432,7 @@ function PvPSteal.tryBegin(thief: Player, npc: Model): (boolean, string?)
 	end
 	local record = WorkerInventory.getRecord(owner, uid) :: any
 	if not (record and record.loc == "station") or isSettling(uid) or replayed[owner] ~= true or replayed[thief] ~= true then
-		return false, "That worker can't be stolen right now."
+		return false, "That creature can't be stolen right now."
 	end
 	if PvPBase.isProtected(owner.UserId) then
 		if PvPBase.isBubble(owner.UserId) then
@@ -693,7 +693,7 @@ function PvPSteal.start()
 
 	-- The owner can't store or move a worker while it is on a thief's shoulder.
 	WorkerInventory.setBusyCheck(function(_player, record)
-		return if theftByUid[record.uid] then "That worker is being stolen! Hit the thief to get it back." else nil
+		return if theftByUid[record.uid] then "That creature is being stolen! Hit the thief to get it back." else nil
 	end)
 	-- A thief who reaches one of their own stations before the hand-over is done: it is recorded on
 	-- that station when the hand-over completes (and taken off it again if it does not).
