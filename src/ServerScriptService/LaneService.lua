@@ -2,9 +2,9 @@
 -- LaneService  (Milestone 030): Home and zone teleports, and the lane's portals. Everything is decided here:
 -- a client only names a destination ("Home" or a zone id). Refused while carrying a worker (caught or
 -- stolen), in a fight, dead, inside the cooldown, or for a zone the player may not enter. Destinations are
--- read from the map: Home = the player's own plot; Main Street / Billionaire Hills = parts tagged LaneStart;
--- the teammate zones = the spot in front of their plaza gate (ZoneProgress.entryPoint), which still enforces
--- the unlock exactly as before.
+-- read from the map: Home = the player's own plot; Knight's Keep = the part tagged LaneStart; gated zones (Sunken
+-- Kingdom, Ember Academy, teammate zones) = the spot in front of their gate (ZoneProgress.entryPoint), which still
+-- enforces the unlock. Teammate zones that aren't ready (ZoneConfig.READY) are "coming soon".
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -76,7 +76,7 @@ function LaneService.destination(player: Player, target: string, zoneId: string?
 		return nil, "That place doesn't exist."
 	end
 	if not LaneConfig.OURS[zone.id] then
-		if not zone.gate then
+		if not zone.gate or not ZoneConfig.isReady(zone.id) then
 			return nil, zone.name .. " is coming soon!"
 		end
 		if not ZoneProgress.isUnlocked(player, zone.id) then

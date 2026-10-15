@@ -44,16 +44,18 @@ local rad = math.rad
 local PROPS_FOLDER = "WorkerLook"
 
 -- Outfit colours for each body region. Unlisted regions (and always the head) show skin.
-local function outfit(o: {
-	top: Color3?, -- UpperTorso
-	upperArms: Color3?,
-	lowerArms: Color3?,
-	hands: Color3?,
-	waist: Color3?, -- LowerTorso
-	upperLegs: Color3?,
-	lowerLegs: Color3?,
-	feet: Color3?,
-}): { [string]: Color3 }
+local function outfit(
+	o: {
+		top: Color3?, -- UpperTorso
+		upperArms: Color3?,
+		lowerArms: Color3?,
+		hands: Color3?,
+		waist: Color3?, -- LowerTorso
+		upperLegs: Color3?,
+		lowerLegs: Color3?,
+		feet: Color3?,
+	}
+): { [string]: Color3 }
 	local colors = {}
 	local function both(name: string, color: Color3?)
 		colors["Left" .. name] = color
@@ -96,7 +98,14 @@ local LOOKS: { [string]: Look } = {
 	-- Scruffy casual: worn olive tee with a patch, faded jeans, beanie, paper cup.
 	broke_bob = {
 		skin = rgb(226, 178, 140),
-		outfit = outfit({ top = rgb(118, 110, 82), upperArms = rgb(118, 110, 82), waist = rgb(62, 78, 104), upperLegs = rgb(62, 78, 104), lowerLegs = rgb(62, 78, 104), feet = rgb(88, 62, 44) }),
+		outfit = outfit({
+			top = rgb(118, 110, 82),
+			upperArms = rgb(118, 110, 82),
+			waist = rgb(62, 78, 104),
+			upperLegs = rgb(62, 78, 104),
+			lowerLegs = rgb(62, 78, 104),
+			feet = rgb(88, 62, 44),
+		}),
 		props = {
 			{ part = "Head", shape = "Cylinder", size = v3(1.3, 0.6, 1.3), at = cf(0, 0.42, 0.02), color = rgb(136, 56, 48) },
 			{ part = "Head", shape = "Ball", size = v3(0.34, 0.34, 0.34), at = cf(0, 0.8, 0.02), color = rgb(136, 56, 48) },
@@ -119,7 +128,15 @@ local LOOKS: { [string]: Look } = {
 	-- Sporty streetwear: red hoodie, black track pants with white stripes, backwards cap, gold chain.
 	street_hustler = {
 		skin = rgb(122, 84, 60),
-		outfit = outfit({ top = rgb(200, 42, 54), upperArms = rgb(200, 42, 54), lowerArms = rgb(200, 42, 54), waist = rgb(34, 36, 44), upperLegs = rgb(34, 36, 44), lowerLegs = rgb(34, 36, 44), feet = WHITE }),
+		outfit = outfit({
+			top = rgb(200, 42, 54),
+			upperArms = rgb(200, 42, 54),
+			lowerArms = rgb(200, 42, 54),
+			waist = rgb(34, 36, 44),
+			upperLegs = rgb(34, 36, 44),
+			lowerLegs = rgb(34, 36, 44),
+			feet = WHITE,
+		}),
 		props = join(cap(BLACK, GOLD, true), {
 			{ part = "LeftUpperLeg", shape = "Block", size = v3(0.08, 1.3, 0.5), at = cf(-0.34, 0, 0), color = WHITE },
 			{ part = "RightUpperLeg", shape = "Block", size = v3(0.08, 1.3, 0.5), at = cf(0.34, 0, 0), color = WHITE },
@@ -145,7 +162,15 @@ local LOOKS: { [string]: Look } = {
 	-- Uniform with a broad silhouette: bulky vest, shoulder pads, badge, radio, peaked cap.
 	security_sam = {
 		skin = rgb(92, 62, 44),
-		outfit = outfit({ top = rgb(52, 58, 72), upperArms = rgb(52, 58, 72), lowerArms = rgb(52, 58, 72), waist = rgb(30, 32, 40), upperLegs = rgb(30, 32, 40), lowerLegs = rgb(30, 32, 40), feet = BLACK }),
+		outfit = outfit({
+			top = rgb(52, 58, 72),
+			upperArms = rgb(52, 58, 72),
+			lowerArms = rgb(52, 58, 72),
+			waist = rgb(30, 32, 40),
+			upperLegs = rgb(30, 32, 40),
+			lowerLegs = rgb(30, 32, 40),
+			feet = BLACK,
+		}),
 		props = join(cap(BLACK, BLACK), {
 			{ part = "Head", shape = "Block", size = v3(0.22, 0.22, 0.05), at = cf(0, 0.5, -0.66), color = GOLD, material = Enum.Material.Metal },
 			{ part = "UpperTorso", shape = "Block", size = v3(2.3, 1.7, 1.3), at = cf(0, -0.05, 0), color = rgb(30, 32, 40) },
@@ -160,7 +185,15 @@ local LOOKS: { [string]: Look } = {
 	-- Tech: graphite hoodie with a glowing coin logo, cyan visor, messy hair, glowing phone.
 	crypto_carl = {
 		skin = rgb(238, 204, 168),
-		outfit = outfit({ top = rgb(46, 48, 62), upperArms = rgb(46, 48, 62), lowerArms = rgb(46, 48, 62), waist = rgb(60, 64, 78), upperLegs = rgb(60, 64, 78), lowerLegs = rgb(60, 64, 78), feet = WHITE }),
+		outfit = outfit({
+			top = rgb(46, 48, 62),
+			upperArms = rgb(46, 48, 62),
+			lowerArms = rgb(46, 48, 62),
+			waist = rgb(60, 64, 78),
+			upperLegs = rgb(60, 64, 78),
+			lowerLegs = rgb(60, 64, 78),
+			feet = WHITE,
+		}),
 		props = {
 			{ part = "UpperTorso", shape = "Disc", size = v3(0.75, 0.75, 0.06), at = cf(0, 0.15, -0.58), color = rgb(247, 147, 26), material = Enum.Material.Neon },
 			{ part = "Head", shape = "Block", size = v3(1.3, 0.32, 1.25), at = cf(0, 0.55, 0.02), color = rgb(150, 98, 58) },
@@ -174,7 +207,15 @@ local LOOKS: { [string]: Look } = {
 	-- Luxury suit: black suit, white shirt, red tie, sunglasses, slick hair, gold watch.
 	ceo_chad = {
 		skin = rgb(236, 188, 148),
-		outfit = outfit({ top = rgb(26, 28, 38), upperArms = rgb(26, 28, 38), lowerArms = rgb(26, 28, 38), waist = rgb(26, 28, 38), upperLegs = rgb(26, 28, 38), lowerLegs = rgb(26, 28, 38), feet = rgb(18, 18, 22) }),
+		outfit = outfit({
+			top = rgb(26, 28, 38),
+			upperArms = rgb(26, 28, 38),
+			lowerArms = rgb(26, 28, 38),
+			waist = rgb(26, 28, 38),
+			upperLegs = rgb(26, 28, 38),
+			lowerLegs = rgb(26, 28, 38),
+			feet = rgb(18, 18, 22),
+		}),
 		props = {
 			{ part = "UpperTorso", shape = "Block", size = v3(0.6, 0.95, 0.05), at = cf(0, 0.42, -0.57), color = WHITE },
 			{ part = "UpperTorso", shape = "Block", size = v3(0.2, 0.85, 0.06), at = cf(0, 0.32, -0.6), color = rgb(196, 30, 40) },
@@ -191,7 +232,16 @@ local LOOKS: { [string]: Look } = {
 	-- cane and a soft golden glow. Meant to be unmistakable at a glance.
 	mystery_millionaire = {
 		skin = rgb(228, 188, 156),
-		outfit = outfit({ top = rgb(58, 26, 92), upperArms = rgb(58, 26, 92), lowerArms = rgb(58, 26, 92), hands = WHITE, waist = rgb(18, 16, 24), upperLegs = rgb(18, 16, 24), lowerLegs = rgb(18, 16, 24), feet = BLACK }),
+		outfit = outfit({
+			top = rgb(58, 26, 92),
+			upperArms = rgb(58, 26, 92),
+			lowerArms = rgb(58, 26, 92),
+			hands = WHITE,
+			waist = rgb(18, 16, 24),
+			upperLegs = rgb(18, 16, 24),
+			lowerLegs = rgb(18, 16, 24),
+			feet = BLACK,
+		}),
 		props = {
 			{ part = "UpperTorso", shape = "Block", size = v3(0.55, 0.9, 0.05), at = cf(0, 0.45, -0.57), color = WHITE },
 			{ part = "UpperTorso", shape = "Block", size = v3(0.46, 0.2, 0.08), at = cf(0, 0.78, -0.6), color = GOLD, material = Enum.Material.Neon },
@@ -222,6 +272,8 @@ local BEACH = rgb(62, 140, 146)
 local TOY = rgb(184, 92, 108)
 local NEON = rgb(110, 80, 168)
 local HILLS = rgb(44, 112, 82)
+local KEEP = rgb(200, 50, 60)
+local SEA = rgb(40, 150, 200)
 
 local PLACEHOLDERS: { [string]: Placeholder } = {
 	-- Beach Boardwalk
@@ -260,6 +312,19 @@ local PLACEHOLDERS: { [string]: Placeholder } = {
 	hedge_fund_hank = { base = "crypto_carl", top = rgb(60, 70, 90), legs = rgb(60, 70, 90), band = HILLS },
 	oil_baron_oswald = { base = "ceo_chad", top = rgb(240, 236, 220), band = HILLS },
 	the_trillionaire = { base = "mystery_millionaire", top = rgb(20, 60, 46), legs = rgb(16, 20, 18), band = HILLS },
+	-- 034 new Commons (placeholder looks until the 035 creature models)
+	training_dummy = { base = "broke_bob", top = rgb(214, 180, 110), legs = rgb(150, 110, 60), band = KEEP },
+	bookling = { base = "delivery_dave", top = rgb(150, 40, 30), legs = rgb(230, 200, 140), band = HILLS },
+	-- Sunken Kingdom (034, placeholder looks until 035)
+	bubble_fish = { base = "broke_bob", top = rgb(110, 200, 240), legs = rgb(250, 160, 70), band = SEA },
+	hermit_porter = { base = "delivery_dave", top = rgb(230, 110, 80), legs = rgb(240, 220, 180), band = SEA },
+	coral_snail = { base = "broke_bob", top = rgb(250, 130, 160), legs = rgb(120, 90, 140), band = SEA },
+	puffer_guard = { base = "street_hustler", top = rgb(240, 210, 90), legs = rgb(60, 110, 150), band = SEA },
+	mermaid_mage = { base = "business_betty", top = rgb(80, 210, 190), legs = rgb(60, 120, 200), band = SEA },
+	shark_knight = { base = "security_sam", top = rgb(120, 140, 160), legs = rgb(50, 70, 100), band = SEA },
+	pearl_seahorse = { base = "crypto_carl", top = rgb(240, 236, 250), legs = rgb(170, 140, 220), band = SEA },
+	tide_warden = { base = "ceo_chad", top = rgb(30, 120, 170), band = SEA },
+	aquaris = { base = "mystery_millionaire", top = rgb(20, 90, 160), legs = rgb(10, 50, 100), band = SEA },
 }
 
 WorkerAppearance.PLACEHOLDERS = PLACEHOLDERS

@@ -16,8 +16,13 @@ local RaceConfig = {}
 RaceConfig.ENABLED = false
 RaceConfig.STUDIO_ATTRIBUTE = "StudioRace"
 RaceConfig.PUBLISHED = "RaceOn"
-RaceConfig.TEMPLATE = "RaceCourse031" -- ServerStorage
-RaceConfig.FOLDER = "RaceCourse" -- Workspace.World.VelocityRoyale
+-- 034: the race runs on the Spell Run course in Ember Academy (built by tools/build034/B4_SpellRun; the 031 circuit
+-- template RaceCourse031 stays in ServerStorage, unused). One run start -> rune gates -> finish arch = LAPS 1.
+RaceConfig.TEMPLATE = "SpellRunCourse034" -- ServerStorage
+RaceConfig.WORLD = "EmberAcademy" -- Workspace.World.<WORLD> holds the course and the live copy
+RaceConfig.COURSE = "SpellRun" -- the course geometry under World.<WORLD> (FallZone, PadSpot)
+RaceConfig.FOLDER = "RaceCourse" -- the live copy of the template, under World.<WORLD>
+RaceConfig.TITLE = "SPELL RUN"
 
 -- Timing (seconds)
 RaceConfig.INTERVAL = 180 -- a race every 3 minutes if at least 1 player is on the pad (the first one is open right away, 032)
@@ -26,7 +31,7 @@ RaceConfig.COUNTDOWN = 5 -- big numbers + sound in the last seconds of the join 
 -- (no walking or jumping) for these seconds and let go at GO (032); off the pad at GO = not racing
 RaceConfig.TIME_LIMIT = 75 -- from GO: 2x the slowest measured 3-lap run (36.9 s, D36; kept in 032: bots run perfect lines, kids on phones don't; max 90); unfinished racers get nothing
 RaceConfig.PODIUM_SECONDS = 20 -- top 3 names stay on the podium board
-RaceConfig.LAPS = 3
+RaceConfig.LAPS = 1
 
 -- Racing: everyone runs at the same fixed speed (D24), no collisions between racers.
 RaceConfig.WALK_SPEED = 16
@@ -48,7 +53,7 @@ RaceConfig.SMALL_RACE_GOLD_PLACES = 1
 
 -- Capsule odds (D34): Silver = normal parade odds (70/20/8/1.8/0.2), Gold = Golden Parade odds
 -- (50/30/14.5/5/0.5). Capsules are free and solo players win Gold every race, so neither is better than
--- what the parade already gives. Rolled from the whole Zone 6 pool (BillionaireHills, 8 workers): inside a
+-- what the parade already gives. Rolled from the whole Ember Academy pool (BillionaireHills, 9 creatures since 034): inside a
 -- rarity every worker is equally likely. Existing Zone 6 catch odds are untouched.
 RaceConfig.ZONE = "BillionaireHills"
 RaceConfig.PER_MILLE = {

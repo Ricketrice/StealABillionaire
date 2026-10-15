@@ -79,7 +79,7 @@ end
 
 local function scan()
 	local world = workspace:FindFirstChild("World")
-	local royale = world and world:FindFirstChild("VelocityRoyale")
+	local royale = world and world:FindFirstChild("EmberAcademy")
 	local showcase = royale and royale:FindFirstChild("CreatureShowcase")
 	if showcase then
 		for _, m in showcase:GetChildren() do

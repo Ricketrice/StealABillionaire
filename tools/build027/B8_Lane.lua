@@ -1,14 +1,26 @@
 -- Studio location: ServerStorage.Build027.B8_Lane (ModuleScript)
--- 030 The Rising Lane. Step 1 (once, attribute Moved030 on World.SkyCity): clears what the lane replaces,
--- moves Main Street (terrace 1) and the whole Velocity Royale strip (terrace 6) as rigid blocks.
--- Step 2 (re-runnable, rebuilds World.SkyCity.Lane): safe line, ramps, portal stops, landing, clouds.
--- Coordinates: Kit.L.lane. North = -Z.
+-- The Rising Lane (030; 034 order). Step 1 (once, attribute Moved034 on World.SkyCity): moves the whole Zone 6 strip
+-- (Ember Academy: gate, bridge, island, Velocity Royale, NPC area, race course template) from terrace 6 down to
+-- terrace 3 as one rigid block, and parks the Lifestyle strip (it sits where the climb now continues). The 030 step
+-- (Main Street to terrace 1) ran once in 030 (Moved030) and lives in git history.
+-- Step 2 (re-runnable, rebuilds World.SkyCity.Lane + the Sunken Kingdom gate/NPC area): safe line, ramps, the T2
+-- Sunken Kingdom terrace + gate, the T3 Ember landing, the T4-T7 teammate portal stops, clouds.
+-- Coordinates: Kit.L.lane / K.climb(). North = -Z.
 
 local K = require(script.Parent.Kit)
 local C, L = K.C, K.L
 local LN = L.lane
 
+local ServerStorage = game:GetService("ServerStorage")
+
 local SKY = workspace.World
+local SEA = {
+	deep = Color3.fromRGB(30, 74, 110),
+	teal = Color3.fromRGB(40, 170, 190),
+	pearl = Color3.fromRGB(236, 236, 246),
+	coral = Color3.fromRGB(250, 122, 110),
+	sand = Color3.fromRGB(222, 204, 160),
+}
 
 local function bounds(part: BasePart): (number, number, number, number)
 	local h = part.Size / 2
@@ -23,21 +35,6 @@ local function bounds(part: BasePart): (number, number, number, number)
 	return minX, maxX, minZ, maxZ
 end
 
--- Top-level things under a folder tree: models (not inside another model) and loose parts.
-local function items(folder: Instance): { Instance }
-	local list = {}
-	for _, d in folder:GetDescendants() do
-		if (d:IsA("Model") or d:IsA("BasePart")) and not d.Parent:IsA("Model") then
-			table.insert(list, d)
-		end
-	end
-	return list
-end
-
-local function pos(inst: Instance): Vector3
-	return if inst:IsA("BasePart") then inst.Position else (inst :: Model):GetPivot().Position
-end
-
 local function shift(blocks: { Instance }, T: CFrame): number
 	local n = 0
 	for _, inst in blocks do
@@ -47,6 +44,8 @@ local function shift(blocks: { Instance }, T: CFrame): number
 			if d:IsA("BasePart") then
 				d.CFrame = T * d.CFrame
 				n += 1
+			elseif d:IsA("Model") and not d.PrimaryPart then
+				d.WorldPivot = T * d.WorldPivot -- (models without a primary part keep their pivot otherwise)
 			end
 		end
 	end
@@ -150,16 +149,6 @@ local function garden(parent: Instance, zc: number, y: number, w: number, len: n
 	end
 end
 
--- Where the climb ends: z of the last ramp's top and the ground height of the Royale landing.
-local function royaleSpot(): (number, number)
-	local z = LN.archZ - LN.streetLength
-	for _, stop in LN.stops do
-		z -= LN.rampLen + stop.len
-	end
-	z -= LN.rampLen
-	return z, LN.base + LN.rise * (#LN.stops + 2) - 0.3
-end
-
 local function hedge(parent: Instance, a: Vector3, b: Vector3, lift: number?)
 	local h = K.bar(parent, "Hedge", a, b, 2.4, 2.6 + (lift or 0), 2.6, C.Hedge, Enum.Material.Plastic)
 	h.CanQuery = false
@@ -173,96 +162,238 @@ local function lampSign(parent: Instance, cf: CFrame, size: Vector3, text: strin
 	return sign
 end
 
+-- A teammate zone's portal stop: grass island + paving, garden, railings, a portal pad with arch, name + status sign
+-- and a LanePortal prompt. Returns the stop's north z.
+local function portalStop(lane: Instance, rocks: Folder, stop: any, i: number, terrace: number, z: number, y: number): number
+	local x, rw = LN.x, LN.rampW
+	local zN, zS = z - stop.len, z
+	local sf = Instance.new("Folder")
+	sf.Name = "Stop" .. terrace .. "_" .. stop.id
+	sf:SetAttribute("ZoneId", stop.id)
+	sf:SetAttribute("Terrace", terrace)
+	sf:SetAttribute("TopY", y)
+	sf:SetAttribute("SouthZ", zS)
+	sf:SetAttribute("NorthZ", zN)
+	sf.Parent = lane
+	local zc = (zN + zS) / 2
+	K.slab(sf, "Island", x - stop.w / 2, x + stop.w / 2, zN, zS, y - 0.3, 4, C.Grass, Enum.Material.Plastic)
+	K.slab(sf, "Paving", x - rw / 2, x + rw / 2, zN, zS, y, 0.6, C.Stone)
+	tiles(sf, x - rw / 2, x + rw / 2, zS, zN, y, 8)
+	borders(sf, x - rw / 2, x + rw / 2, zN, zS, y)
+	K.slab(sf, "Accent", x - rw / 2, x + rw / 2, zc - 2, zc + 2, y + 0.12, 0.2, stop.colour).CanCollide = false
+	for _, e in { { x - stop.w / 2, x + stop.w / 2, zN - 0.5, zN + 0.3 }, { x - stop.w / 2, x + stop.w / 2, zS - 0.3, zS + 0.5 } } do
+		K.slab(sf, "Curb", e[1], e[2], e[3], e[4], y - 0.3 + 0.25, 0.5, C.Curb).CanCollide = false
+	end
+	garden(sf, zc, y - 0.3, stop.w, stop.len)
+	stopRails(sf, y, zN, zS, stop.w)
+	K.place("M_Rock_B", CFrame.new(x, y - 20, zc) * CFrame.Angles(0, math.rad(53 * i), 0), rocks, 1.2)
+	K.place("M_Rock_A", CFrame.new(x + 10, y - 17, zc - 8) * CFrame.Angles(0, math.rad(97 * i), 0), rocks, 0.9)
+	-- portal on the west side: pad, arch, glow, sign, prompt
+	local px = x - 19.5
+	K.part({
+		name = "PadBase",
+		parent = sf,
+		shape = "Cylinder",
+		size = Vector3.new(0.4, 14, 14),
+		cf = CFrame.new(px, y + 0.2, zc) * CFrame.Angles(0, 0, math.rad(90)),
+		color = C.Trim,
+		deco = true,
+	})
+	K.part({
+		name = "Pad",
+		parent = sf,
+		shape = "Cylinder",
+		size = Vector3.new(0.3, 11.6, 11.6),
+		cf = CFrame.new(px, y + 0.35, zc) * CFrame.Angles(0, 0, math.rad(90)),
+		color = stop.colour,
+		deco = true,
+	})
+	for _, s in { -1, 1 } do
+		K.part({ name = "Pillar", parent = sf, size = Vector3.new(1.8, 13, 1.8), pos = Vector3.new(px, y + 6.5, zc + s * 6.5), color = stop.colour })
+		K.part({ name = "PillarCap", parent = sf, size = Vector3.new(2.6, 0.8, 2.6), pos = Vector3.new(px, y + 13.4, zc + s * 6.5), color = C.Trim })
+	end
+	K.part({ name = "Beam", parent = sf, size = Vector3.new(2, 2, 15), pos = Vector3.new(px, y + 12, zc), color = stop.colour })
+	K.part({ name = "BeamTrim", parent = sf, size = Vector3.new(2.4, 0.5, 15.4), pos = Vector3.new(px, y + 13.1, zc), color = C.Trim })
+	K.part({
+		name = "Glow",
+		parent = sf,
+		size = Vector3.new(0.3, 10.2, 11.2),
+		pos = Vector3.new(px, y + 5.6, zc),
+		color = stop.colour,
+		mat = Enum.Material.Neon,
+		transparency = 0.55,
+		deco = true,
+	})
+	lampSign(sf, CFrame.lookAt(Vector3.new(px, y + 17, zc), Vector3.new(px + 10, y + 17, zc)), Vector3.new(18, 3.6, 0.8), stop.label, C.Navy, stop.colour)
+	-- status under the name, kept up to date per player by LaneClient (COMING SOON / UNLOCK $X / OPEN)
+	local status = lampSign(sf, CFrame.lookAt(Vector3.new(px, y + 14.9, zc), Vector3.new(px + 10, y + 14.9, zc)), Vector3.new(12, 1.4, 0.6), "COMING SOON", C.Navy, C.Curb)
+	status.Name = "Status"
+	status:SetAttribute("ZoneId", stop.id)
+	local trig = K.part({ name = "PortalTrigger", parent = sf, ghost = true, size = Vector3.new(8, 6, 8), pos = Vector3.new(px + 2, y + 3, zc) })
+	trig.CanQuery = true
+	trig:SetAttribute("ZoneId", stop.id)
+	K.tag(trig, "LanePortal")
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Travel"
+	prompt.ObjectText = stop.label
+	prompt.HoldDuration = 0.4
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = trig
+	return zN
+end
+
+-- A lane gate's landing at the top of a ramp (exactly the gate's width, so the gate closes it).
+local function gateLanding(lane: Instance, rocks: Folder, name: string, zoneId: string, terrace: number, zS: number, y: number): Folder
+	local x, rw, lw = LN.x, LN.rampW, LN.landing
+	local f = Instance.new("Folder")
+	f.Name = name
+	f:SetAttribute("ZoneId", zoneId)
+	f:SetAttribute("Terrace", terrace)
+	f:SetAttribute("TopY", y)
+	f.Parent = lane
+	K.slab(f, "Island", x - lw.w / 2, x + lw.w / 2, zS - lw.len, zS, y - 0.3, 4, C.Grass, Enum.Material.Plastic)
+	K.slab(f, "Paving", x - rw / 2, x + rw / 2, zS - lw.len, zS, y, 0.6, C.Stone)
+	tiles(f, x - rw / 2, x + rw / 2, zS, zS - lw.len, y, 6)
+	borders(f, x - rw / 2, x + rw / 2, zS - lw.len, zS, y)
+	K.place("M_Rock_B", CFrame.new(x, y - 20, zS - 6), rocks, 1.2)
+	return f
+end
+
+-- T2: the Sunken Kingdom terrace (sand island, paved path, coral-stone wall along its south edge so nobody walks
+-- round the gate, railings on the other edges, rocks underneath). The underwater look is its own builder (034 Phase 2).
+local function sunkenTerrace(f: Folder, rocks: Folder, zS: number, zN: number, y: number)
+	local x, rw, sw = LN.x, LN.rampW, LN.sunken.w
+	local x0, x1 = x - sw / 2, x + sw / 2
+	K.slab(f, "Terrace", x0, x1, zN, zS, y - 0.3, 5, SEA.sand, Enum.Material.Sand)
+	K.slab(f, "Path", x - rw / 2, x + rw / 2, zN, zS, y, 0.6, C.Stone)
+	tiles(f, x - rw / 2, x + rw / 2, zS, zN, y, 8)
+	borders(f, x - rw / 2, x + rw / 2, zN, zS, y)
+	for _, side in { -1, 1 } do
+		local inner = x + side * (LN.landing.w / 2)
+		local outer = if side < 0 then x0 else x1
+		local mid = (inner + outer) / 2
+		K.part({ name = "SouthWall", parent = f, size = Vector3.new(math.abs(outer - inner), 9, 2), pos = Vector3.new(mid, y + 4.2, zS - 1), color = SEA.deep })
+		K.part({
+			name = "SouthWallCap",
+			parent = f,
+			size = Vector3.new(math.abs(outer - inner) + 0.4, 0.8, 2.6),
+			pos = Vector3.new(mid, y + 9, zS - 1),
+			color = SEA.pearl,
+			deco = true,
+		})
+		railing(f, Vector3.new(outer - side * 0.5, y, zS - 2), Vector3.new(outer - side * 0.5, y, zN), 9)
+		railing(f, Vector3.new(outer - side * 0.5, y, zN + 0.5), Vector3.new(x + side * (rw / 2 + 0.5), y, zN + 0.5), 5)
+	end
+	for k, dx in { -42, 0, 42 } do
+		for j, t in { 0.25, 0.75 } do
+			local at = CFrame.new(x + dx, y - 24, zS + (zN - zS) * t) * CFrame.Angles(0, math.rad(61 * (k + j)), 0)
+			K.place(if (k + j) % 2 == 0 then "M_Rock_B" else "M_Rock_A", at, rocks, 1.7)
+		end
+	end
+end
+
+-- The Sunken Kingdom's gate (a recoloured copy of the Ember Academy gate) and its NPC area (Workspace.Zones).
+local function sunkenZone(zLanding: number, y: number, zS: number, _zN: number): string
+	local fz = SKY.FutureZones
+	local folder = fz:FindFirstChild("Our_SunkenKingdom")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "Our_SunkenKingdom"
+		local gate = fz.Zone6_BillionaireHills.Gate:Clone()
+		for _, p in gate:GetDescendants() do
+			if p:IsA("BasePart") then
+				if p.Name == "Barrier" or p.Name == "AccentStripe" then
+					p.Color = SEA.teal
+				elseif p.BrickColor == BrickColor.new("Earth blue") then
+					p.Color = SEA.deep
+				end
+			elseif p:IsA("TextLabel") and p.Text:find("BILLIONAIRE HILLS") then
+				p.Text = "ZONE 2 · SUNKEN KINGDOM"
+			end
+		end
+		gate.Parent = folder
+		folder:SetAttribute("ZoneId", "SunkenKingdom")
+		folder:SetAttribute("DisplayName", "SUNKEN KINGDOM")
+		folder.Parent = fz
+	end
+	local gate = folder:FindFirstChild("Gate") :: Model
+	gate:SetAttribute("LaneGate", true)
+	local barrier = gate:FindFirstChild("Barrier") :: BasePart
+	local target = Vector3.new(LN.x, y + 5.1, zLanding - LN.landing.len / 2)
+	local delta = target - barrier.Position
+	for _, p in gate:GetDescendants() do
+		if p:IsA("BasePart") then
+			p.CFrame = CFrame.new(delta) * p.CFrame
+		end
+	end
+	gate.WorldPivot = CFrame.new(delta) * gate.WorldPivot
+	-- NPC area: Workspace.Zones.SunkenKingdom (ZoneBoundary + 6 SpawnPoints), rebuilt
+	local zones = workspace:FindFirstChild("Zones") :: Folder
+	local old = zones:FindFirstChild("SunkenKingdom")
+	if old then
+		old:Destroy()
+	end
+	local area = Instance.new("Folder")
+	area.Name = "SunkenKingdom"
+	local zc = zS - 60 -- the open middle of the terrace (the Shell Palace and the ruins stand north of it)
+	local boundary = K.part({ name = "ZoneBoundary", parent = area, ghost = true, size = Vector3.new(60, 20, 84), pos = Vector3.new(LN.x, y + 10, zc) })
+	boundary.CanQuery = false
+	local spawns = Instance.new("Folder")
+	spawns.Name = "SpawnPoints"
+	spawns.Parent = area
+	for i, off in { { -22, -32 }, { 22, -32 }, { -24, 0 }, { 24, 0 }, { -20, 32 }, { 20, 32 } } do
+		K.part({ name = "SpawnPoint" .. i, parent = spawns, ghost = true, size = Vector3.new(2, 1, 2), pos = Vector3.new(LN.x + off[1], y + 3, zc + off[2]) })
+	end
+	area.Parent = zones
+	return ("Sunken gate at z %.1f, NPC area centre z %.0f"):format(barrier.Position.Z, zc)
+end
+
+-- North edge of the (moved) Ember Academy island on the centre line: the climb to the teammate stops starts there.
+local function emberNorthZ(): number
+	local best = math.huge
+	for _, p in SKY.Islands.BillionaireHillsIsland:GetDescendants() do
+		if p:IsA("BasePart") and math.abs(p.Position.X - LN.x) < p.Size.X / 2 then
+			best = math.min(best, p.Position.Z - p.Size.Z / 2)
+		end
+	end
+	return best
+end
+
 -- Step 1 ------------------------------------------------------------------------------------------------
 local function moveBlocks(): string
 	local sky = K.root()
-	if sky:GetAttribute("Moved030") then
+	if sky:GetAttribute("Moved034") then
 		return "already moved"
 	end
-	local ground, dressing = sky.Ground, sky.Dressing
-	local report = {}
-
-	-- what the lane replaces: reserved plot 2 + its path, the boss plot, Zone 1 gateway, trees in the lane mouth
-	local gone = 0
-	local function kill(inst: Instance?)
-		if inst then
-			inst:Destroy()
-			gone += 1
-		end
-	end
-	kill(sky.ReservedPlots:FindFirstChild("Reserved2"))
-	kill(sky.ReservedPlots:FindFirstChild("BossVaultPlot"))
-	for _, name in { "PathSouth", "PathSouthCurb", "Zone1Gateway", "Zone1GatewayCurb" } do
-		kill(ground:FindFirstChild(name))
-	end
-	for _, tree in items(dressing) do
-		local at = pos(tree)
-		if at.X > -174 and at.X < -141 and at.Z < -60.5 and at.Z > -118 then
-			kill(tree)
-		end
-	end
-	-- the bump-out's north hedge (the lane leaves through it)
-	for _, h in ground.Edge:GetChildren() do
-		if h.Name == "Hedge" and math.abs(h.Position.Z + 115) < 1.5 and math.abs(h.Position.X + 157) < 1.5 then
-			kill(h)
-		end
-	end
-
-	-- terrace 1: Main Street as one rigid block, rotated to run north, +12 up
-	local arch = Vector3.new(-179, 0, -4)
-	local T1 = CFrame.new(LN.x, LN.rise, LN.archZ) * CFrame.Angles(0, -math.pi / 2, 0) * CFrame.new(-arch)
-	local set: { Instance } = {}
-	local function inMS(p: Vector3): boolean
-		return p.X < -175.5 and p.Z > -59 and p.Z < 53
-	end
-	for _, name in { "Island4", "MainStreet", "MainStreetCurb" } do
-		table.insert(set, ground[name])
-	end
-	for _, folder in { ground.Edge, ground.Rocks } do
-		for _, c in items(folder) do
-			if inMS(pos(c)) then
-				table.insert(set, c)
-			end
-		end
-	end
-	table.insert(set, sky.MainStreet)
-	table.insert(set, sky.Hub.Zone1Arch)
-	for _, c in items(dressing) do
-		if inMS(pos(c)) then
-			table.insert(set, c)
-		end
-	end
-	table.insert(set, workspace.Zones.MainStreet)
-	table.insert(report, ("Main Street block: %d parts"):format(shift(set, T1)))
-
-	-- terrace 6: the plaza gate + bridge + Velocity Royale strip as one block, turned so the gate faces north
 	local W = SKY
-	local gate = W.FutureZones.Zone6_BillionaireHills.Gate
-	local barrier = gate.Barrier
-	local plaza = W.FutureZones.BillionairePlaza.ArenaFloor.Position
-	local out = Vector3.new(barrier.Position.X - plaza.X, 0, barrier.Position.Z - plaza.Z).Unit
-	local topZ, groundY = royaleSpot()
-	local R = CFrame.lookAt(Vector3.zero, Vector3.new(0, 0, -1)) * CFrame.lookAt(Vector3.zero, out):Inverse()
-	local gateOld = Vector3.new(barrier.Position.X, 0, barrier.Position.Z)
-	local T6 = CFrame.new(LN.x, groundY, topZ - LN.gateOffset) * R * CFrame.new(-gateOld)
-	local set6: { Instance } = { W.VelocityRoyale, W.BillionaireCity.Zone6Plaza, W.FutureZones.Zone6_BillionaireHills }
-	table.insert(set6, W.Islands.BillionaireHillsIsland)
-	table.insert(set6, W.Bridges.BillionaireHillsBridge)
-	table.insert(set6, W.DistrictArchitecture.BillionaireHills)
-	table.insert(set6, W.LockedZoneEntrances.BillionaireHills)
-	table.insert(set6, workspace.Zones.BillionaireHills)
+	local old = sky.Lane:FindFirstChild("Stop6_Royale")
+	assert(old, "the 030 Royale landing (Lane.Stop6_Royale) is missing")
+	local island = old:FindFirstChild("Island") :: BasePart
+	local oldSouth = island.Position.Z + island.Size.Z / 2
+	local c = K.climb()
+	local d = Vector3.new(0, (LN.base + LN.rise * 3) - old:GetAttribute("TopY"), c.t3Landing - oldSouth)
+	local set: { Instance } = { W.VelocityRoyale, W.BillionaireCity.Zone6Plaza, W.FutureZones.Zone6_BillionaireHills }
+	table.insert(set, W.Islands.BillionaireHillsIsland)
+	table.insert(set, W.Bridges.BillionaireHillsBridge)
+	table.insert(set, W.DistrictArchitecture.BillionaireHills)
+	table.insert(set, W.LockedZoneEntrances.BillionaireHills)
+	table.insert(set, workspace.Zones.BillionaireHills)
+	table.insert(set, ServerStorage.RaceCourse031) -- the live course is cloned from it at run time
 	for _, g in W.BridgeGuards:GetChildren() do
 		if g.Name:find("BillionaireHills") then
-			table.insert(set6, g)
+			table.insert(set, g)
 		end
 	end
-	table.insert(report, ("Royale block: %d parts"):format(shift(set6, T6)))
-	-- Zone 6's gate is the top of the lane: it keeps its barrier (cash unlock, ZoneGates) and ZoneProgress
-	-- treats everything north of it as the district (attribute LaneGate)
-	gate:SetAttribute("LaneGate", true)
-	sky:SetAttribute("Moved030", true)
-	table.insert(report, ("removed %d old pieces"):format(gone))
-	return table.concat(report, "; ")
+	local n = shift(set, CFrame.new(d))
+	local parked = K.folder(ServerStorage, "_Parked034")
+	local strip = W.VelocityRoyale:FindFirstChild("LifestyleStrip")
+	if strip then
+		strip.Parent = parked
+	end
+	sky:SetAttribute("Moved034", true)
+	sky:SetAttribute("EmberShift034", d)
+	return ("Ember block moved by %s: %d parts; Lifestyle strip parked"):format(tostring(d), n)
 end
 
 -- Step 2 ------------------------------------------------------------------------------------------------
@@ -336,106 +467,35 @@ local function buildLane(): string
 	end
 
 	-- the climb ----------------------------------------------------------------------------------------
+	local c = K.climb()
 	local y = base
-	local z = LN.rampAStartZ
-	ramp(lane, z, y, LN.archZ, base + LN.rise, rocks)
+	ramp(lane, LN.rampAStartZ, y, LN.archZ, base + LN.rise, rocks)
 	y = base + LN.rise
-	z = LN.archZ - LN.streetLength -- end of Main Street's paving
 	local startMarks: { [string]: CFrame } = {}
 	startMarks.MainStreet = CFrame.lookAt(Vector3.new(x, y + 3, LN.archZ - 4), Vector3.new(x, y + 3, LN.archZ - 20))
+	-- T2 Sunken Kingdom: ramp, gate landing, terrace
+	ramp(lane, c.t1End, y, c.t2Landing, y + LN.rise, rocks)
+	y += LN.rise
+	local t2 = gateLanding(lane, rocks, "T2_SunkenKingdom", "SunkenKingdom", 2, c.t2Landing, y)
+	sunkenTerrace(t2, rocks, c.t2South, c.t2North, y)
+	local sunkenReport = sunkenZone(c.t2Landing, y, c.t2South, c.t2North)
+	-- T3 Ember Academy: ramp + gate landing (its gate, bridge and island are the moved Zone 6 strip)
+	ramp(lane, c.t2North, y, c.t3Landing, y + LN.rise, rocks)
+	y += LN.rise
+	gateLanding(lane, rocks, "T3_EmberAcademy", "BillionaireHills", 3, c.t3Landing, y)
+	-- the old "locked villa" hedge closed the island's entrance behind the bridge: parked (the gate is the lock now)
+	local hedgeGate = SKY.LockedZoneEntrances.BillionaireHills:FindFirstChild("VillaGateHedge")
+	if hedgeGate then
+		hedgeGate.Parent = K.folder(ServerStorage, "_Parked034")
+	end
+	-- T4-T7 teammate portal stops, from the Ember island's north edge
+	local z = emberNorthZ()
 	for i, stop in LN.stops do
 		ramp(lane, z, y, z - LN.rampLen, y + LN.rise, rocks)
 		z -= LN.rampLen
 		y += LN.rise
-		local zN, zS = z - stop.len, z
-		local sf = Instance.new("Folder")
-		sf.Name = "Stop" .. (i + 1) .. "_" .. stop.id
-		sf:SetAttribute("ZoneId", stop.id)
-		sf:SetAttribute("Terrace", i + 1)
-		sf:SetAttribute("TopY", y)
-		sf:SetAttribute("SouthZ", zS)
-		sf:SetAttribute("NorthZ", zN)
-		sf.Parent = lane
-		local zc = (zN + zS) / 2
-		K.slab(sf, "Island", x - stop.w / 2, x + stop.w / 2, zN, zS, y - 0.3, 4, C.Grass, Enum.Material.Plastic)
-		K.slab(sf, "Paving", x - rw / 2, x + rw / 2, zN, zS, y, 0.6, C.Stone)
-		tiles(sf, x - rw / 2, x + rw / 2, zS, zN, y, 8)
-		borders(sf, x - rw / 2, x + rw / 2, zN, zS, y)
-		K.slab(sf, "Accent", x - rw / 2, x + rw / 2, zc - 2, zc + 2, y + 0.12, 0.2, stop.colour).CanCollide = false
-		for _, e in { { x - stop.w / 2, x + stop.w / 2, zN - 0.5, zN + 0.3 }, { x - stop.w / 2, x + stop.w / 2, zS - 0.3, zS + 0.5 } } do
-			K.slab(sf, "Curb", e[1], e[2], e[3], e[4], y - 0.3 + 0.25, 0.5, C.Curb).CanCollide = false
-		end
-		garden(sf, zc, y - 0.3, stop.w, stop.len)
-		stopRails(sf, y, zN, zS, stop.w)
-		K.place("M_Rock_B", CFrame.new(x, y - 20, zc) * CFrame.Angles(0, math.rad(53 * i), 0), rocks, 1.2)
-		K.place("M_Rock_A", CFrame.new(x + 10, y - 17, zc - 8) * CFrame.Angles(0, math.rad(97 * i), 0), rocks, 0.9)
-		-- portal on the west side: pad, arch, glow, sign, prompt
-		local px = x - 19.5
-		K.part({
-			name = "PadBase",
-			parent = sf,
-			shape = "Cylinder",
-			size = Vector3.new(0.4, 14, 14),
-			cf = CFrame.new(px, y + 0.2, zc) * CFrame.Angles(0, 0, math.rad(90)),
-			color = C.Trim,
-			deco = true,
-		})
-		K.part({
-			name = "Pad",
-			parent = sf,
-			shape = "Cylinder",
-			size = Vector3.new(0.3, 11.6, 11.6),
-			cf = CFrame.new(px, y + 0.35, zc) * CFrame.Angles(0, 0, math.rad(90)),
-			color = stop.colour,
-			deco = true,
-		})
-		for _, s in { -1, 1 } do
-			K.part({ name = "Pillar", parent = sf, size = Vector3.new(1.8, 13, 1.8), pos = Vector3.new(px, y + 6.5, zc + s * 6.5), color = stop.colour })
-			K.part({ name = "PillarCap", parent = sf, size = Vector3.new(2.6, 0.8, 2.6), pos = Vector3.new(px, y + 13.4, zc + s * 6.5), color = C.Trim })
-		end
-		K.part({ name = "Beam", parent = sf, size = Vector3.new(2, 2, 15), pos = Vector3.new(px, y + 12, zc), color = stop.colour })
-		K.part({ name = "BeamTrim", parent = sf, size = Vector3.new(2.4, 0.5, 15.4), pos = Vector3.new(px, y + 13.1, zc), color = C.Trim })
-		K.part({
-			name = "Glow",
-			parent = sf,
-			size = Vector3.new(0.3, 10.2, 11.2),
-			pos = Vector3.new(px, y + 5.6, zc),
-			color = stop.colour,
-			mat = Enum.Material.Neon,
-			transparency = 0.55,
-			deco = true,
-		})
-		lampSign(sf, CFrame.lookAt(Vector3.new(px, y + 17, zc), Vector3.new(px + 10, y + 17, zc)), Vector3.new(18, 3.6, 0.8), stop.label, C.Navy, stop.colour)
-		local trig = K.part({ name = "PortalTrigger", parent = sf, ghost = true, size = Vector3.new(8, 6, 8), pos = Vector3.new(px + 2, y + 3, zc) })
-		trig.CanQuery = true
-		trig:SetAttribute("ZoneId", stop.id)
-		K.tag(trig, "LanePortal")
-		local prompt = Instance.new("ProximityPrompt")
-		prompt.ActionText = "Travel"
-		prompt.ObjectText = stop.label
-		prompt.HoldDuration = 0.4
-		prompt.MaxActivationDistance = 12
-		prompt.RequiresLineOfSight = false
-		prompt.Parent = trig
-		z = zN
+		z = portalStop(lane, rocks, stop, i, i + 3, z, y)
 	end
-	-- last ramp up to the Royale landing
-	ramp(lane, z, y, z - LN.rampLen, y + LN.rise, rocks)
-	z -= LN.rampLen
-	y += LN.rise
-	local landing = Instance.new("Folder")
-	landing.Name = "Stop6_Royale"
-	landing:SetAttribute("ZoneId", "BillionaireHills")
-	landing:SetAttribute("Terrace", 6)
-	landing:SetAttribute("TopY", y)
-	landing.Parent = lane
-	local lw = LN.landing
-	K.slab(landing, "Island", x - lw.w / 2, x + lw.w / 2, z - lw.len, z, y - 0.3, 4, C.Grass, Enum.Material.Plastic)
-	K.slab(landing, "Paving", x - rw / 2, x + rw / 2, z - lw.len, z, y, 0.6, C.Stone)
-	tiles(landing, x - rw / 2, x + rw / 2, z, z - lw.len, y, 6)
-	borders(landing, x - rw / 2, x + rw / 2, z - lw.len, z, y)
-	K.place("M_Rock_B", CFrame.new(x, y - 20, z - 6), rocks, 1.2)
-	startMarks.BillionaireHills = CFrame.lookAt(Vector3.new(x, y + 3, z - 2), Vector3.new(x, y + 3, z - 30))
 
 	for id, cf in startMarks do
 		local m = K.part({ name = "Start_" .. id, parent = lane, ghost = true, size = Vector3.new(2, 1, 2), cf = cf })
@@ -446,9 +506,9 @@ local function buildLane(): string
 	-- cheap clouds beside the climb
 	local clouds = K.folder(lane, "Clouds")
 	local rng = Random.new(30)
-	for i = 1, 14 do
+	for i = 1, 20 do
 		local zz = -120 - i * 55
-		local yy = base + math.clamp((-zz - 116) / 11, 0, 72) - rng:NextNumber(26, 40)
+		local yy = base + math.clamp((-zz - 116) / 11, 0, 84) - rng:NextNumber(26, 40)
 		local s = rng:NextNumber(60, 110)
 		local cloud = K.part({
 			name = "Cloud",
@@ -465,7 +525,7 @@ local function buildLane(): string
 	end
 
 	lane:SetAttribute("TopZ", z)
-	return ("lane: %d parts, top y %.1f, landing z %.0f"):format(K.count(lane), y, z)
+	return ("lane: %d parts, top y %.1f, top z %.0f; %s"):format(K.count(lane), y, z, sunkenReport)
 end
 
 return {

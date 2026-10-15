@@ -96,7 +96,7 @@ local function paint()
 		local row = rows[zone.id]
 		local open, text = true, "Open"
 		if not LaneConfig.OURS[zone.id] then
-			if not zone.gate then
+			if not zone.gate or zone.ready == false then
 				open, text = false, "Coming soon"
 			elseif not unlocked[zone.id] then
 				open, text = false, "Locked " .. CashFormat.format(zone.price)
@@ -111,6 +111,39 @@ local function paint()
 end
 player:GetAttributeChangedSignal("UnlockedZones"):Connect(paint)
 paint()
+
+-- The teammate portal stops' status signs (034, Lane.Stop<n>_<zone>.Status, attr ZoneId): COMING SOON until that zone
+-- is ready, then the price until this player unlocks it, then OPEN. Re-applied now and then (signs stream in and out).
+local function paintSigns()
+	local lane = workspace:FindFirstChild("World") and workspace.World:FindFirstChild("SkyCity") and workspace.World.SkyCity:FindFirstChild("Lane")
+	if not lane then
+		return
+	end
+	local unlocked = player:GetAttribute("UnlockedZones") or ""
+	for _, stop in lane:GetChildren() do
+		local sign = stop:FindFirstChild("Status")
+		local zone = sign and ZoneConfig.get(sign:GetAttribute("ZoneId") or "")
+		if zone then
+			local text = if zone.ready == false
+				then "COMING SOON"
+				elseif table.find(string.split(unlocked, ","), zone.id) then "OPEN"
+				else "UNLOCK " .. CashFormat.format(zone.price)
+			for _, gui in sign:GetChildren() do
+				local label = gui:FindFirstChild("Label")
+				if label and label:IsA("TextLabel") and label.Text ~= text then
+					label.Text = text
+				end
+			end
+		end
+	end
+end
+player:GetAttributeChangedSignal("UnlockedZones"):Connect(paintSigns)
+task.spawn(function()
+	while true do
+		paintSigns()
+		task.wait(3)
+	end
+end)
 
 UITheme.registerScreen("Zones", function()
 	paint()

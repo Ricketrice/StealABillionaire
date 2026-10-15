@@ -18,7 +18,11 @@
 -- targetIncomeMultiplier (Beach x6, Toy Town x15, Neon x40, Hills x100). Attack/speed/defence
 -- get +4 per district step (capped at 100, the UI meter's maximum). Only the server pays from these.
 --
--- Food Court (Zone 2) is teammate-owned: its roster is a placeholder (PENDING_ZONES) until the team
+-- 034 (Steal a Boss, D43): every zone of ours has 9: Main Street's shape + one more Common (training_dummy,
+-- bookling). Sunken Kingdom (new, ours) = x10 of Main Street's slot incomes. Display names come from
+-- CustomWorkers (creature names); ids, rarities and incomes never change.
+--
+-- Food Court is teammate-owned: its roster is a placeholder (PENDING_ZONES) until the team
 -- approves its workers. It has no catalogue entries, so nothing can roll or pay for it yet.
 
 local WorkerCatalogue = {}
@@ -64,6 +68,18 @@ local WORKERS: { [string]: Worker } = {
 	crypto_carl = { name = "Crypto Carl", zone = "MainStreet", rarity = "Epic", role = "Earner", income = 35, attack = 17, speed = 24, defence = 15 },
 	ceo_chad = { name = "CEO Chad", zone = "MainStreet", rarity = "Legendary", role = "All-rounder", income = 100, attack = 65, speed = 55, defence = 60 },
 	mystery_millionaire = { name = "Mystery Millionaire", zone = "MainStreet", rarity = "Secret", role = "All-rounder", income = 500, attack = 85, speed = 80, defence = 80 },
+	training_dummy = { name = "Training Dummy", zone = "MainStreet", rarity = "Common", role = "Tank", income = 5, attack = 8, speed = 10, defence = 20 }, -- 034
+
+	-- Sunken Kingdom (034, ours): x10
+	bubble_fish = { name = "Bubble Fish", zone = "SunkenKingdom", rarity = "Common", role = "Earner", income = 50, attack = 12, speed = 17, defence = 12 },
+	hermit_porter = { name = "Hermit Porter", zone = "SunkenKingdom", rarity = "Common", role = "All-rounder", income = 60, attack = 18, speed = 24, defence = 17 },
+	coral_snail = { name = "Coral Snail", zone = "SunkenKingdom", rarity = "Common", role = "Tank", income = 50, attack = 10, speed = 12, defence = 22 },
+	puffer_guard = { name = "Puffer Guard", zone = "SunkenKingdom", rarity = "Rare", role = "Fighter", income = 90, attack = 34, speed = 32, defence = 14 },
+	mermaid_mage = { name = "Mermaid Mage", zone = "SunkenKingdom", rarity = "Rare", role = "Earner", income = 140, attack = 14, speed = 19, defence = 20 },
+	shark_knight = { name = "Shark Knight", zone = "SunkenKingdom", rarity = "Epic", role = "Tank", income = 220, attack = 30, speed = 17, defence = 57 },
+	pearl_seahorse = { name = "Pearl Seahorse", zone = "SunkenKingdom", rarity = "Epic", role = "Earner", income = 350, attack = 19, speed = 26, defence = 17 },
+	tide_warden = { name = "Tide Warden", zone = "SunkenKingdom", rarity = "Legendary", role = "All-rounder", income = 1000, attack = 67, speed = 57, defence = 62 },
+	aquaris = { name = "Aquaris", zone = "SunkenKingdom", rarity = "Secret", role = "All-rounder", income = 5000, attack = 87, speed = 82, defence = 82 },
 
 	-- Beach Boardwalk (Zone 3): x6
 	surfer_sid = { name = "Surfer Sid", zone = "BeachBoardwalk", rarity = "Common", role = "Earner", income = 30, attack = 14, speed = 19, defence = 14 },
@@ -104,6 +120,7 @@ local WORKERS: { [string]: Worker } = {
 	hedge_fund_hank = { name = "Hedge Fund Hank", zone = "BillionaireHills", rarity = "Epic", role = "Earner", income = 3500, attack = 33, speed = 40, defence = 31 },
 	oil_baron_oswald = { name = "Oil Baron Oswald", zone = "BillionaireHills", rarity = "Legendary", role = "All-rounder", income = 10000, attack = 81, speed = 71, defence = 76 },
 	the_trillionaire = { name = "The Trillionaire", zone = "BillionaireHills", rarity = "Secret", role = "All-rounder", income = 50000, attack = 100, speed = 96, defence = 96 },
+	bookling = { name = "Bookling", zone = "BillionaireHills", rarity = "Common", role = "Fighter", income = 500, attack = 30, speed = 34, defence = 26 }, -- 034
 }
 for id, worker in WORKERS do
 	worker.id = id
@@ -130,6 +147,18 @@ local ZONES: { [string]: { string } } = {
 		"crypto_carl",
 		"ceo_chad",
 		"mystery_millionaire",
+		"training_dummy",
+	},
+	SunkenKingdom = {
+		"bubble_fish",
+		"hermit_porter",
+		"coral_snail",
+		"puffer_guard",
+		"mermaid_mage",
+		"shark_knight",
+		"pearl_seahorse",
+		"tide_warden",
+		"aquaris",
 	},
 	BeachBoardwalk = {
 		"surfer_sid",
@@ -170,6 +199,7 @@ local ZONES: { [string]: { string } } = {
 		"hedge_fund_hank",
 		"oil_baron_oswald",
 		"the_trillionaire",
+		"bookling",
 	},
 }
 

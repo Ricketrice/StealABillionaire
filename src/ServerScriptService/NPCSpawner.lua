@@ -69,6 +69,7 @@ local ZONES = {
 	},
 	-- Districts: fewer NPCs each so a full server stays light on mobile. Food Court (Zone 2) is
 	-- teammate-owned and has no spawner until its roster is approved.
+	{ zone = "SunkenKingdom", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true }, -- 034, ours
 	{ zone = "BeachBoardwalk", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true },
 	{ zone = "ToyTown", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true },
 	{ zone = "NeonDowntown", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true },
@@ -95,8 +96,10 @@ for _, settings in ZONES do
 		maxNPCs = settings.maxNPCs,
 		lifetime = settings.lifetime,
 		walkSpeed = settings.walkSpeed,
-		shouldSpawn = if settings.district then function()
-			return anyoneUnlocked(settings.zone)
-		end else nil,
+		shouldSpawn = if settings.district
+			then function()
+				return anyoneUnlocked(settings.zone)
+			end
+			else nil,
 	})
 end

@@ -88,20 +88,21 @@ ParadeConfig.GOALS = {
 	{ kind = "pads", goal = 1, text = "Put a worker on a pad", icon = "⭐" },
 	{ kind = "catch", goal = 3, text = "Catch 3 workers", icon = "🎁" },
 	{ kind = "pads", goal = 6, text = "Fill 6 pads", icon = "⭐" },
-	{ kind = "zone", zone = "ToyTown", text = "Unlock Toy Town", icon = "🔓" },
-	{ kind = "zone", zone = "BillionaireHills", text = "Unlock Velocity Royale", icon = "🏁" },
+	{ kind = "zone", zone = "SunkenKingdom", text = "Unlock the Sunken Kingdom", icon = "🔓" },
+	{ kind = "zone", zone = "BillionaireHills", text = "Unlock Ember Academy", icon = "🔥" },
 	{ kind = "book", text = "Complete the collection book", icon = "📖" }, -- goal = every catalogue worker
 }
 
 -- Collection book -----------------------------------------------------------------------------------
--- One page per zone, in this order. A zone without workers in the catalogue shows "coming soon".
+-- One page per zone, in lane order (034). A zone without workers in the catalogue shows "coming soon".
 ParadeConfig.BOOK_PAGES = {
-	{ zone = "MainStreet", title = "Main Street" },
+	{ zone = "MainStreet", title = "Knight's Keep" },
+	{ zone = "SunkenKingdom", title = "Sunken Kingdom" },
+	{ zone = "BillionaireHills", title = "Ember Academy" },
 	{ zone = "FoodCourt", title = "Food Court" },
 	{ zone = "BeachBoardwalk", title = "Beach Boardwalk" },
 	{ zone = "ToyTown", title = "Toy Town" },
 	{ zone = "NeonDowntown", title = "Neon Downtown" },
-	{ zone = "BillionaireHills", title = "Velocity Royale" },
 }
 ParadeConfig.BOOK_MAX = 200 -- most entries a save's book keeps
 

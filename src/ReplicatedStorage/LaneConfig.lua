@@ -12,8 +12,8 @@ LaneConfig.START_TAG = "LaneStart" -- ghost part with a ZoneId attribute: where 
 LaneConfig.REQUEST = "LaneTravel" -- RemoteEvent client -> server: "Home" or "Zone", zoneId
 LaneConfig.NOTICE = "LaneNotice" -- RemoteEvent server -> client: ok, title, message
 
--- Zones that are always open (Main Street). Zone 6 is ours too but sits behind its cash unlock like the gated ones. Every other zone follows ZoneConfig (a zone is open
--- only if its gate is wired and the player bought it; the rest are teammates' and "coming soon").
+-- Zones that are always open (Knight's Keep = MainStreet). Every other zone follows ZoneConfig: open only if its gate
+-- is wired, it is ready (teammate zones, ZoneConfig.READY) and the player bought it; else locked or "coming soon".
 LaneConfig.OURS = { MainStreet = true }
 
 return LaneConfig

@@ -106,9 +106,9 @@ K.L = {
 }
 
 -- 030 The Rising Lane (north = -Z). Heights: base area 0, every terrace one `rise` higher. Terrace 1 is Main
--- Street (moved as a whole, rotated to run north); terraces 2-5 are short portal stops (teammate zones
--- keep their islands; the stop's gate sends you there); terrace 6 = Velocity Royale (moved as a whole).
--- Stop sizes live here so a stop can grow to a full terrace when its teammate moves in.
+-- Street (Knight's Keep; moved as a whole in 030, rotated to run north). 034 order (D41/D43): T2 Sunken Kingdom (ours,
+-- a full terrace behind a lane gate), T3 Ember Academy (the old Zone 6 / Velocity Royale strip, moved down as one
+-- block by B8_Lane.move), T4-T7 the teammate zones' short portal stops (their islands stay where they are).
 K.L.lane = {
 	x = -157, -- centre line
 	rampW = 24,
@@ -119,15 +119,28 @@ K.L.lane = {
 	rampAStartZ = -116, -- end of the base-area island
 	archZ = -164, -- Main Street's arch (street runs north from here)
 	streetLength = 179, -- paving, arch to far end
-	stops = {
+	landing = { w = 30, len = 13 }, -- a lane gate's landing at the top of a ramp (exactly the gate's width)
+	sunken = { w = 130, len = 160 }, -- T2 terrace north of its landing
+	stops = { -- T4-T7, after the Ember Academy island
 		{ id = "FoodCourt", label = "FOOD COURT", w = 56, len = 40, colour = K.C.Coral },
 		{ id = "BeachBoardwalk", label = "BEACH BOARDWALK", w = 56, len = 40, colour = K.C.Sky },
 		{ id = "ToyTown", label = "TOY TOWN", w = 56, len = 40, colour = K.LOT_COLOURS[5] },
 		{ id = "NeonDowntown", label = "NEON DOWNTOWN", w = 56, len = 40, colour = K.LOT_COLOURS[7] },
 	},
-	landing = { w = 56, len = 13 }, -- under the Velocity Royale gate
-	gateOffset = 7, -- gate centre this far north of the last ramp's top
 }
+
+-- Key z values of the climb (north = smaller z), from the numbers above.
+function K.climb()
+	local LN = K.L.lane
+	local c = {}
+	c.t1End = LN.archZ - LN.streetLength -- -343
+	c.t2Landing = c.t1End - LN.rampLen -- -391: south edge of the Sunken Kingdom landing
+	c.t2South = c.t2Landing - LN.landing.len -- -404
+	c.t2North = c.t2South - LN.sunken.len -- -564
+	c.t3Landing = c.t2North - LN.rampLen -- -612: south edge of the Ember Academy landing
+	c.t3South = c.t3Landing - LN.landing.len
+	return c
+end
 
 function K.folder(parent: Instance, name: string, fresh: boolean?): Folder
 	local f = parent:FindFirstChild(name)

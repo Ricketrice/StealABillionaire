@@ -4,7 +4,7 @@
 -- "StudioDevTools" is true (default unset = off; read live, so it can be flipped during Play).
 -- Only real accounts (UserId > 0, i.e. the developer in Play Solo) get them; multi-client test players
 -- (negative ids) never do, so automated tests run unchanged even with the flag left on.
---   * Zone 6 (Billionaire Hills) counts as unlocked (ZoneProgress.isUnlocked + the UnlockedZones attribute).
+--   * our gated zones (Sunken Kingdom, Ember Academy; 034) count as unlocked (ZoneProgress.isUnlocked + the UnlockedZones attribute).
 --     The save is untouched: nothing is added to data.zones, and buying it is refused as "owned".
 --   * Chat "/devcash [amount]" adds test cash (default 300,000). Cash is saved with the player's data, so it
 --     only works on the in-memory save (PlayerData.isPersistent() false), never on a real DataStore.
@@ -20,7 +20,7 @@ local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 local StudioDevTools = {}
 
 local ATTRIBUTE = "StudioDevTools"
-local DEV_ZONE = "BillionaireHills" -- Zone 6 (ours); Zones 2-5 are teammate-owned and never touched here
+local DEV_ZONES = { SunkenKingdom = true, BillionaireHills = true } -- ours; teammate zones are never touched here
 local DEFAULT_CASH = 300000
 local MAX_CASH = 1000000000
 
@@ -32,9 +32,9 @@ function StudioDevTools.enabledFor(player: Player): boolean
 	return player.UserId > 0 and StudioDevTools.enabled()
 end
 
--- Whether the dev tools make this district count as unlocked for the player (Zone 6 only).
+-- Whether the dev tools make this district count as unlocked for the player (our gated zones only).
 function StudioDevTools.unlocksZone(player: Player, zoneId: string): boolean
-	return zoneId == DEV_ZONE and StudioDevTools.enabledFor(player)
+	return DEV_ZONES[zoneId] == true and StudioDevTools.enabledFor(player)
 end
 
 -- Calls back whenever the flag changes (Studio only).

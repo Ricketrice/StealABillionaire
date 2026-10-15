@@ -20,7 +20,7 @@ local ORDER = { "SlimeRookie", "DragonPup", "MechBeast" }
 local LOOK = { SlimeRookie = "Common", DragonPup = "Epic", MechBeast = "Legendary" } -- rarity look only
 local RARITY_COLOR = { Common = Color3.fromRGB(196, 200, 208), Epic = Color3.fromRGB(176, 92, 255), Legendary = Color3.fromRGB(255, 196, 40) }
 -- The stand: a row of plinths on the plaza in front of the podium, facing the plaza (+Z).
-local STAND = CFrame.new(-159.2, 72.3, -912) -- centre of the row, on the ground
+local STAND = CFrame.new(-159.2, 36.3, -781) -- centre of the row, on the ground (034: the Ember island moved down by (0, -36, 131))
 local SPACING = 9
 
 local function part(props: { [string]: any }): Part
@@ -72,9 +72,9 @@ end
 local folder: Folder? = nil
 local function build()
 	local source = ServerStorage:FindFirstChild("Prototypes") and ServerStorage.Prototypes:FindFirstChild("Creatures")
-	local royale = workspace:FindFirstChild("World") and workspace.World:FindFirstChild("VelocityRoyale")
+	local royale = workspace:FindFirstChild("World") and workspace.World:FindFirstChild("EmberAcademy")
 	if not (source and royale) then
-		warn("[CreatureShowcase] ServerStorage.Prototypes.Creatures or World.VelocityRoyale missing")
+		warn("[CreatureShowcase] ServerStorage.Prototypes.Creatures or World.EmberAcademy missing")
 		return
 	end
 	local f = Instance.new("Folder")

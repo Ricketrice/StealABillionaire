@@ -1,19 +1,22 @@
 -- Studio location: ReplicatedStorage.ZoneConfig (ModuleScript)
 -- ZoneConfig
 -- District progression, shared by the server (rules) and clients (gate UI). Zone 1 is free; the
--- others unlock one after another, in `number` order, with cash. Unlocks are permanent.
+-- others unlock one after another, in `number` order (= the Rising Lane's terrace order), with cash.
+-- Unlocks are permanent.
 --
--- Prices are PLACEHOLDERS approved for testing in Milestone 014, not final economy balance.
+-- 034 (Steal a Boss, D41/D43): the lane is Knight's Keep (MainStreet) -> Sunken Kingdom -> Ember Academy
+-- (BillionaireHills) -> the four teammate zones. Internal ids never change (saves and teammate scripts);
+-- only `number`, `name` and prices did.
 --
 --   id           the district's ZoneId (attribute on its Workspace.World.FutureZones folder)
 --   folder       that folder's name (gate model, NPC area)
---   purchasable  the server accepts unlock purchases for it
+--   purchasable  the server accepts unlock purchases for it (only while it is also ready)
 --   gate         its gate is wired up: per-player access on the client plus the server's
---                boundary check. Only wire a gate once its district is approved for integration.
+--                boundary check
+--   ready        teammate zones only: false = "Coming soon", locked for everyone (no purchase, no entry, even
+--                with an old unlock in the save). The teammate switches their own zone on here (READY).
 --
--- Food Court (Zone 2) is teammate-owned: it is listed for the unlock order only, with no purchase
--- or gate wiring until that integration is approved. Beach Boardwalk's gate is reached through
--- the Food Court, so it waits for the same approval. Toy Town is the approved test gate.
+-- Zones 4-7 are teammate-owned: listed for the order, prices and gates only; nothing inside them is ours.
 
 local ZoneConfig = {}
 
@@ -26,28 +29,29 @@ export type Zone = {
 	purchasable: boolean,
 	gate: boolean,
 	requires: string?, -- the zone that must be unlocked first (default: the one before it)
+	ready: boolean?, -- set from READY (teammate zones); nil = always ready (ours)
 }
 
 ZoneConfig.FREE_ZONE = "MainStreet"
 
+-- One switch per teammate zone (D43): true once that teammate's zone is ready to open.
+ZoneConfig.READY = {
+	FoodCourt = false,
+	BeachBoardwalk = false,
+	ToyTown = false,
+	NeonDowntown = false,
+}
+
 ZoneConfig.ZONES = {
-	{ id = "MainStreet", number = 1, name = "Main Street", price = 0, purchasable = false, gate = false },
-	{ id = "FoodCourt", number = 2, name = "Food Court", price = 40000, folder = "Zone2_FoodCourt", purchasable = false, gate = false },
-	{ id = "BeachBoardwalk", number = 3, name = "Beach Boardwalk", price = 150000, folder = "Zone3_BeachBoardwalk", purchasable = false, gate = false },
-	{ id = "ToyTown", number = 4, name = "Toy Town", price = 500000, folder = "Zone4_ToyTown", purchasable = true, gate = true },
-	{ id = "NeonDowntown", number = 5, name = "Neon Downtown", price = 1500000, folder = "Zone5_NeonDowntown", purchasable = false, gate = false },
-	-- Zone 6 is ours: its gate is the top of the Rising Lane (030). Launch price 250,000 (D33) while Zones 2-5 are
-	-- closed (to be raised when they open; the old 5,000,000 ladder price is the fallback); it needs only Main Street.
-	{
-		id = "BillionaireHills",
-		number = 6,
-		name = "Billionaire Hills",
-		price = 250000,
-		folder = "Zone6_BillionaireHills",
-		purchasable = true,
-		gate = true,
-		requires = "MainStreet",
-	},
+	{ id = "MainStreet", number = 1, name = "Knight's Keep", price = 0, purchasable = false, gate = false },
+	-- Ours (034): both are lane gates (Gate attribute LaneGate).
+	{ id = "SunkenKingdom", number = 2, name = "Sunken Kingdom", price = 50000, folder = "Our_SunkenKingdom", purchasable = true, gate = true },
+	{ id = "BillionaireHills", number = 3, name = "Ember Academy", price = 500000, folder = "Zone6_BillionaireHills", purchasable = true, gate = true },
+	-- Teammate zones, ladder prices (D43), each needs the one before.
+	{ id = "FoodCourt", number = 4, name = "Food Court", price = 2500000, folder = "Zone2_FoodCourt", purchasable = true, gate = true },
+	{ id = "BeachBoardwalk", number = 5, name = "Beach Boardwalk", price = 7500000, folder = "Zone3_BeachBoardwalk", purchasable = true, gate = true },
+	{ id = "ToyTown", number = 6, name = "Toy Town", price = 25000000, folder = "Zone4_ToyTown", purchasable = true, gate = true },
+	{ id = "NeonDowntown", number = 7, name = "Neon Downtown", price = 75000000, folder = "Zone5_NeonDowntown", purchasable = true, gate = true },
 } :: { Zone }
 
 -- Worker progression foundation. Each district names the WorkerCatalogue roster its NPCs roll from
@@ -57,11 +61,12 @@ ZoneConfig.ZONES = {
 -- once it has a Workspace.Zones.<roster> folder (ZoneBoundary + SpawnPoints) and an NPCSpawner entry.
 ZoneConfig.WORKERS = {
 	MainStreet = { roster = "MainStreet", targetIncomeMultiplier = 1 },
+	SunkenKingdom = { roster = "SunkenKingdom", targetIncomeMultiplier = 10 },
 	FoodCourt = { roster = nil, targetIncomeMultiplier = 2.5 },
 	BeachBoardwalk = { roster = nil, targetIncomeMultiplier = 6 },
 	ToyTown = { roster = nil, targetIncomeMultiplier = 15 },
 	NeonDowntown = { roster = nil, targetIncomeMultiplier = 40 },
-	BillionaireHills = { roster = nil, targetIncomeMultiplier = 100 },
+	BillionaireHills = { roster = "BillionaireHills", targetIncomeMultiplier = 100 },
 } :: { [string]: { roster: string?, targetIncomeMultiplier: number } }
 
 local byId: { [string]: Zone } = {}
@@ -86,6 +91,17 @@ function ZoneConfig.prerequisite(zoneId: string): Zone?
 	return ZoneConfig.previous(zoneId)
 end
 
+-- False while a teammate zone is "Coming soon" (READY): nobody can buy or enter it.
+function ZoneConfig.isReady(zoneId: string): boolean
+	local zone = byId[zoneId]
+	return zone ~= nil and zone.ready ~= false
+end
+
+-- The server sells it right now: purchasable and ready.
+function ZoneConfig.forSale(zone: Zone): boolean
+	return zone.purchasable and zone.ready ~= false
+end
+
 -- Checks the configuration; errors describing the first problem found.
 function ZoneConfig.validate()
 	table.clear(byId)
@@ -99,6 +115,9 @@ function ZoneConfig.validate()
 		assert(not zone.gate or zone.folder, zone.id .. " needs a folder for its gate")
 		assert(not zone.requires or zone.requires == ZoneConfig.FREE_ZONE or zone.requires ~= zone.id, zone.id .. " can't require itself")
 		assert(ZoneConfig.WORKERS[zone.id], zone.id .. " needs a worker progression entry")
+		if ZoneConfig.READY[zone.id] ~= nil then
+			zone.ready = ZoneConfig.READY[zone.id] == true
+		end
 		byId[zone.id] = zone
 		byNumber[zone.number] = zone
 	end

@@ -52,7 +52,15 @@ end
 -- Unlock panel -------------------------------------------------------------------------------------
 local gui = UIKit.screen("ZoneUnlock", UIStyle.DisplayOrder.Inventory + 1)
 local root = UIKit.root(gui)
-local panel = UIKit.panel({ Name = "Panel", AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -16), Size = UDim2.new(0.94, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BorderColor = C.GoldDark, Parent = root })
+local panel = UIKit.panel({
+	Name = "Panel",
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -16),
+	Size = UDim2.new(0.94, 0, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	BorderColor = C.GoldDark,
+	Parent = root,
+})
 panel.Visible = false
 UIKit.make("UISizeConstraint", { MaxSize = Vector2.new(380, math.huge), Parent = panel })
 UIKit.padding(panel, 16, 14)
@@ -60,7 +68,17 @@ UIKit.list(panel, Enum.FillDirection.Vertical, 8)
 
 local header = UIKit.text({ Text = "", Role = "Micro", Font = UIStyle.FontBold, Color = C.Gold, LayoutOrder = 1, Parent = panel })
 local title = UIKit.text({ Text = "", Role = "Title", LayoutOrder = 2, Parent = panel })
-local status = UIKit.text({ Text = "", Role = "Body", Color = C.TextMuted, Wrap = true, Truncate = false, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 3, Parent = panel })
+local status = UIKit.text({
+	Text = "",
+	Role = "Body",
+	Color = C.TextMuted,
+	Wrap = true,
+	Truncate = false,
+	Size = UDim2.new(1, 0, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	LayoutOrder = 3,
+	Parent = panel,
+})
 
 local function statRow(order: number, label: string): TextLabel
 	local row = UIKit.make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 22), LayoutOrder = order, Parent = panel })
@@ -130,7 +148,7 @@ function refresh()
 		status.Text = "Unlocked. Walk through the gate to enter."
 		meter.set(1, C.Success)
 		buy.setEnabled(false, "UNLOCKED")
-	elseif not zone.purchasable then
+	elseif not ZoneConfig.forSale(zone) then
 		status.Text = "This district isn't open yet."
 		meter.set(0)
 		buy.setEnabled(false, "COMING SOON")
@@ -200,7 +218,7 @@ local function applyGate(zone: ZoneConfig.Zone, unlocked: { [string]: boolean })
 	end
 	local p = prompt :: ProximityPrompt
 	p.ObjectText = string.upper(zone.name)
-	p.ActionText = "Unlock " .. CashFormat.format(zone.price)
+	p.ActionText = if ZoneConfig.forSale(zone) then "Unlock " .. CashFormat.format(zone.price) else "Coming soon"
 	p.Enabled = not isOpen
 end
 

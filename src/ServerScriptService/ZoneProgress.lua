@@ -16,8 +16,11 @@
 -- Unlocked districts are shown to clients on the player's "UnlockedZones" attribute (comma
 -- separated ids, server-written only).
 --
--- Studio only (032): with ServerStorage.StudioDevTools on, Zone 6 also counts as unlocked for the developer
--- (StudioDevTools.unlocksZone); it is added to the attribute but never to the save.
+-- Studio only (032): with ServerStorage.StudioDevTools on, our gated zones also count as unlocked for the developer
+-- (StudioDevTools.unlocksZone); they are added to the attribute but never to the save.
+--
+-- 034: a teammate zone that isn't ready (ZoneConfig.READY) counts as locked for everyone, even with an old unlock in
+-- the save (kept there, shown again once the zone is ready).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -50,8 +53,9 @@ local plazaCentre: Vector3? = nil
 local gateRadius = math.huge
 local anchors: { Region } = {}
 local returnPoints: { [string]: CFrame } = {}
--- Gates that are not on the plaza ring but at the top of the Rising Lane (030, Gate attribute LaneGate): the
--- district is everything north of the barrier (smaller Z) within LANE_GATE_HALF_WIDTH of it.
+-- Gates that are not on the plaza ring but on the Rising Lane (030, Gate attribute LaneGate): the district is
+-- everything north of the barrier (smaller Z) within LANE_GATE_HALF_WIDTH of it, up to the next lane gate (034:
+-- Sunken Kingdom, then Ember Academy; the northmost gate a position is past wins).
 local LANE_GATE_HALF_WIDTH = 110
 local laneGates: { [string]: BasePart } = {}
 
@@ -107,11 +111,15 @@ end
 
 -- The district a world position is in, or nil (home island, Main Street, bridges home, plaza).
 function ZoneProgress.zoneAt(position: Vector3): string?
+	local laneZone, laneZ = nil, math.huge
 	for id, barrier in laneGates do
 		local b = barrier.Position
-		if position.Z < b.Z - BOUNDARY_MARGIN and math.abs(position.X - b.X) < LANE_GATE_HALF_WIDTH and position.Y > b.Y - 30 then
-			return id
+		if position.Z < b.Z - BOUNDARY_MARGIN and math.abs(position.X - b.X) < LANE_GATE_HALF_WIDTH and position.Y > b.Y - 30 and b.Z < laneZ then
+			laneZone, laneZ = id, b.Z
 		end
+	end
+	if laneZone then
+		return laneZone
 	end
 	if not plazaCentre or (flat(position) - flat(plazaCentre)).Magnitude < gateRadius + BOUNDARY_MARGIN then
 		return nil
@@ -135,6 +143,9 @@ function ZoneProgress.isUnlocked(player: Player, zoneId: string): boolean
 	if zoneId == ZoneConfig.FREE_ZONE then
 		return true
 	end
+	if not ZoneConfig.isReady(zoneId) then
+		return false
+	end
 	local data = PlayerData.get(player)
 	if data ~= nil and StudioDevTools.unlocksZone(player, zoneId) then
 		return true
@@ -145,7 +156,12 @@ end
 local function publish(player: Player)
 	local data = PlayerData.get(player)
 	if data then
-		local shown = table.clone(data.zones)
+		local shown = {}
+		for _, id in data.zones do
+			if ZoneConfig.isReady(id) then
+				table.insert(shown, id)
+			end
+		end
 		for _, zone in ZoneConfig.ZONES do
 			if not table.find(shown, zone.id) and StudioDevTools.unlocksZone(player, zone.id) then
 				table.insert(shown, zone.id)
@@ -170,8 +186,8 @@ function ZoneProgress.purchase(player: Player, zoneId: any): (boolean, string, s
 	if ZoneProgress.isUnlocked(player, zone.id) then
 		return false, "owned", zone.name .. " is already unlocked."
 	end
-	if not zone.purchasable then
-		return false, "unavailable", zone.name .. " can't be unlocked yet."
+	if not ZoneConfig.forSale(zone) then
+		return false, "unavailable", zone.name .. " is coming soon!"
 	end
 	local previous = ZoneConfig.prerequisite(zone.id)
 	if previous and not ZoneProgress.isUnlocked(player, previous.id) then

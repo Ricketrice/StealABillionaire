@@ -492,7 +492,7 @@ local SOUNDS: { [string]: { id: string, volume: number, speed: number } } = {
 -- Custom effects (Milestone 017D): original sounds for our own zones, Main Street and Velocity
 -- Royale. Any other zone, and any call without a zone, keeps the default sounds above.
 -- hit = seconds into the file where the reveal lands; the build-up before it is part of the file.
-local CUSTOM_ZONES = { MainStreet = true, BillionaireHills = true }
+local CUSTOM_ZONES = { MainStreet = true, SunkenKingdom = true, BillionaireHills = true }
 local CUSTOM: { [string]: { id: string, volume: number, speed: number, hit: number? } } = {
 	pop = { id = "rbxassetid://74021374247483", volume = 0.6, speed = 1 }, -- common_pop
 	chime = { id = "rbxassetid://114449852068977", volume = 0.65, speed = 1 }, -- rare_chime

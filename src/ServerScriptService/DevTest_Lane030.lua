@@ -1,9 +1,10 @@
 -- Studio location: ServerScriptService.DevTest_Lane030 (Script)
 -- DevTest_Lane030  (Milestone 030) -- STUDIO-ONLY two-player test of the Rising Lane. Inert unless Studio
 -- started the session with StudioTestService and the argument "lane030" (2 clients, in-memory save:
--- ServerStorage StudioMemoryStore = true). Covers: the 14-case HUD layout check with the new buttons, all four
--- portal prompts (held by a real client; Toy Town unlocked and locked), the Zone 6 cash unlock and its gate,
--- the saved peak rank, teleports refused while carrying, and a carry down the lane with the opponent's bat.
+-- ServerStorage StudioMemoryStore = true). Covers: the 14-case HUD layout check with the new buttons, the four
+-- teammate portal prompts T4-T7 (held by a real client; "coming soon" even with an old unlock in the save), our two
+-- lane gates (034: Sunken Kingdom 50k needs Knight's Keep, Ember Academy 500k needs Sunken), run-home walks at carry
+-- speed, the saved peak rank, teleports refused while carrying, and a carry down the lane with the opponent's bat.
 -- Results: "@@T030|".
 
 local RunService = game:GetService("RunService")
@@ -173,11 +174,23 @@ scenario("hud layout (28 runs: 14 screens x normal/worst, new buttons)", functio
 	expect("no layout issues", r.issues and #r.issues == 0, r.issues and table.concat(r.issues, "; "))
 end)
 
-scenario("portals: all four prompts held by a real client", function()
-	for _, zoneId in { "FoodCourt", "BeachBoardwalk", "NeonDowntown" } do
+scenario("portals: the four teammate stops (T4-T7) held by a real client", function()
+	local data = PlayerData.get(A) :: any
+	-- the stops are past the Ember Academy gate (034): only players who unlocked it get there
+	table.insert(data.zones, "SunkenKingdom")
+	table.insert(data.zones, "BillionaireHills")
+	table.insert(data.zones, "ToyTown") -- an old test save with Toy Town unlocked: still closed while not ready
+	ZoneProgress._test.publish(A)
+	expect("an old Toy Town unlock isn't published while it's not ready", not tostring(A:GetAttribute("UnlockedZones")):find("ToyTown"), A:GetAttribute("UnlockedZones"))
+	for i, zoneId in { "FoodCourt", "BeachBoardwalk", "ToyTown", "NeonDowntown" } do
+		local zone = ZoneConfig.get(zoneId)
+		expect(zoneId .. " is zone " .. (i + 3) .. ", gated, not ready", zone.number == i + 3 and zone.gate and zone.ready == false, zone.number)
 		local trig = portal(zoneId)
 		expect(zoneId .. " portal exists", trig ~= nil)
 		if trig then
+			local stop = trig.Parent :: Instance
+			expect(zoneId .. " stop is terrace " .. (i + 3), stop:GetAttribute("Terrace") == i + 3, stop.Name)
+			expect(zoneId .. " has a status sign", stop:FindFirstChild("Status") ~= nil)
 			put(A, trig.Position + Vector3.new(3, 0, 0))
 			local before = root(A).Position
 			local r = ask(A, "prompt", { zone = zoneId }, 12)
@@ -186,76 +199,141 @@ scenario("portals: all four prompts held by a real client", function()
 			expect(zoneId .. " player stayed", (root(A).Position - before).Magnitude < 8)
 			cooldown()
 		end
+		local bought, code = ZoneProgress.purchase(A, zoneId)
+		expect(zoneId .. " can't be bought (coming soon)", bought == false and (code == "unavailable" or code == "owned"), code)
 	end
-	local toy = portal("ToyTown")
-	expect("Toy Town portal exists", toy ~= nil)
-	if toy then
-		put(A, toy.Position + Vector3.new(3, 0, 0))
-		local before = root(A).Position
-		local r = ask(A, "prompt", { zone = "ToyTown" }, 12)
-		expect(
-			"Toy Town locked: refused with the unlock hint",
-			r.notice and r.notice.ok == false and tostring(r.notice.message):find("Unlock Toy Town") ~= nil,
-			r.notice and r.notice.message
-		)
-		expect("Toy Town locked: player stayed", (root(A).Position - before).Magnitude < 8)
-		cooldown()
-		local data = PlayerData.get(A) :: any
-		table.insert(data.zones, "ToyTown")
-		ZoneProgress._test.publish(A)
-		task.wait(0.3)
-		r = ask(A, "prompt", { zone = "ToyTown" }, 12)
-		local entry = ZoneProgress.entryPoint("ToyTown")
-		expect("Toy Town unlocked: accepted", r.notice and r.notice.ok == true, r.notice and r.notice.message)
-		expect(
-			"Toy Town unlocked: landed in front of its gate",
-			entry ~= nil and (root(A).Position - entry.Position).Magnitude < 10,
-			entry and (root(A).Position - entry.Position).Magnitude
-		)
-		table.remove(data.zones)
-		ZoneProgress._test.publish(A)
+	expect("Toy Town still counts as locked", ZoneProgress.isUnlocked(A, "ToyTown") == false)
+	expect("its old region turns players back", ZoneProgress.zoneAt(Vector3.new(332, 10, 84)) == "ToyTown")
+	for _, id in { "ToyTown", "SunkenKingdom", "BillionaireHills" } do
+		table.remove(data.zones, table.find(data.zones, id))
 	end
+	ZoneProgress._test.publish(A)
 	put(A, Vector3.new(-157, 3.5, -92))
 	cooldown()
 end)
 
-scenario("zone 6: cash unlock and its gate at the top of the lane", function()
-	local barrier = FZ.Zone6_BillionaireHills.Gate.Barrier :: BasePart
-	local z6 = ZoneConfig.get("BillionaireHills")
-	expect("Zone 6 is a gated, purchasable zone needing only Main Street", z6.gate and z6.purchasable and z6.requires == "MainStreet" and z6.price == 250000)
-	local beyond = barrier.Position + Vector3.new(0, 0, -30)
-	local south = barrier.Position + Vector3.new(0, 0, 25)
-	expect("north of the gate is Zone 6", ZoneProgress.zoneAt(beyond) == "BillionaireHills")
-	expect("south of the gate is not", ZoneProgress.zoneAt(south) == nil)
-	expect("the lane (terrace 4) is not", ZoneProgress.zoneAt(Vector3.new(-157, 50, -590)) == nil)
-	expect("Toy Town's old region is not Zone 6", ZoneProgress.zoneAt(Vector3.new(332, 10, 84)) ~= "BillionaireHills")
-	put(A, beyond)
-	ZoneProgress._test.enforce()
-	task.wait(0.3)
-	expect("locked: turned back to the gate", root(A).Position.Z > barrier.Position.Z, root(A).Position.Z)
-	local ok, why = LaneService.travel(A, "Zone", "BillionaireHills")
-	expect("locked: zone teleport refused", ok == false and tostring(why):find("Unlock") ~= nil, why)
-	cooldown()
+-- Walks A at carry speed (13.6) along the centre line from `from` to the safe line; seconds or nil.
+local function runHome(from: Vector3, via: { Vector3 }?): number?
+	local humanoid = (A.Character :: Model):FindFirstChildOfClass("Humanoid") :: Humanoid
+	put(A, from, Vector3.new(-157, from.Y, -100))
+	humanoid.WalkSpeed = 13.6
+	local points = table.clone(via or {})
+	table.insert(points, Vector3.new(-157, 3.5, -100))
+	local t0 = os.clock()
+	for _, point in points do
+		local lastMove = 0
+		while os.clock() - t0 < 140 do
+			if os.clock() - lastMove > 4 then
+				humanoid.WalkSpeed = 13.6
+				humanoid:MoveTo(point)
+				lastMove = os.clock()
+			end
+			task.wait(0.1)
+			local p = root(A).Position
+			if p.Y < -20 then
+				return nil
+			end
+			if point.Z > -101 then
+				if p.Z > -112.5 then
+					return os.clock() - t0
+				end
+			elseif (Vector3.new(p.X, 0, p.Z) - Vector3.new(point.X, 0, point.Z)).Magnitude < 3 then
+				break
+			end
+		end
+	end
+	return nil
+end
+
+scenario("our lane gates: Sunken Kingdom (T2) and Ember Academy (T3)", function()
+	local sunkenBarrier = FZ.Our_SunkenKingdom.Gate.Barrier :: BasePart
+	local emberBarrier = FZ.Zone6_BillionaireHills.Gate.Barrier :: BasePart
+	local sk, ea = ZoneConfig.get("SunkenKingdom"), ZoneConfig.get("BillionaireHills")
+	expect(
+		"Sunken Kingdom = zone 2, 50,000, gated, needs Knight's Keep",
+		sk.number == 2 and sk.price == 50000 and sk.gate and ZoneConfig.prerequisite("SunkenKingdom").id == "MainStreet"
+	)
+	expect(
+		"Ember Academy = zone 3, 500,000, gated, needs Sunken",
+		ea.number == 3 and ea.price == 500000 and ea.gate and ZoneConfig.prerequisite("BillionaireHills").id == "SunkenKingdom"
+	)
+	expect("Sunken gate is a lane gate south of Ember's", FZ.Our_SunkenKingdom.Gate:GetAttribute("LaneGate") == true and sunkenBarrier.Position.Z > emberBarrier.Position.Z)
+	expect("Knight's Keep (T1) is no district", ZoneProgress.zoneAt(Vector3.new(-157, 15, -300)) == nil)
+	expect("north of the Sunken gate is Sunken Kingdom", ZoneProgress.zoneAt(sunkenBarrier.Position + Vector3.new(0, -2, -30)) == "SunkenKingdom")
+	expect("the T2 -> T3 ramp is still Sunken", ZoneProgress.zoneAt(Vector3.new(-157, 30, -590)) == "SunkenKingdom")
+	expect("north of the Ember gate is Ember Academy", ZoneProgress.zoneAt(emberBarrier.Position + Vector3.new(0, -2, -30)) == "BillionaireHills")
+	expect("the teammate stops (T4) are past Ember", ZoneProgress.zoneAt(Vector3.new(-157, 51, -905)) == "BillionaireHills")
+	-- locked: turned back at each gate, teleports refused
+	for _, case in { { "SunkenKingdom", sunkenBarrier }, { "BillionaireHills", emberBarrier } } do
+		local id, barrier = case[1], case[2]
+		put(A, barrier.Position + Vector3.new(0, -2, -30))
+		ZoneProgress._test.enforce()
+		task.wait(0.3)
+		expect(id .. " locked: turned back to its gate", root(A).Position.Z > barrier.Position.Z, root(A).Position.Z)
+		local ok, why = LaneService.travel(A, "Zone", id)
+		expect(id .. " locked: zone teleport refused", ok == false and tostring(why):find("Unlock") ~= nil, why)
+		cooldown()
+	end
 	CashService.trySpend(A, math.max(CashService.get(A), 1))
+	CashService.add(A, 600000)
 	local bought, code = ZoneProgress.purchase(A, "BillionaireHills")
-	expect("no cash: refused (funds)", bought == false and code == "funds", code)
-	CashService.add(A, 250000)
+	expect("Ember before Sunken: refused (prerequisite)", bought == false and code == "prerequisite", code)
+	bought, code = ZoneProgress.purchase(A, "SunkenKingdom")
+	expect("Sunken Kingdom: unlocked", bought == true and code == "unlocked", code)
+	expect("50,000 taken", CashService.get(A) == 550000, CashService.get(A))
 	bought, code = ZoneProgress.purchase(A, "BillionaireHills")
-	expect("250,000 cash: unlocked", bought == true and code == "unlocked", code)
-	expect("price taken", CashService.get(A) == 0, CashService.get(A))
-	bought, code = ZoneProgress.purchase(A, "BillionaireHills")
-	expect("second purchase: owned", bought == false and code == "owned", code)
-	put(A, beyond)
-	ZoneProgress._test.enforce()
-	task.wait(0.3)
-	expect("unlocked: stays beyond the gate", root(A).Position.Z < barrier.Position.Z, root(A).Position.Z)
-	put(A, Vector3.new(-157, 3.5, -92))
-	cooldown()
-	ok, why = LaneService.travel(A, "Zone", "BillionaireHills")
-	local entry = ZoneProgress.entryPoint("BillionaireHills")
-	expect("unlocked: zone teleport lands in front of the gate", ok == true and entry ~= nil and (root(A).Position - entry.Position).Magnitude < 10, why)
+	expect("Ember Academy: unlocked", bought == true and code == "unlocked", code)
+	expect("500,000 taken", CashService.get(A) == 50000, CashService.get(A))
+	for _, case in { { "SunkenKingdom", sunkenBarrier }, { "BillionaireHills", emberBarrier } } do
+		local id, barrier = case[1], case[2]
+		put(A, barrier.Position + Vector3.new(0, -2, -30))
+		ZoneProgress._test.enforce()
+		task.wait(0.3)
+		expect(id .. " unlocked: stays beyond the gate", root(A).Position.Z < barrier.Position.Z, root(A).Position.Z)
+		put(A, Vector3.new(-157, 3.5, -92))
+		cooldown()
+		local ok, why = LaneService.travel(A, "Zone", id)
+		local entry = ZoneProgress.entryPoint(id)
+		expect(id .. " unlocked: teleport lands in front of its gate", ok == true and entry ~= nil and (root(A).Position - entry.Position).Magnitude < 10, why)
+		cooldown()
+	end
+	-- Sunken Kingdom catching: its spawner starts once someone has it unlocked
+	local npcs = waitUntil(30, function()
+		local area = workspace.Zones:FindFirstChild("SunkenKingdom")
+		local folder = area and area:FindFirstChild("NPCs")
+		return folder and #folder:GetChildren() > 0
+	end)
+	expect("Sunken Kingdom NPCs spawn", npcs ~= nil)
+	local rolled = WorkerCatalogue.rollWorker("SunkenKingdom", Random.new(7))
+	expect("a Sunken roll is a Sunken creature", WorkerCatalogue.get(rolled).zone == "SunkenKingdom", rolled)
+
+	-- run-home walks at carry speed (13.6), measured from the far end of each catch area / to each portal
+	local keepFar = workspace.Zones.MainStreet.ZoneBoundary :: BasePart
+	local sunkenFar = workspace.Zones.SunkenKingdom.ZoneBoundary :: BasePart
+	local emberFar = workspace.Zones.BillionaireHills.ZoneBoundary :: BasePart
+	local function farEnd(b: BasePart): Vector3
+		return Vector3.new(-157, b.Position.Y - b.Size.Y / 2 + 3.5, b.Position.Z - b.Size.Z / 2 + 3)
+	end
+	local times = {}
+	local t1 = runHome(farEnd(keepFar))
+	local t2 = runHome(farEnd(sunkenFar))
+	local t3 = runHome(farEnd(emberFar))
+	local t4 = runHome((portal("FoodCourt") :: BasePart).Position + Vector3.new(19.5 - 2, 0.5, 0))
+	local all = { t1, t2, t3, t4 }
+	for i = 1, 4 do
+		local t = all[i]
+		times[i] = if t then ("T%d %.1f s"):format(i, t) else ("T%d failed"):format(i)
+		expect(("run home from T%d"):format(i), t ~= nil)
+	end
+	note("INFO", "run-home at 13.6 studs/s", table.concat(times, ", "))
+	expect("T2 under 40 s", t2 and t2 < 40, t2)
+	expect("T3 under 55 s", t3 and t3 < 55, t3)
+	local humanoid = (A.Character :: Model):FindFirstChildOfClass("Humanoid") :: Humanoid
+	humanoid.WalkSpeed = 16
 	local data = PlayerData.get(A) :: any
-	table.remove(data.zones, table.find(data.zones, "BillionaireHills"))
+	for _, id in { "SunkenKingdom", "BillionaireHills" } do
+		table.remove(data.zones, table.find(data.zones, id))
+	end
 	ZoneProgress._test.publish(A)
 	put(A, Vector3.new(-157, 3.5, -92))
 	cooldown()
@@ -315,10 +393,15 @@ scenario("carry: teleports refused, then down the lane with the opponent's bat",
 	local toy = portal("FoodCourt")
 	if toy then
 		local z = PlayerData.get(A) :: any
+		table.insert(z.zones, "SunkenKingdom") -- (the stops are past the Ember gate)
+		table.insert(z.zones, "BillionaireHills")
 		put(A, toy.Position + Vector3.new(3, 0, 0))
 		local r = ask(A, "prompt", { zone = "FoodCourt" }, 12)
 		expect("portal refused while carrying", r.notice and r.notice.ok == false and tostring(r.notice.message):find("carrying") ~= nil, r.notice and r.notice.message)
 		expect("still carrying", A:GetAttribute("CarryingNPC") == true and z ~= nil)
+		for _, id in { "SunkenKingdom", "BillionaireHills" } do
+			table.remove(z.zones, table.find(z.zones, id))
+		end
 	end
 	PvPBase.endProtection(B)
 	PvPBase.endProtection(A)

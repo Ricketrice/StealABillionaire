@@ -1,6 +1,8 @@
 -- Studio location: ServerScriptService.RaceService (ModuleScript)
 -- RaceService  (Milestone 031, D21 Royale Race)
--- Stand on the pad -> race 3 laps of the Velocity Royale circuit -> finish -> a capsule opens -> a Zone 6 worker.
+-- Stand on the pad -> run the Spell Run course (034; LAPS = 1: rune gates in order, then the finish arch) -> a capsule
+-- opens -> an Ember Academy creature. Falling below the course is never death: anyone inside the course's FallZone
+-- is popped back (a racer to the last rune gate they passed, anyone else to PadSpot), whether the race is on or not.
 --
 -- Rounds: the first race is open as soon as the course is built (032); after that, once RaceConfig.INTERVAL has
 -- passed since the last start, the next eligible player who stands on the pad starts a JOIN_WINDOW countdown
@@ -21,7 +23,7 @@
 -- racer; a rejoin after finishing finds hub.race.id already set.
 --
 -- World: nothing is added unless the race is on (RaceConfig flag / Studio attribute StudioRace). The course
--- (ServerStorage.RaceCourse031) is cloned into Workspace.World.VelocityRoyale.RaceCourse, whose attributes
+-- (ServerStorage.<RaceConfig.TEMPLATE>) is cloned into Workspace.World.<RaceConfig.WORLD>.RaceCourse, whose attributes
 -- the clients read: State (Waiting|Countdown|Racing|Podium), Ready (server time the next race may start),
 -- GoAt, EndsAt, Laps, Racers; its Route folder holds the gate positions (CFrameValues, attribute Order) for the
 -- client's next-checkpoint arch. A racer can leave mid-race (RaceAction "Leave", the HUD button): no reward.
@@ -37,6 +39,7 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local RaceConfig = require(ReplicatedStorage:WaitForChild("RaceConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
+local ZoneConfig = require(ReplicatedStorage:WaitForChild("ZoneConfig"))
 local ParadeService = require(script.Parent:WaitForChild("ParadeService"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 local WorkerInventory = require(script.Parent:WaitForChild("WorkerInventory"))
@@ -136,9 +139,10 @@ end
 -- "Next race in 2:41", ...) and one rule line. The odds are on the OddsBoard.
 local function dressSign(sign: BasePart)
 	for _, gui in faces(sign) do
-		label(gui, "Title", "ROYALE RACE", 0.04, 0.2, GOLD_TEXT, Enum.Font.FredokaOne)
+		label(gui, "Title", RaceConfig.TITLE, 0.04, 0.2, GOLD_TEXT, Enum.Font.FredokaOne)
 		label(gui, "Status", "Stand on the pad to race!", 0.27, 0.44, WHITE, Enum.Font.GothamBlack)
-		label(gui, "Rule", ("%d laps · every finisher wins a capsule"):format(RaceConfig.LAPS), 0.76, 0.17, WHITE, Enum.Font.GothamBold)
+		local rule = if RaceConfig.LAPS > 1 then ("%d laps"):format(RaceConfig.LAPS) else ("%d rune gates"):format(checkpointCount)
+		label(gui, "Rule", rule .. " · every finisher wins a capsule", 0.76, 0.17, WHITE, Enum.Font.GothamBold)
 	end
 end
 
@@ -199,9 +203,9 @@ end
 local function buildCourse(): boolean
 	local template = ServerStorage:FindFirstChild(RaceConfig.TEMPLATE)
 	local world = workspace:FindFirstChild("World")
-	local royale = world and world:FindFirstChild("VelocityRoyale")
+	local royale = world and world:FindFirstChild(RaceConfig.WORLD)
 	if not (template and royale) then
-		warn("[RaceService] ServerStorage." .. RaceConfig.TEMPLATE .. " or World.VelocityRoyale is missing; no race")
+		warn("[RaceService] ServerStorage." .. RaceConfig.TEMPLATE .. " or World." .. RaceConfig.WORLD .. " is missing; no race")
 		return false
 	end
 	table.clear(gates)
@@ -254,6 +258,7 @@ local function buildCourse(): boolean
 	end
 	route.Parent = folder
 	folder:SetAttribute("Laps", RaceConfig.LAPS)
+	folder:SetAttribute("Checkpoints", checkpointCount)
 	folder:SetAttribute("State", "Waiting")
 	folder.Parent = royale
 	course = folder
@@ -304,7 +309,7 @@ type Race = {
 local serverId = HttpService:GenerateGUID(false)
 local raceCount = 0
 local race: Race? = nil
-RaceService.stats = { races = 0, finished = 0, capsules = 0, out = 0, duplicate = 0, left = 0 }
+RaceService.stats = { races = 0, finished = 0, capsules = 0, out = 0, duplicate = 0, left = 0, pops = 0 }
 
 -- Can this player race right now? (ok, message for the player)
 function RaceService.eligible(player: Player): (boolean, string?)
@@ -312,7 +317,7 @@ function RaceService.eligible(player: Player): (boolean, string?)
 		return false, "Loading your data, one moment"
 	end
 	if not ZoneProgress.isUnlocked(player, RaceConfig.ZONE) then
-		return false, "Unlock Velocity Royale to race"
+		return false, ("Unlock %s to race"):format((ZoneConfig.get(RaceConfig.ZONE) :: any).name)
 	end
 	if player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true or player:GetAttribute("HeistCarrying") == true then
 		return false, "Drop your worker first"
@@ -505,6 +510,40 @@ local function step(r: Race, racer: Racer, dt: number)
 	clientEvent:FireClient(player, "Lap", { lap = racer.lap, laps = RaceConfig.LAPS })
 end
 
+-- Falls (034): anyone inside the course's FallZone (below the floating course) is put back, never killed: a racer at
+-- the last rune gate they passed (the pad if none yet), anyone else at PadSpot. Runs whether the race is on or not.
+local function catchFalls()
+	local world = workspace:FindFirstChild("World")
+	local home = world and world:FindFirstChild(RaceConfig.WORLD)
+	local geometry = home and home:FindFirstChild(RaceConfig.COURSE)
+	local zone = geometry and geometry:FindFirstChild("FallZone")
+	local spot = geometry and geometry:FindFirstChild("PadSpot")
+	if not (zone and spot and zone:IsA("BasePart") and spot:IsA("BasePart")) then
+		return
+	end
+	for _, player in Players:GetPlayers() do
+		local root = livingRoot(player)
+		if root and inBox(zone.CFrame, zone.Size / 2, root.Position) then
+			local target = spot.CFrame
+			local racer = race and race.racers[player]
+			if racer then
+				local passed = math.min(racer.nextCp - 1, checkpointCount)
+				local gate = gates[passed]
+				if passed >= 1 and gate then
+					target = gate.cf * CFrame.new(0, -1, 0)
+				end
+			end
+			(player.Character :: Model):PivotTo(target)
+			root.AssemblyLinearVelocity = Vector3.zero
+			if racer then
+				racer.last = target.Position
+			end
+			RaceService.stats.pops += 1
+			clientEvent:FireClient(player, "Pop", { racing = racer ~= nil })
+		end
+	end
+end
+
 -- Rounds ------------------------------------------------------------------------------------------------
 local function setBlock(player: Player, text: string?)
 	if player:GetAttribute("RaceBlock") ~= text then
@@ -607,7 +646,8 @@ end
 
 local function endRace(r: Race, reason: string)
 	for _, racer in r.racers do
-		out(r, racer, if reason == "time" then "Time's up! Finish all 3 laps next time." else "The race was stopped.")
+		local late = if RaceConfig.LAPS > 1 then ("Time's up! Finish all %d laps next time."):format(RaceConfig.LAPS) else "Time's up! Reach the finish arch next time."
+		out(r, racer, if reason == "time" then late else "The race was stopped.")
 	end
 	race = nil
 	RaceService.lastRace = { id = r.id, started = r.started, finishers = r.finishers, reason = reason }
@@ -726,6 +766,7 @@ function RaceService.start()
 				table.clear(nameTags)
 			end
 			ReplicatedStorage:SetAttribute(RaceConfig.PUBLISHED, if running then true else nil)
+			catchFalls()
 			local folder = course
 			if running and folder then
 				local now = serverNow()

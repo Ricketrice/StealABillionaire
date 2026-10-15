@@ -5,7 +5,7 @@
 -- countdown in its last seconds (for players on the pad), the race HUD (big "LAP 2/3" + time left + an arrow to
 -- the next checkpoint + a Leave race button), a glowing arch over the next checkpoint (this client only, 032), the capsule pop at the
 -- finish (the reveal card itself comes from WorkerRevealCard) and the top-3 banner after a race.
--- Everything is read from Workspace.World.VelocityRoyale.RaceCourse attributes, the local player's
+-- Everything is read from Workspace.World.<RaceConfig.WORLD>.RaceCourse attributes, the local player's
 -- Racing / RaceLap attributes and RaceEvent; RaceService decides everything. Nothing runs while RaceOn is off.
 
 local Players = game:GetService("Players")
@@ -33,8 +33,8 @@ end
 
 local function course(): Instance?
 	local world = workspace:FindFirstChild("World")
-	local royale = world and world:FindFirstChild("VelocityRoyale")
-	return royale and royale:FindFirstChild(RaceConfig.FOLDER)
+	local home = world and world:FindFirstChild(RaceConfig.WORLD)
+	return home and home:FindFirstChild(RaceConfig.FOLDER)
 end
 
 -- Sounds: Roblox's own built-in files, pitched (like UIKit's defaults).
@@ -64,7 +64,7 @@ local scale = Instance.new("UIScale")
 scale.Parent = panel
 local lapLabel = UITheme.text({
 	Name = "Lap",
-	Text = "LAP 1/3",
+	Text = if RaceConfig.LAPS > 1 then ("LAP 1/%d"):format(RaceConfig.LAPS) else "RUNE GATE 1",
 	Role = "Display",
 	TextSize = 44,
 	Color = GOLD,
@@ -367,11 +367,26 @@ local function refreshPanel()
 	leaveButton.Visible = racing
 	refreshArch()
 	if racing then
-		local lap = player:GetAttribute("RaceLap") or 1
-		lapLabel.Text = ("LAP %d/%d"):format(lap, RaceConfig.LAPS)
+		if RaceConfig.LAPS > 1 then
+			local lap = player:GetAttribute("RaceLap") or 1
+			lapLabel.Text = ("LAP %d/%d"):format(lap, RaceConfig.LAPS)
+		else -- Spell Run (034): the next rune gate, then the finish arch
+			local folder = course()
+			local total = folder and folder:GetAttribute("Checkpoints") or 0
+			local nextGate = player:GetAttribute("RaceNext") or 1
+			lapLabel.Text = if nextGate == 0 then "TO THE FINISH!" else ("RUNE GATE %d/%d"):format(nextGate, total)
+		end
 	end
 end
 player:GetAttributeChangedSignal("Racing"):Connect(refreshPanel)
+player:GetAttributeChangedSignal("RaceNext"):Connect(function()
+	if RaceConfig.LAPS == 1 and player:GetAttribute("Racing") == true then
+		refreshPanel()
+		lapLabel.TextColor3 = C.Text
+		UITheme.tween(lapLabel, 0.6, { TextColor3 = GOLD })
+		beep("lap", 1.4)
+	end
+end)
 player:GetAttributeChangedSignal("RaceLap"):Connect(function()
 	refreshPanel()
 	if player:GetAttribute("RaceLap") and player:GetAttribute("RaceLap") > 1 then
@@ -426,7 +441,7 @@ local function showPodium(rows: any)
 	local character = player.Character
 	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 	if not (pad and pad:IsA("BasePart") and rootPart and rootPart:IsA("BasePart")) or (rootPart.Position - pad.Position).Magnitude > 160 then
-		return -- only for players at Velocity Royale
+		return -- only for players at the course
 	end
 	local lines = {}
 	for i, row in rows do
@@ -460,7 +475,9 @@ clientEvent.OnClientEvent:Connect(function(kind, info)
 	elseif kind == "Out" and type(info) == "table" then
 		panel.Visible = false
 		leaveButton.Visible = false
-		UITheme.toast("error", "Royale Race", tostring(info.reason or "Out of the race."))
+		UITheme.toast("error", "Spell Run", tostring(info.reason or "Out of the race."))
+	elseif kind == "Pop" and type(info) == "table" then
+		UITheme.toast("info", "Whoops!", if info.racing then "Back to your last rune gate." else "Back to the start pad.")
 	elseif kind == "End" and type(info) == "table" then
 		showPodium(info.podium)
 	end
