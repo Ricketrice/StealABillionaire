@@ -1,0 +1,130 @@
+{
+ "parts": {
+  "DragonHead": [
+   {
+    "name": "DragonHead_Anchor",
+    "colour": "ink"
+   },
+   {
+    "name": "DragonHead_Skull",
+    "colour": "blue"
+   },
+   {
+    "name": "DragonHead_Snout",
+    "colour": "blueLight"
+   },
+   {
+    "name": "DragonHead_Jaw",
+    "colour": "belly"
+   },
+   {
+    "name": "DragonHead_Teeth",
+    "colour": "white"
+   },
+   {
+    "name": "DragonHead_Nostrils",
+    "colour": "ink"
+   },
+   {
+    "name": "DragonHead_Horns",
+    "colour": "gold"
+   },
+   {
+    "name": "DragonHead_CheekFins",
+    "colour": "cyan"
+   },
+   {
+    "name": "DragonHead_Sockets",
+    "colour": "ink"
+   },
+   {
+    "name": "DragonHead_Eyes",
+    "colour": "eye"
+   },
+   {
+    "name": "DragonHead_Crest",
+    "colour": "gold"
+   }
+  ],
+  "DragonWingR": [
+   {
+    "name": "DragonWingR_Anchor",
+    "colour": "ink"
+   },
+   {
+    "name": "DragonWingR_Bones",
+    "colour": "blue"
+   },
+   {
+    "name": "DragonWingR_Claw",
+    "colour": "gold"
+   },
+   {
+    "name": "DragonWingR_Membrane",
+    "colour": "cyan"
+   },
+   {
+    "name": "DragonWingR_Edge",
+    "colour": "cyanDark"
+   }
+  ],
+  "DragonWingL": [
+   {
+    "name": "DragonWingL_Anchor",
+    "colour": "ink"
+   },
+   {
+    "name": "DragonWingL_Bones",
+    "colour": "blue"
+   },
+   {
+    "name": "DragonWingL_Claw",
+    "colour": "gold"
+   },
+   {
+    "name": "DragonWingL_Membrane",
+    "colour": "cyan"
+   },
+   {
+    "name": "DragonWingL_Edge",
+    "colour": "cyanDark"
+   }
+  ],
+  "DragonTail": [
+   {
+    "name": "DragonTail_Anchor",
+    "colour": "ink"
+   },
+   {
+    "name": "DragonTail_Segments",
+    "colour": "blue"
+   },
+   {
+    "name": "DragonTail_Fin",
+    "colour": "cyan"
+   },
+   {
+    "name": "DragonTail_Spikes",
+    "colour": "gold"
+   }
+  ]
+ },
+ "report": {
+  "DragonHead": {
+   "tris": 788,
+   "parts": 11
+  },
+  "DragonWingR": {
+   "tris": 260,
+   "parts": 5
+  },
+  "DragonWingL": {
+   "tris": 260,
+   "parts": 5
+  },
+  "DragonTail": {
+   "tris": 104,
+   "parts": 4
+  }
+ }
+}

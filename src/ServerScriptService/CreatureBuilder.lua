@@ -9,6 +9,7 @@
 -- written on each animated prop (Anim*). Prop offsets are in the body part's own space.
 
 local CollectionService = game:GetService("CollectionService")
+local ContentProvider = game:GetService("ContentProvider")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -104,6 +105,28 @@ local function makeEmitter(fx: CreatureSpecs.Fx, scale: number): ParticleEmitter
 	return e
 end
 
+-- A catalogue face (spec.face = "rbxassetid://<image id>") is only used if it really loads; otherwise the creature
+-- keeps the part-built default smile. Checked once per id.
+local faceOk: { [string]: boolean } = {}
+local function faceLoads(id: string): boolean
+	if faceOk[id] == nil then
+		local probe = Instance.new("Decal")
+		probe.Texture = id
+		local status: Enum.AssetFetchStatus? = nil
+		local ok = pcall(function()
+			ContentProvider:PreloadAsync({ probe }, function(_, s)
+				status = s
+			end)
+		end)
+		probe:Destroy()
+		faceOk[id] = ok and status == Enum.AssetFetchStatus.Success
+		if not faceOk[id] then
+			warn("[CreatureBuilder] face did not load, using the default smile:", id)
+		end
+	end
+	return faceOk[id]
+end
+
 local function meshMaster(name: string): MeshPart?
 	local imports = ServerStorage:FindFirstChild("Imports035")
 	local found = imports and imports:FindFirstChild(name, true)
@@ -111,6 +134,96 @@ local function meshMaster(name: string): MeshPart?
 		return found
 	end
 	return found and found:FindFirstChildWhichIsA("MeshPart", true)
+end
+
+local function setAnim(part: BasePart, a: any, offset: CFrame)
+	part:SetAttribute("AnimKind", a.kind)
+	part:SetAttribute("AnimAxis", a.axis or "X")
+	part:SetAttribute("AnimAmp", a.amp)
+	part:SetAttribute("AnimSpeed", a.speed or 2)
+	part:SetAttribute("AnimPhase", a.phase or 0)
+	part:SetAttribute("AnimBase", offset)
+	part:SetAttribute("AnimPivot", a.pivot or CFrame.new())
+end
+
+-- A Blender model from ServerStorage.Imports035 (prop.model, e.g. DragonHead): every MeshPart is welded to `body`, placed
+-- relative to the model's "<Name>_Anchor" part (its origin) at prop.at and scaled so the model is `fit.size` studs long
+-- along `fit.axis` (X / Y / Z, in the model's own axes). prop.colors[<part name>] = Color3 or { color, neon, trans, mat };
+-- prop.partAnim[<part name>] overrides prop.anim for one part (the jaw). Returns the parts (empty if the import is missing).
+local function makeModelParts(prop: any, body: BasePart): { BasePart }
+	local out: { BasePart } = {}
+	local imports = ServerStorage:FindFirstChild("Imports035")
+	local src = imports and imports:FindFirstChild(prop.model, true)
+	if not src then
+		warn("[CreatureBuilder] missing import", prop.model)
+		return out
+	end
+	local meshes: { BasePart } = {}
+	local anchor: BasePart? = nil
+	for _, d in src:GetDescendants() do
+		if d:IsA("MeshPart") then
+			if d.Name:match("Anchor$") then
+				anchor = d
+			else
+				table.insert(meshes, d)
+			end
+		end
+	end
+	if not anchor or #meshes == 0 then
+		warn("[CreatureBuilder] import", prop.model, "needs an Anchor part and at least one mesh")
+		return out
+	end
+	local lo, hi = Vector3.new(math.huge, math.huge, math.huge), Vector3.new(-math.huge, -math.huge, -math.huge)
+	for _, m in meshes do
+		local rel = anchor.CFrame:ToObjectSpace(m.CFrame)
+		for _, sx in { -0.5, 0.5 } do
+			for _, sy in { -0.5, 0.5 } do
+				for _, sz in { -0.5, 0.5 } do
+					local c = rel * Vector3.new(m.Size.X * sx, m.Size.Y * sy, m.Size.Z * sz)
+					lo = Vector3.new(math.min(lo.X, c.X), math.min(lo.Y, c.Y), math.min(lo.Z, c.Z))
+					hi = Vector3.new(math.max(hi.X, c.X), math.max(hi.Y, c.Y), math.max(hi.Z, c.Z))
+				end
+			end
+		end
+	end
+	local ext = hi - lo
+	local fit = prop.fit or { axis = "Z", size = ext.Z }
+	local k = fit.size / (if fit.axis == "X" then ext.X elseif fit.axis == "Y" then ext.Y else ext.Z)
+	for _, m in meshes do
+		local key = m.Name:match("_(.+)$") or m.Name
+		local part = m:Clone()
+		for _, c in part:GetChildren() do
+			if not (c:IsA("SpecialMesh") or c:IsA("SurfaceAppearance")) then
+				c:Destroy()
+			end
+		end
+		part.Name = key
+		part.Size = m.Size * k
+		local rel = anchor.CFrame:ToObjectSpace(m.CFrame)
+		local offset = prop.at * CFrame.new(rel.Position * k) * rel.Rotation
+		part.CFrame = body.CFrame * offset
+		local look: any = prop.colors and prop.colors[key]
+		if typeof(look) == "Color3" then
+			look = { color = look }
+		end
+		part.Color = look and look.color or part.Color
+		part.Transparency = look and look.trans or 0
+		part.Material = if look and look.neon then Enum.Material.Neon else (look and look.mat or Enum.Material.SmoothPlastic)
+		part.TextureID = ""
+		part.CanCollide, part.CanTouch, part.CanQuery = false, false, false
+		part.Massless = true
+		part.Anchored = false
+		part.CastShadow = false
+		local weld = Instance.new("Weld")
+		weld.Part0, weld.Part1, weld.C0 = body, part, offset
+		weld.Parent = part
+		local a = (prop.partAnim and prop.partAnim[key]) or prop.anim
+		if a then
+			setAnim(part, a, offset)
+		end
+		table.insert(out, part)
+	end
+	return out
 end
 
 local function makeProp(prop: CreatureSpecs.Prop, body: BasePart): BasePart?
@@ -171,13 +284,7 @@ local function makeProp(prop: CreatureSpecs.Prop, body: BasePart): BasePart?
 
 	local a = prop.anim
 	if a then
-		part:SetAttribute("AnimKind", a.kind)
-		part:SetAttribute("AnimAxis", a.axis or "X")
-		part:SetAttribute("AnimAmp", a.amp)
-		part:SetAttribute("AnimSpeed", a.speed or 2)
-		part:SetAttribute("AnimPhase", a.phase or 0)
-		part:SetAttribute("AnimBase", offset)
-		part:SetAttribute("AnimPivot", a.pivot or CFrame.new())
+		setAnim(part, a, offset)
 	end
 	return part
 end
@@ -321,6 +428,7 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		end
 	end
 	local head = bodyOf(model, "Head")
+	local faceDecal = false
 	if head then
 		for _, d in head:GetChildren() do
 			if d:IsA("Decal") then
@@ -331,6 +439,13 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 			local face = Instance.new("Decal")
 			face.Name = "face"
 			face.Texture = "rbxasset://textures/face.png"
+			face.Face = Enum.NormalId.Front
+			face.Parent = head
+		elseif spec.face and faceLoads(spec.face) then -- the creature's own catalogue face (big, readable)
+			faceDecal = true
+			local face = Instance.new("Decal")
+			face.Name = "face"
+			face.Texture = spec.face
 			face.Face = Enum.NormalId.Front
 			face.Parent = head
 		end
@@ -350,14 +465,18 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 	local folder = Instance.new("Folder")
 	folder.Name = PROPS_FOLDER
 	local all: { CreatureSpecs.Prop } = table.clone(spec.props)
-	if noob then -- a clear classic face made of parts (renders in the card viewports too): big black eyes + a smile
+	if noob and not faceDecal then -- a clear classic face made of parts (renders in the card viewports too): big black eyes + a smile
 		for _, f in FACE do
 			table.insert(all, f)
 		end
 	end
 	for _, prop in all do
 		local body = bodyOf(model, prop.on)
-		if body then
+		if body and (prop :: any).model then
+			for _, part in makeModelParts(prop, body) do
+				part.Parent = folder
+			end
+		elseif body then
 			local part = makeProp(prop, body)
 			if part then
 				part.Parent = folder

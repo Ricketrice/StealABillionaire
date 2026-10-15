@@ -34,6 +34,10 @@ export type Prop = {
 	neon: boolean?,
 	trans: number?, -- Transparency
 	mesh: string?, -- Imports035 master; size = the stud size it is scaled to
+	model: string?, -- Imports035 model (all its mesh parts); fit = { axis, size } scales it, colors / partAnim per mesh part
+	fit: { axis: string, size: number }?,
+	colors: { [string]: any }?,
+	partAnim: { [string]: any }?,
 	anim: { kind: string, axis: string?, amp: number, speed: number?, phase: number?, pivot: CFrame? }?,
 }
 
@@ -47,6 +51,7 @@ export type Spec = {
 	fx: { Fx }?,
 	light: Color3?,
 	own: boolean?, -- non-humanoid (fish, owl, snail, newt, golem): keeps the recoloured R15 body instead of the noob
+	face: string?, -- humanoids: catalogue face image ("rbxassetid://..."); nil = the default part-built smile
 	hideBody: boolean?, -- hide the R15 body (props make the whole creature)
 	halo: Color3?, -- spinning ring on the ground
 	sound: string?,
@@ -725,118 +730,23 @@ CreatureSpecs.tide_warden = { -- Tide Warden (L): Aquaris's champion; coral crow
 	halo = rgb(90, 200, 255),
 }
 
--- Aquaris (S): the water dragon, a coiled serpent built from balls along a curve; the rig only walks it.
+-- Aquaris (S): a real water dragon from the reusable DragonKit (ReplicatedStorage.DragonKit): long-snouted head with an opening
+-- jaw and swept-back gold horns, S-curve neck, rounded body with light belly plates and dorsal spikes, four clawed legs standing
+-- on the ground, big finger-boned wings with glowing membrane panels (they flap), a spiked tail that sways. The rig only walks it.
+-- DRAGON_MESHES: false = every piece from plain parts; true = the Blender head, wings and tail tip from ServerStorage.Imports035.
+local DragonKit = require(script.Parent:WaitForChild("DragonKit"))
+local DRAGON_MESHES = false
 local function aquaris(): Spec
-	local props: { Prop } = {}
-	local count = 20
-	for i = 1, count do
-		local t = i / count -- 0 = tail tip, 1 = neck
-		local ang = t * 5.2
-		local r = 0.45 + math.sin(t * math.pi) * 0.5
-		local pos = v3(math.sin(ang) * 1.5 * (1 - t * 0.35), -2.7 + t * 4.6, math.cos(ang) * 0.9 * (1 - t * 0.35) + 0.4)
-		local shade = if i % 2 == 0 then rgb(18, 84, 176) else rgb(70, 214, 240)
-		table.insert(props, P("Seg" .. i, "LowerTorso", "Ball", v3(r * 2, r * 2, r * 2), cf(pos), shade, { mat = Enum.Material.SmoothPlastic }))
-		if i % 3 == 0 then -- back frills
-			table.insert(
-				props,
-				P(
-					"Frill" .. i,
-					"LowerTorso",
-					"Block",
-					v3(0.08, r * 1.3, r * 1.2),
-					cf(pos + v3(0, r * 0.95, 0.1)),
-					rgb(130, 245, 255),
-					{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Z", amp = 8, speed = 2.2, phase = i * 0.5 } }
-				)
-			)
-		end
-		if i % 3 == 2 then -- gold belly plates
-			table.insert(props, P("BellyPlate" .. i, "LowerTorso", "Block", v3(r * 1.3, r * 0.4, 0.16), cf(pos + v3(0, 0, -r * 0.92)), GOLD, { mat = METAL }))
-		end
-		if i % 4 == 1 then -- pearly belly scales
-			table.insert(props, P("Scale" .. i, "LowerTorso", "Ball", v3(r * 0.8, r * 0.8, r * 0.8), cf(pos + v3(0, 0, -r * 0.75)), rgb(240, 250, 255), { neon = true }))
-		end
-	end
-	local head = v3(0, 2.7, -0.8)
-	local extra: { Prop } = {
-		P("Head", "LowerTorso", "Ball", v3(1.5, 1.2, 1.9), cf(head), rgb(40, 150, 215)),
-		P(
-			"Jaw",
-			"LowerTorso",
-			"Block",
-			v3(1.0, 0.3, 1.2),
-			cf(head + v3(0, -0.55, -0.55)),
-			rgb(30, 110, 180),
-			{ anim = { kind = "swing", axis = "X", amp = 8, speed = 1.6, pivot = cf(head + v3(0, -0.4, 0.2)) } }
-		),
-		P("Snout", "LowerTorso", "Block", v3(0.9, 0.55, 0.9), cf(head + v3(0, -0.05, -1.05)), rgb(70, 190, 235)),
-		P("Mouth", "LowerTorso", "Block", v3(0.3, 0.3, 0.3), cf(head + v3(0, -0.3, -1.55)), rgb(20, 60, 110)),
-		P("EyeL", "LowerTorso", "Ball", v3(0.46, 0.46, 0.4), cf(head + v3(-0.55, 0.3, -0.65)), rgb(190, 255, 255), { neon = true }),
-		P("EyeR", "LowerTorso", "Ball", v3(0.46, 0.46, 0.4), cf(head + v3(0.55, 0.3, -0.65)), rgb(190, 255, 255), { neon = true }),
-		P("PupilL", "LowerTorso", "Ball", v3(0.2, 0.3, 0.14), cf(head + v3(-0.55, 0.3, -0.88)), rgb(10, 30, 60)),
-		P("PupilR", "LowerTorso", "Ball", v3(0.2, 0.3, 0.14), cf(head + v3(0.55, 0.3, -0.88)), rgb(10, 30, 60)),
-		P("HornL", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(-0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(18)), rgb(255, 205, 70), { mat = METAL }),
-		P("HornR", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(-18)), rgb(255, 205, 70), { mat = METAL }),
-		P("HeadSpikeA", "LowerTorso", "Wedge", v3(0.3, 0.8, 0.4), cf(head + v3(0, 0.75, -0.2)), rgb(255, 205, 70), { mat = METAL }),
-		P("HeadSpikeB", "LowerTorso", "Wedge", v3(0.26, 0.7, 0.36), cf(head + v3(0, 0.7, 0.35)), rgb(255, 205, 70), { mat = METAL }),
-		P("HeadSpikeC", "LowerTorso", "Wedge", v3(0.22, 0.6, 0.3), cf(head + v3(0, 0.6, 0.85)), rgb(255, 205, 70), { mat = METAL }),
-		P("CheekSpikeL", "LowerTorso", "Wedge", v3(0.3, 0.6, 0.3), cf(head + v3(-0.8, -0.1, 0.2)) * CFrame.Angles(0, 0, rad(90)), rgb(255, 205, 70), { mat = METAL }),
-		P("CheekSpikeR", "LowerTorso", "Wedge", v3(0.3, 0.6, 0.3), cf(head + v3(0.8, -0.1, 0.2)) * CFrame.Angles(0, 0, rad(-90)), rgb(255, 205, 70), { mat = METAL }),
-		P(
-			"FinL",
-			"LowerTorso",
-			"Block",
-			v3(1.0, 0.1, 0.9),
-			cf(head + v3(-1.1, 0.0, 0.5)),
-			rgb(130, 245, 255),
-			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6 } }
-		),
-		P(
-			"FinR",
-			"LowerTorso",
-			"Block",
-			v3(1.0, 0.1, 0.9),
-			cf(head + v3(1.1, 0.0, 0.5)),
-			rgb(130, 245, 255),
-			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6, phase = 3 } }
-		),
-		P(
-			"TailFinA",
-			"LowerTorso",
-			"Block",
-			v3(1.4, 0.1, 0.9),
-			cf(v3(0, -2.9, 0.4)),
-			rgb(130, 245, 255),
-			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4 } }
-		),
-		P(
-			"TailFinB",
-			"LowerTorso",
-			"Block",
-			v3(0.9, 0.1, 1.4),
-			cf(v3(0, -2.9, 0.4)),
-			rgb(130, 245, 255),
-			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4, phase = 1 } }
-		),
-		P("Pool", "LowerTorso", "Cylinder", v3(5.4, 0.1, 5.4), cf(0, -3.15, 0.2), rgb(90, 200, 255), { neon = true, trans = 0.5, anim = { kind = "spin", axis = "Y", amp = 25 } }),
-	}
-	for _, p in extra do
-		table.insert(props, p)
-	end
+	local props, fx = DragonKit.build({ u = 1, colors = DragonKit.WATER, meshes = DRAGON_MESHES })
 	return {
 		hideBody = true,
 		scale = 3,
-		skin = rgb(40, 150, 215),
+		skin = rgb(18, 84, 176),
 		props = props,
-		fx = {
-			{ on = "Mouth", kind = "puff", color = rgb(150, 220, 255), rate = 22, size = 2.2, aura = true }, -- the water breath
-			{ on = "Seg10", kind = "bubble", color = rgb(190, 235, 255), rate = 10, size = 1.6, aura = true },
-			{ on = "Head", kind = "spark", color = rgb(210, 245, 255), rate = 8, aura = true },
-			{ on = "Seg14", kind = "drop", color = rgb(170, 235, 255), rate = 16, size = 1.5, aura = true }, -- water droplets rain off the body
-			{ on = "Seg6", kind = "drop", color = rgb(120, 210, 255), rate = 10, size = 1.2, aura = true },
-		},
+		fx = fx,
 		light = rgb(120, 210, 255),
 		halo = rgb(90, 200, 255),
+		sound = "boss_roar",
 	}
 end
 CreatureSpecs.aquaris = aquaris()
@@ -1565,6 +1475,39 @@ type Polish = {
 	set: { [string]: any }?, -- spec fields: light, halo, sound
 }
 
+-- Face catalogue (free Creator Store face decals, each checked to load in Studio on 2026-10-16; the ids are the IMAGE ids the
+-- decals resolve to). One field per creature below (`faceOf`), change them here. The builder falls back to the default smile
+-- if one ever fails to load.
+local FACES = {
+	angry = "rbxassetid://91718245554912", -- angry frown, brows down
+	angry2 = "rbxassetid://115235921239202", -- grumpy frown
+	stern = "rbxassetid://15539331496", -- serious, heavy brows
+	suspicious = "rbxassetid://80659697191573", -- narrow eyes, scheming frown
+	happy = "rbxassetid://155406534", -- big goofy grin
+	cool = "rbxassetid://139147174838791", -- sunglasses and a smirk
+	scholar = "rbxassetid://308995820", -- round glasses, calm
+	neutral = "rbxassetid://926088892", -- dots and a line
+}
+local faceOf = {
+	broke_bob = "happy",
+	delivery_dave = "happy",
+	training_dummy = "neutral",
+	street_hustler = "cool",
+	business_betty = "happy",
+	security_sam = "stern",
+	crypto_carl = "angry2",
+	ceo_chad = "cool",
+	mystery_millionaire = "angry",
+	puffer_guard = "stern",
+	mermaid_mage = "scholar",
+	shark_knight = "angry",
+	tide_warden = "stern",
+	butler_barnaby = "happy",
+	bookling = "scholar",
+	chef_pierre = "happy",
+	oil_baron_oswald = "scholar",
+	the_trillionaire = "suspicious",
+}
 local YELLOW = rgb(245, 205, 48)
 local NEON_CYAN = rgb(80, 255, 230)
 
@@ -1697,8 +1640,8 @@ local function polishList(): { [string]: Polish }
 		}
 	end
 	do
-		local blade, trail = sword("Blade", 4.8, 0.95, rgb(205, 212, 226), rgb(255, 110, 30), rgb(150, 158, 175), rgb(60, 40, 40), 35)
-		local shield = Kit.shield({ w = 2.7, h = 3.6, face = rgb(100, 18, 28), rim = rgb(150, 158, 175), emblem = rgb(255, 110, 30), at = cf(-0.55, 0.15, -0.85), neon = true })
+		local blade, trail = sword("Blade", 4.8, 0.95, rgb(205, 212, 226), rgb(255, 110, 30), GOLD, rgb(60, 40, 40), 35)
+		local shield = Kit.shield({ w = 2.7, h = 3.6, face = rgb(100, 18, 28), rim = GOLD, emblem = rgb(255, 110, 30), at = cf(-0.55, 0.15, -0.85), neon = true })
 		L.mystery_millionaire = { -- Sir Ironclad (S): dark iron, lava accents, horns
 			outfit = { top = rgb(40, 42, 54), waist = rgb(28, 30, 40), arms = rgb(40, 42, 54), hands = rgb(30, 30, 36), legs = rgb(30, 32, 42), feet = rgb(20, 20, 26) },
 			drop = {
@@ -1720,7 +1663,7 @@ local function polishList(): { [string]: Polish }
 			add = {
 				Kit.armor({
 					main = rgb(52, 55, 70),
-					trim = rgb(150, 158, 175),
+					trim = GOLD,
 					accent = rgb(255, 100, 30),
 					glow = rgb(255, 120, 40),
 					tier = 3,
@@ -1731,6 +1674,36 @@ local function polishList(): { [string]: Polish }
 				}),
 				shield,
 				blade,
+				{ -- a tall red plume on a gold crest holder, with gold trim down its spine
+					P("PlumeHolder", "Head", "Block", v3(0.5, 0.45, 0.9), cf(0, 1.3, 0.05), GOLD, { mat = METAL }),
+					P(
+						"TallPlume",
+						"Head",
+						"Block",
+						v3(0.34, 2.4, 1.7),
+						cf(0, 2.65, 0.15),
+						rgb(205, 28, 40),
+						{ anim = { kind = "swing", axis = "X", amp = 10, speed = 2.0, pivot = cf(0, 1.4, 0.1) } }
+					),
+					P(
+						"PlumeTip",
+						"Head",
+						"Block",
+						v3(0.26, 1.1, 1.2),
+						cf(0, 4.2, 0.45),
+						rgb(235, 60, 50),
+						{ neon = true, anim = { kind = "swing", axis = "X", amp = 16, speed = 2.0, pivot = cf(0, 1.4, 0.1) } }
+					),
+					P(
+						"PlumeGold",
+						"Head",
+						"Block",
+						v3(0.4, 2.2, 0.16),
+						cf(0, 2.65, -0.7),
+						GOLD,
+						{ mat = METAL, anim = { kind = "swing", axis = "X", amp = 10, speed = 2.0, pivot = cf(0, 1.4, 0.1) } }
+					),
+				},
 			},
 			fx = { trail },
 			set = { sound = "boss_roar" },
@@ -2019,6 +1992,10 @@ local function applyPolish()
 			for _, f in pol.fx do
 				table.insert(spec.fx, f)
 			end
+		end
+		local face = faceOf[id]
+		if face and not spec.own and not spec.hideBody then
+			spec.face = FACES[face]
 		end
 		for k, v in pol.set or {} do
 			(spec :: any)[k] = v
