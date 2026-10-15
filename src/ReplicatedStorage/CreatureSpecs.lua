@@ -797,4 +797,431 @@ local function aquaris(): Spec
 end
 CreatureSpecs.aquaris = aquaris()
 
+-- ================================ EMBER ACADEMY ================================
+local FIRE, FLAME, EMBER_RED, ROBE, STONE = rgb(255, 140, 40), rgb(255, 210, 70), rgb(200, 50, 40), rgb(170, 40, 40), rgb(130, 128, 140)
+
+CreatureSpecs.butler_barnaby = { -- Candle Imp (C): a candle with a flame on its head, wax drips
+	scale = 0.95,
+	skin = rgb(250, 232, 200),
+	outfit = outfit({ top = rgb(235, 80, 60), waist = rgb(150, 40, 40), arms = rgb(250, 232, 200), legs = rgb(150, 40, 40), feet = rgb(90, 30, 30) }),
+	props = {
+		P("Candle", "Head", "Cylinder", v3(0.85, 1.0, 0.85), cf(0, 0.95, 0), rgb(255, 245, 215)),
+		P("Flame", "Head", "Ball", v3(0.45, 0.8, 0.45), cf(0, 1.7, 0), FLAME, { neon = true, anim = { kind = "pulse", amp = 0.18, speed = 7 } }),
+		P("HornL", "Head", "Block", v3(0.2, 0.5, 0.2), cf(-0.55, 0.55, 0.1) * CFrame.Angles(0, 0, rad(25)), EMBER_RED),
+		P("HornR", "Head", "Block", v3(0.2, 0.5, 0.2), cf(0.55, 0.55, 0.1) * CFrame.Angles(0, 0, rad(-25)), EMBER_RED),
+		P("DripA", "Head", "Ball", v3(0.28, 0.4, 0.28), cf(0.3, 0.42, -0.2), rgb(255, 245, 215)),
+		P("DripB", "Head", "Ball", v3(0.22, 0.34, 0.22), cf(-0.25, 0.4, 0.15), rgb(255, 245, 215)),
+		P(
+			"Tail",
+			"LowerTorso",
+			"Block",
+			v3(0.14, 0.14, 1.4),
+			cf(0, -0.3, 0.9),
+			EMBER_RED,
+			{ anim = { kind = "swing", axis = "Y", amp = 18, speed = 3, pivot = cf(0, -0.3, 0.3) } }
+		),
+		P(
+			"TailTip",
+			"LowerTorso",
+			"Block",
+			v3(0.4, 0.1, 0.4),
+			cf(0, -0.3, 1.7) * CFrame.Angles(0, rad(45), 0),
+			EMBER_RED,
+			{ anim = { kind = "swing", axis = "Y", amp = 18, speed = 3, pivot = cf(0, -0.3, 0.3) } }
+		),
+	},
+	fx = { { on = "Flame", kind = "flame", color = FIRE, rate = 5, size = 0.5 } },
+	light = FLAME,
+}
+
+CreatureSpecs.caddie_gus = { -- Ember Newt (C): a newt with a tail lantern that breathes tiny flame puffs
+	skin = rgb(255, 150, 70),
+	outfit = outfit({ top = rgb(255, 130, 50), waist = rgb(200, 90, 40), arms = rgb(255, 150, 70), legs = rgb(200, 90, 40), feet = rgb(150, 70, 30) }),
+	props = {
+		P("Hood", "Head", "Block", v3(1.45, 0.55, 1.55), cf(0, 0.5, 0.05), rgb(255, 120, 45)),
+		P("EyeL", "Head", "Ball", v3(0.4, 0.4, 0.4), cf(-0.4, 0.8, -0.3), rgb(255, 245, 160)),
+		P("EyeR", "Head", "Ball", v3(0.4, 0.4, 0.4), cf(0.4, 0.8, -0.3), rgb(255, 245, 160)),
+		P("Snout", "Head", "Block", v3(0.85, 0.4, 0.8), cf(0, -0.1, -0.85), rgb(255, 120, 45)),
+		P("Spots", "UpperTorso", "Block", v3(1.5, 0.12, 1.3), cf(0, 0.8, 0.05), rgb(120, 40, 30)),
+		P(
+			"Tail",
+			"LowerTorso",
+			"Block",
+			v3(0.45, 0.35, 2.0),
+			cf(0, -0.4, 1.4),
+			rgb(255, 130, 50),
+			{ anim = { kind = "swing", axis = "Y", amp = 14, speed = 2.6, pivot = cf(0, -0.4, 0.4) } }
+		),
+		P(
+			"Lantern",
+			"LowerTorso",
+			"Ball",
+			v3(0.6, 0.6, 0.6),
+			cf(0, -0.4, 2.6),
+			FLAME,
+			{ neon = true, anim = { kind = "swing", axis = "Y", amp = 14, speed = 2.6, pivot = cf(0, -0.4, 0.4) } }
+		),
+		P(
+			"LanternCap",
+			"LowerTorso",
+			"Block",
+			v3(0.5, 0.1, 0.5),
+			cf(0, -0.05, 2.6),
+			rgb(70, 50, 40),
+			{ anim = { kind = "swing", axis = "Y", amp = 14, speed = 2.6, pivot = cf(0, -0.4, 0.4) } }
+		),
+	},
+	fx = { { on = "Snout", kind = "puff", color = FIRE, rate = 5, size = 0.7 } }, -- tiny dragon-breath puffs
+}
+
+CreatureSpecs.bookling = { -- Bookling (C): a spellbook that chomps
+	skin = rgb(200, 170, 140),
+	outfit = outfit({ top = rgb(110, 60, 150), waist = rgb(80, 40, 110), arms = rgb(110, 60, 150), legs = rgb(80, 40, 110), feet = rgb(60, 30, 80) }),
+	props = {
+		P("BookSpine", "UpperTorso", "Block", v3(1.9, 2.2, 0.3), cf(0, 0.1, -0.78), rgb(120, 40, 50)),
+		P("Pages", "UpperTorso", "Block", v3(1.7, 0.2, 1.2), cf(0, 0.0, -1.35), rgb(255, 245, 215)),
+		P(
+			"CoverTop",
+			"UpperTorso",
+			"Block",
+			v3(1.9, 0.3, 1.6),
+			cf(0, 0.25, -1.55),
+			rgb(130, 50, 160),
+			{ anim = { kind = "swing", axis = "X", amp = 16, speed = 3.2, pivot = cf(0, 0.2, -0.85) } }
+		),
+		P(
+			"CoverBottom",
+			"UpperTorso",
+			"Block",
+			v3(1.9, 0.3, 1.6),
+			cf(0, -0.3, -1.55),
+			rgb(130, 50, 160),
+			{ anim = { kind = "swing", axis = "X", amp = -16, speed = 3.2, pivot = cf(0, -0.25, -0.85) } }
+		),
+		P(
+			"TeethTop",
+			"UpperTorso",
+			"Block",
+			v3(1.5, 0.2, 0.25),
+			cf(0, 0.05, -2.2),
+			rgb(255, 255, 255),
+			{ anim = { kind = "swing", axis = "X", amp = 16, speed = 3.2, pivot = cf(0, 0.2, -0.85) } }
+		),
+		P(
+			"TeethBottom",
+			"UpperTorso",
+			"Block",
+			v3(1.5, 0.2, 0.25),
+			cf(0, -0.1, -2.2),
+			rgb(255, 255, 255),
+			{ anim = { kind = "swing", axis = "X", amp = -16, speed = 3.2, pivot = cf(0, -0.25, -0.85) } }
+		),
+		P(
+			"EyeL",
+			"UpperTorso",
+			"Ball",
+			v3(0.4, 0.4, 0.3),
+			cf(-0.45, 0.45, -2.0),
+			rgb(255, 255, 255),
+			{ anim = { kind = "swing", axis = "X", amp = 16, speed = 3.2, pivot = cf(0, 0.2, -0.85) } }
+		),
+		P(
+			"EyeR",
+			"UpperTorso",
+			"Ball",
+			v3(0.4, 0.4, 0.3),
+			cf(0.45, 0.45, -2.0),
+			rgb(255, 255, 255),
+			{ anim = { kind = "swing", axis = "X", amp = 16, speed = 3.2, pivot = cf(0, 0.2, -0.85) } }
+		),
+		P("Rune", "UpperTorso", "Disc", v3(0.5, 0.5, 0.08), cf(0, 0.1, -0.95), FLAME, { neon = true }),
+	},
+}
+
+CreatureSpecs.polo_pro_penny = { -- Ember Owl (R): burning quill, big eyes, flapping wings
+	skin = rgb(190, 140, 90),
+	outfit = outfit({ top = rgb(150, 100, 60), waist = rgb(120, 80, 50), arms = rgb(150, 100, 60), legs = rgb(120, 80, 50), feet = rgb(255, 170, 60) }),
+	props = {
+		P("Cap", "Head", "Ball", v3(1.75, 1.5, 1.75), cf(0, 0.25, 0.05), rgb(150, 100, 60)),
+		P("TuftL", "Head", "Block", v3(0.25, 0.6, 0.25), cf(-0.6, 0.95, 0) * CFrame.Angles(0, 0, rad(18)), rgb(110, 70, 40)),
+		P("TuftR", "Head", "Block", v3(0.25, 0.6, 0.25), cf(0.6, 0.95, 0) * CFrame.Angles(0, 0, rad(-18)), rgb(110, 70, 40)),
+		P("EyeL", "Head", "Disc", v3(0.6, 0.6, 0.1), cf(-0.35, 0.2, -0.82), rgb(255, 225, 90)),
+		P("EyeR", "Head", "Disc", v3(0.6, 0.6, 0.1), cf(0.35, 0.2, -0.82), rgb(255, 225, 90)),
+		P("PupilL", "Head", "Disc", v3(0.28, 0.28, 0.1), cf(-0.35, 0.2, -0.87), rgb(20, 15, 15)),
+		P("PupilR", "Head", "Disc", v3(0.28, 0.28, 0.1), cf(0.35, 0.2, -0.87), rgb(20, 15, 15)),
+		P("Beak", "Head", "Block", v3(0.3, 0.35, 0.4), cf(0, -0.1, -0.9), rgb(255, 170, 60)),
+		P(
+			"WingL",
+			"UpperTorso",
+			"Block",
+			v3(0.2, 1.9, 1.2),
+			cf(-1.4, -0.1, 0.2),
+			rgb(120, 80, 50),
+			{ anim = { kind = "swing", axis = "Z", amp = 10, speed = 3, pivot = cf(-1.2, 0.8, 0) } }
+		),
+		P(
+			"WingR",
+			"UpperTorso",
+			"Block",
+			v3(0.2, 1.9, 1.2),
+			cf(1.4, -0.1, 0.2),
+			rgb(120, 80, 50),
+			{ anim = { kind = "swing", axis = "Z", amp = -10, speed = 3, pivot = cf(1.2, 0.8, 0) } }
+		),
+		P(
+			"Quill",
+			"RightHand",
+			"Cylinder",
+			v3(0.1, 1.8, 0.1),
+			cf(0, 0.2, -0.5) * CFrame.Angles(rad(30), 0, 0),
+			rgb(255, 245, 225),
+			{ anim = { kind = "swing", axis = "X", amp = 18, speed = 2.4 } }
+		),
+		P("QuillFlame", "RightHand", "Ball", v3(0.35, 0.6, 0.35), cf(0, 1.0, -0.95), FIRE, { neon = true, anim = { kind = "swing", axis = "X", amp = 18, speed = 2.4 } }),
+	},
+	fx = { { on = "QuillFlame", kind = "flame", color = FIRE, rate = 5, size = 0.5 } },
+}
+
+CreatureSpecs.chef_pierre = { -- Fire Apprentice (R): oversized hat, flames from both hands
+	skin = SKIN,
+	outfit = outfit({ top = rgb(210, 60, 50), waist = rgb(255, 200, 70), arms = rgb(210, 60, 50), legs = rgb(150, 40, 40), feet = rgb(90, 30, 30) }),
+	props = {
+		P("Brim", "Head", "Cylinder", v3(3.0, 0.12, 3.0), cf(0, 0.5, 0), rgb(150, 40, 40)),
+		P("Hat1", "Head", "Cylinder", v3(1.8, 0.8, 1.8), cf(0, 0.95, 0), rgb(170, 45, 45)),
+		P("Hat2", "Head", "Cylinder", v3(1.25, 0.8, 1.25), cf(0.05, 1.7, 0), rgb(170, 45, 45)),
+		P("Hat3", "Head", "Cylinder", v3(0.7, 0.8, 0.7), cf(0.2, 2.45, 0), rgb(170, 45, 45), { anim = { kind = "swing", axis = "Z", amp = 6, speed = 2, pivot = cf(0, 1.5, 0) } }),
+		P("HatBand", "Head", "Cylinder", v3(1.9, 0.2, 1.9), cf(0, 0.65, 0), rgb(255, 200, 70)),
+		P("Robe", "LowerTorso", "Block", v3(1.95, 1.7, 1.2), cf(0, -1.2, 0), rgb(190, 50, 45)),
+		P("FireL", "LeftHand", "Ball", v3(0.55, 0.7, 0.55), cf(0, -0.5, -0.1), FIRE, { neon = true, anim = { kind = "pulse", amp = 0.2, speed = 6 } }),
+		P("FireR", "RightHand", "Ball", v3(0.55, 0.7, 0.55), cf(0, -0.5, -0.1), FIRE, { neon = true, anim = { kind = "pulse", amp = 0.2, speed = 6, phase = 2 } }),
+	},
+	fx = { { on = "FireL", kind = "flame", color = FIRE, rate = 6, size = 0.7 }, { on = "FireR", kind = "flame", color = FIRE, rate = 6, size = 0.7 } },
+}
+
+CreatureSpecs.bodyguard_boris = { -- Rune Golem (E): stone giant with glowing runes
+	skin = STONE,
+	outfit = outfit({ top = rgb(120, 118, 130), waist = rgb(100, 98, 110), arms = STONE, legs = rgb(100, 98, 110), feet = rgb(90, 88, 100) }),
+	props = {
+		P("TorsoRock", "UpperTorso", "Block", v3(2.5, 1.9, 1.6), cf(0, 0.05, 0), rgb(135, 132, 145)),
+		P("HeadRock", "Head", "Block", v3(1.6, 1.5, 1.5), cf(0, 0.1, 0), rgb(150, 147, 160)),
+		P("EyeL", "Head", "Block", v3(0.35, 0.18, 0.1), cf(-0.35, 0.2, -0.77), rgb(255, 180, 60), { neon = true }),
+		P("EyeR", "Head", "Block", v3(0.35, 0.18, 0.1), cf(0.35, 0.2, -0.77), rgb(255, 180, 60), { neon = true }),
+		P("ShoulderL", "LeftUpperArm", "Block", v3(1.5, 1.2, 1.5), cf(0, 0.35, 0), rgb(120, 118, 130)),
+		P("ShoulderR", "RightUpperArm", "Block", v3(1.5, 1.2, 1.5), cf(0, 0.35, 0), rgb(120, 118, 130)),
+		P("FistL", "LeftHand", "Block", v3(1.15, 1.15, 1.15), cf(0, -0.3, 0), rgb(135, 132, 145), { anim = { kind = "bob", amp = 0.08, speed = 2 } }),
+		P("FistR", "RightHand", "Block", v3(1.15, 1.15, 1.15), cf(0, -0.3, 0), rgb(135, 132, 145), { anim = { kind = "bob", amp = 0.08, speed = 2, phase = 3 } }),
+		P("ChestRune", "UpperTorso", "Disc", v3(0.95, 0.95, 0.1), cf(0, 0.15, -0.85), FIRE, { neon = true, anim = { kind = "pulse", amp = 0.12, speed = 2.5 } }),
+		P("RuneArmL", "LeftLowerArm", "Block", v3(0.15, 0.7, 0.3), cf(-0.4, 0, -0.1), rgb(90, 220, 255), { neon = true }),
+		P("RuneArmR", "RightLowerArm", "Block", v3(0.15, 0.7, 0.3), cf(0.4, 0, -0.1), rgb(90, 220, 255), { neon = true }),
+		P("BackCrystal", "UpperTorso", "Block", v3(0.7, 1.4, 0.7), cf(0, 0.6, 1.0) * CFrame.Angles(0, rad(45), 0), FIRE, { neon = true, trans = 0.2 }),
+	},
+	fx = { { on = "ChestRune", kind = "spark", color = FIRE, rate = 5, aura = true } },
+	light = FIRE,
+	halo = FIRE,
+}
+
+CreatureSpecs.hedge_fund_hank = { -- Phoenix (E): a fire bird with wings of flame
+	hideBody = true,
+	skin = EMBER_RED,
+	props = {
+		P("Body", "LowerTorso", "Ball", v3(1.9, 1.7, 2.5), cf(0, 0.2, 0.1), rgb(235, 70, 40)),
+		P("Breast", "LowerTorso", "Ball", v3(1.4, 1.3, 1.6), cf(0, 0.0, -0.5), rgb(255, 170, 60)),
+		P("Head", "LowerTorso", "Ball", v3(1.1, 1.1, 1.1), cf(0, 1.25, -1.2), rgb(240, 80, 45)),
+		P("Beak", "LowerTorso", "Block", v3(0.3, 0.3, 0.65), cf(0, 1.15, -1.9), rgb(255, 215, 80)),
+		P("EyeL", "LowerTorso", "Ball", v3(0.2, 0.2, 0.2), cf(-0.35, 1.4, -1.65), rgb(20, 15, 15)),
+		P("EyeR", "LowerTorso", "Ball", v3(0.2, 0.2, 0.2), cf(0.35, 1.4, -1.65), rgb(20, 15, 15)),
+		P("Crest1", "LowerTorso", "Block", v3(0.15, 0.8, 0.3), cf(0, 2.05, -1.1), FLAME, { neon = true, anim = { kind = "swing", axis = "X", amp = 10, speed = 5 } }),
+		P(
+			"Crest2",
+			"LowerTorso",
+			"Block",
+			v3(0.15, 0.6, 0.3),
+			cf(0, 1.95, -0.8) * CFrame.Angles(rad(25), 0, 0),
+			FIRE,
+			{ neon = true, anim = { kind = "swing", axis = "X", amp = 10, speed = 5, phase = 1 } }
+		),
+		P("LegL", "LowerTorso", "Block", v3(0.22, 2.2, 0.22), cf(-0.5, -1.55, -0.1), rgb(255, 215, 80)),
+		P("LegR", "LowerTorso", "Block", v3(0.22, 2.2, 0.22), cf(0.5, -1.55, -0.1), rgb(255, 215, 80)),
+		P(
+			"WingL",
+			"LowerTorso",
+			"Block",
+			v3(2.6, 0.12, 1.9),
+			cf(-2.2, 0.7, 0.2),
+			rgb(255, 100, 40),
+			{ neon = true, trans = 0.1, anim = { kind = "swing", axis = "Z", amp = 28, speed = 3.4, pivot = cf(-0.9, 0.7, 0) } }
+		),
+		P(
+			"WingTipL",
+			"LowerTorso",
+			"Block",
+			v3(2.2, 0.1, 1.5),
+			cf(-4.3, 0.7, 0.3),
+			FLAME,
+			{ neon = true, trans = 0.3, anim = { kind = "swing", axis = "Z", amp = 28, speed = 3.4, pivot = cf(-0.9, 0.7, 0) } }
+		),
+		P(
+			"WingR",
+			"LowerTorso",
+			"Block",
+			v3(2.6, 0.12, 1.9),
+			cf(2.2, 0.7, 0.2),
+			rgb(255, 100, 40),
+			{ neon = true, trans = 0.1, anim = { kind = "swing", axis = "Z", amp = -28, speed = 3.4, pivot = cf(0.9, 0.7, 0) } }
+		),
+		P(
+			"WingTipR",
+			"LowerTorso",
+			"Block",
+			v3(2.2, 0.1, 1.5),
+			cf(4.3, 0.7, 0.3),
+			FLAME,
+			{ neon = true, trans = 0.3, anim = { kind = "swing", axis = "Z", amp = -28, speed = 3.4, pivot = cf(0.9, 0.7, 0) } }
+		),
+		P(
+			"TailA",
+			"LowerTorso",
+			"Block",
+			v3(0.5, 0.1, 2.4),
+			cf(0, 0.1, 2.2),
+			rgb(255, 120, 40),
+			{ neon = true, trans = 0.1, anim = { kind = "swing", axis = "Y", amp = 12, speed = 2.2, pivot = cf(0, 0.1, 1.0) } }
+		),
+		P(
+			"TailB",
+			"LowerTorso",
+			"Block",
+			v3(0.5, 0.1, 2.2),
+			cf(-0.5, 0.1, 2.1) * CFrame.Angles(0, rad(-12), 0),
+			FLAME,
+			{ neon = true, trans = 0.2, anim = { kind = "swing", axis = "Y", amp = 12, speed = 2.2, phase = 1, pivot = cf(0, 0.1, 1.0) } }
+		),
+		P(
+			"TailC",
+			"LowerTorso",
+			"Block",
+			v3(0.5, 0.1, 2.2),
+			cf(0.5, 0.1, 2.1) * CFrame.Angles(0, rad(12), 0),
+			FLAME,
+			{ neon = true, trans = 0.2, anim = { kind = "swing", axis = "Y", amp = 12, speed = 2.2, phase = 2, pivot = cf(0, 0.1, 1.0) } }
+		),
+	},
+	fx = {
+		{ on = "WingTipL", kind = "flame", color = FIRE, rate = 8, size = 1.1, aura = true },
+		{ on = "WingTipR", kind = "flame", color = FIRE, rate = 8, size = 1.1, aura = true },
+		{ on = "Body", kind = "spark", color = FLAME, rate = 5, aura = true },
+	},
+	light = FIRE,
+}
+
+CreatureSpecs.oil_baron_oswald = { -- Flame Archmage (L): Ignis's champion; staff spells, orbiting runes
+	scale = 1.3,
+	skin = SKIN,
+	outfit = outfit({ top = ROBE, waist = rgb(255, 200, 70), arms = ROBE, legs = rgb(120, 30, 30), feet = rgb(90, 25, 25) }),
+	props = {
+		P("Brim", "Head", "Cylinder", v3(3.1, 0.14, 3.1), cf(0, 0.5, 0), rgb(120, 28, 30)),
+		P("Hat1", "Head", "Cylinder", v3(1.9, 0.9, 1.9), cf(0, 1.0, 0), rgb(150, 36, 36)),
+		P("Hat2", "Head", "Cylinder", v3(1.35, 0.9, 1.35), cf(0, 1.85, 0), rgb(150, 36, 36)),
+		P("Hat3", "Head", "Cylinder", v3(0.8, 0.9, 0.8), cf(0.1, 2.7, 0), rgb(150, 36, 36)),
+		P("HatBand", "Head", "Cylinder", v3(2.0, 0.22, 2.0), cf(0, 0.68, 0), rgb(255, 200, 70), { mat = METAL }),
+		P("HatFlame", "Head", "Ball", v3(0.5, 0.9, 0.5), cf(0.1, 3.55, 0), FLAME, { neon = true, anim = { kind = "pulse", amp = 0.2, speed = 6 } }),
+		P("Beard", "Head", "Block", v3(1.1, 1.0, 0.4), cf(0, -0.75, -0.5), rgb(245, 245, 250)),
+		P("Skirt", "LowerTorso", "Block", v3(2.2, 2.7, 1.4), cf(0, -1.7, 0), rgb(140, 32, 32)),
+		P("Mantle", "UpperTorso", "Block", v3(2.7, 0.7, 1.7), cf(0, 0.85, 0), rgb(255, 200, 70), { mat = METAL }),
+		P("MantleBadge", "UpperTorso", "Disc", v3(0.7, 0.7, 0.1), cf(0, 0.1, -0.7), rgb(255, 200, 70), { neon = true }),
+		P("StaffShaft", "RightHand", "Cylinder", v3(0.24, 5.4, 0.24), cf(0, 1.9, -0.45), rgb(90, 55, 35), { anim = { kind = "swing", axis = "X", amp = 8, speed = 1.4 } }),
+		P(
+			"StaffRing",
+			"RightHand",
+			"Cylinder",
+			v3(1.4, 0.1, 1.4),
+			cf(0, 4.6, -0.45),
+			rgb(255, 200, 70),
+			{ neon = true, anim = { kind = "swing", axis = "X", amp = 8, speed = 1.4 } }
+		),
+		P("StaffOrb", "RightHand", "Ball", v3(1.0, 1.0, 1.0), cf(0, 4.9, -0.45), FIRE, { neon = true, anim = { kind = "pulse", amp = 0.15, speed = 3 } }),
+		P("RuneA", "UpperTorso", "Block", v3(0.5, 0.5, 0.12), cf(2.4, 0.4, 0), FLAME, { neon = true, anim = { kind = "spin", axis = "Y", amp = 70, pivot = cf(0, 0, 0) } }),
+		P("RuneB", "UpperTorso", "Block", v3(0.5, 0.5, 0.12), cf(-1.2, 1.4, 2.1), FLAME, { neon = true, anim = { kind = "spin", axis = "Y", amp = 70, pivot = cf(0, 0, 0) } }),
+		P("RuneC", "UpperTorso", "Block", v3(0.5, 0.5, 0.12), cf(-1.2, -0.6, -2.1), FLAME, { neon = true, anim = { kind = "spin", axis = "Y", amp = 70, pivot = cf(0, 0, 0) } }),
+	},
+	fx = {
+		{ on = "StaffOrb", kind = "flame", color = FIRE, rate = 14, size = 1.2, aura = true },
+		{ on = "StaffOrb", kind = "spark", color = FLAME, rate = 8, aura = true },
+	},
+	light = FIRE,
+	halo = FIRE,
+}
+
+-- Ignis the Pyromancer (S): the Ember Academy boss; huge hat, staff, a spell circle at his feet.
+CreatureSpecs.the_trillionaire = {
+	scale = 2.5,
+	skin = rgb(255, 214, 170),
+	outfit = outfit({ top = rgb(110, 25, 40), waist = rgb(255, 190, 60), arms = rgb(110, 25, 40), legs = rgb(80, 20, 30), feet = rgb(60, 15, 20) }),
+	props = {
+		P("Brim", "Head", "Cylinder", v3(3.6, 0.15, 3.6), cf(0, 0.5, 0), rgb(90, 20, 35)),
+		P("Hat1", "Head", "Cylinder", v3(2.1, 1.0, 2.1), cf(0, 1.05, 0), rgb(120, 28, 42)),
+		P("Hat2", "Head", "Cylinder", v3(1.65, 1.0, 1.65), cf(0, 2.0, 0), rgb(120, 28, 42)),
+		P("Hat3", "Head", "Cylinder", v3(1.2, 1.0, 1.2), cf(0.1, 2.95, 0), rgb(120, 28, 42)),
+		P("Hat4", "Head", "Cylinder", v3(0.75, 1.0, 0.75), cf(0.25, 3.9, 0), rgb(120, 28, 42)),
+		P("HatBand", "Head", "Cylinder", v3(2.25, 0.25, 2.25), cf(0, 0.7, 0), rgb(255, 200, 70), { mat = METAL }),
+		P("HatGem", "Head", "Ball", v3(0.5, 0.5, 0.4), cf(0, 0.7, -1.1), FIRE, { neon = true }),
+		P("HatFlame", "Head", "Ball", v3(0.6, 1.1, 0.6), cf(0.3, 4.85, 0), FLAME, { neon = true, anim = { kind = "pulse", amp = 0.22, speed = 6 } }),
+		P("EyeL", "Head", "Disc", v3(0.25, 0.25, 0.08), cf(-0.3, 0.1, -0.62), FLAME, { neon = true }),
+		P("EyeR", "Head", "Disc", v3(0.25, 0.25, 0.08), cf(0.3, 0.1, -0.62), FLAME, { neon = true }),
+		P("BeardFlame", "Head", "Block", v3(1.0, 1.2, 0.35), cf(0, -0.8, -0.5), FIRE, { neon = true, trans = 0.15, anim = { kind = "pulse", amp = 0.1, speed = 4 } }),
+		P("Robe", "LowerTorso", "Block", v3(2.3, 2.8, 1.5), cf(0, -1.7, 0), rgb(90, 20, 32)),
+		P("RobeHem", "LowerTorso", "Block", v3(2.4, 0.3, 1.6), cf(0, -3.0, 0), rgb(255, 190, 60), { neon = true }),
+		P("SpikeL", "LeftUpperArm", "Block", v3(0.3, 1.0, 0.3), cf(-0.3, 0.9, 0) * CFrame.Angles(0, 0, rad(25)), rgb(255, 190, 60), { mat = METAL }),
+		P("SpikeR", "RightUpperArm", "Block", v3(0.3, 1.0, 0.3), cf(0.3, 0.9, 0) * CFrame.Angles(0, 0, rad(-25)), rgb(255, 190, 60), { mat = METAL }),
+		P("Mantle", "UpperTorso", "Block", v3(2.9, 0.8, 1.8), cf(0, 0.85, 0), rgb(255, 190, 60), { mat = METAL }),
+		P(
+			"Cape",
+			"UpperTorso",
+			"Block",
+			v3(2.2, 3.4, 0.1),
+			cf(0, -0.9, 0.85),
+			rgb(130, 25, 40),
+			{ anim = { kind = "swing", axis = "X", amp = 6, speed = 1.5, pivot = cf(0, 0.8, 0.85) } }
+		),
+		P("StaffShaft", "RightHand", "Cylinder", v3(0.28, 6.4, 0.28), cf(0, 2.4, -0.5), rgb(70, 40, 30), { anim = { kind = "swing", axis = "X", amp = 10, speed = 1.2 } }),
+		P(
+			"StaffClawA",
+			"RightHand",
+			"Block",
+			v3(0.2, 1.1, 0.2),
+			cf(0.35, 5.7, -0.5) * CFrame.Angles(0, 0, rad(-20)),
+			rgb(255, 190, 60),
+			{ mat = METAL, anim = { kind = "swing", axis = "X", amp = 10, speed = 1.2 } }
+		),
+		P(
+			"StaffClawB",
+			"RightHand",
+			"Block",
+			v3(0.2, 1.1, 0.2),
+			cf(-0.35, 5.7, -0.5) * CFrame.Angles(0, 0, rad(20)),
+			rgb(255, 190, 60),
+			{ mat = METAL, anim = { kind = "swing", axis = "X", amp = 10, speed = 1.2 } }
+		),
+		P("StaffOrb", "RightHand", "Ball", v3(1.3, 1.3, 1.3), cf(0, 5.9, -0.5), FIRE, { neon = true, anim = { kind = "pulse", amp = 0.15, speed = 2.6 } }),
+		P("StaffCore", "RightHand", "Ball", v3(0.7, 0.7, 0.7), cf(0, 5.9, -0.5), FLAME, { neon = true, anim = { kind = "pulse", amp = 0.25, speed = 5 } }),
+		P("OrbitA", "UpperTorso", "Ball", v3(0.6, 0.6, 0.6), cf(2.6, 0.5, 0), FIRE, { neon = true, anim = { kind = "spin", axis = "Y", amp = 60, pivot = cf(0, 0, 0) } }),
+		P("OrbitB", "UpperTorso", "Ball", v3(0.6, 0.6, 0.6), cf(-1.3, 0.5, 2.25), FIRE, { neon = true, anim = { kind = "spin", axis = "Y", amp = 60, pivot = cf(0, 0, 0) } }),
+		P("OrbitC", "UpperTorso", "Ball", v3(0.6, 0.6, 0.6), cf(-1.3, 0.5, -2.25), FIRE, { neon = true, anim = { kind = "spin", axis = "Y", amp = 60, pivot = cf(0, 0, 0) } }),
+		-- the spell circle at his feet: two counter-turning rings + four runes
+		P("CircleOuter", "LowerTorso", "Cylinder", v3(6.6, 0.07, 6.6), cf(0, -3.15, 0), FIRE, { neon = true, trans = 0.45, anim = { kind = "spin", axis = "Y", amp = 25 } }),
+		P("CircleInner", "LowerTorso", "Cylinder", v3(4.4, 0.08, 4.4), cf(0, -3.12, 0), FLAME, { neon = true, trans = 0.4, anim = { kind = "spin", axis = "Y", amp = -40 } }),
+		P("CircleRuneA", "LowerTorso", "Block", v3(0.7, 0.08, 0.7), cf(3.0, -3.1, 0), FLAME, { neon = true, anim = { kind = "spin", axis = "Y", amp = 25 } }),
+		P("CircleRuneB", "LowerTorso", "Block", v3(0.7, 0.08, 0.7), cf(-3.0, -3.1, 0), FLAME, { neon = true, anim = { kind = "spin", axis = "Y", amp = 25 } }),
+		P("CircleRuneC", "LowerTorso", "Block", v3(0.7, 0.08, 0.7), cf(0, -3.1, 3.0), FLAME, { neon = true, anim = { kind = "spin", axis = "Y", amp = 25 } }),
+		P("CircleRuneD", "LowerTorso", "Block", v3(0.7, 0.08, 0.7), cf(0, -3.1, -3.0), FLAME, { neon = true, anim = { kind = "spin", axis = "Y", amp = 25 } }),
+	},
+	fx = {
+		{ on = "StaffOrb", kind = "flame", color = FIRE, rate = 18, size = 1.6, aura = true },
+		{ on = "StaffCore", kind = "spark", color = FLAME, rate = 12, aura = true },
+		{ on = "CircleOuter", kind = "flame", color = FIRE, rate = 8, size = 0.8, aura = true },
+		{ on = "HatFlame", kind = "smoke", color = rgb(90, 60, 60), rate = 3, aura = true },
+	},
+	light = FIRE,
+}
+
 return CreatureSpecs

@@ -108,6 +108,15 @@ local SIGNATURE = {
 	pearl_seahorse = { "Bubble", "TailPearl" },
 	tide_warden = { "TridentShaft", "Coral1" },
 	aquaris = { "Head", "Mouth", "Seg10" },
+	butler_barnaby = { "Candle", "Flame" },
+	caddie_gus = { "Snout", "Lantern" },
+	bookling = { "CoverTop", "TeethTop" },
+	polo_pro_penny = { "Quill", "WingL" },
+	chef_pierre = { "Hat3", "FireL", "FireR" },
+	bodyguard_boris = { "ChestRune", "FistL" },
+	hedge_fund_hank = { "WingL", "WingR", "TailA" },
+	oil_baron_oswald = { "StaffOrb", "RuneA" },
+	the_trillionaire = { "StaffOrb", "CircleOuter", "HatFlame" },
 }
 
 local function parts(model: Instance): number
@@ -202,8 +211,8 @@ local function models_()
 	info("creatures with a spec", count)
 end
 
-local function same()
-	local zone = ZoneArea.new(workspace.Zones.MainStreet)
+local function sameFor(zoneName: string)
+	local zone = ZoneArea.new(workspace.Zones[zoneName])
 	local wanderers = waitUntil(90, function()
 		local list = {}
 		for _, npc in zone.npcFolder:GetChildren() do
@@ -213,7 +222,7 @@ local function same()
 		end
 		return if #list >= 2 then list else nil
 	end)
-	expect("wanderers spawn as their creature (LookId set)", wanderers ~= nil)
+	expect(zoneName .. " wanderers spawn as their creature (LookId set)", wanderers ~= nil)
 	if not wanderers then
 		return
 	end
@@ -266,14 +275,10 @@ local function same()
 	expect("pad = same parts + colours", signature(npc) == sigBefore)
 	local padWant = math.min(models[id]:GetAttribute("CreatureScale") or 1, 1.6)
 	expect("pad scale capped at 1.6", math.abs((npc:GetAttribute("CreatureScale") or 0) - padWant) < 0.01, npc:GetAttribute("CreatureScale"))
+end
 
-	-- the rebuild path (saved creature on a pad after rejoin): same call WorkerInventory.spawnOnStation makes
-	local mystery = ServerStorage.NPCModels.MysteryNPC:Clone()
-	mystery.Parent = workspace
-	mystery:PivotTo(CFrame.new(0, 600, 0))
-	WorkerAppearance.apply(mystery, id)
-	expect("rebuilt-on-pad = same parts + colours", signature(mystery) == signature(models[id]))
-	mystery:Destroy()
+local function swapAll()
+	-- the rebuild path (saved creature on a pad after rejoin) and the reveal swap: the call WorkerAppearance.apply makes
 	for rid, spec in CreatureSpecs do
 		if type(spec) == "table" then
 			local m = ServerStorage.NPCModels.MysteryNPC:Clone()
@@ -377,7 +382,22 @@ LogService.MessageOut:Connect(function(message, kind)
 end)
 
 scenario("models", models_)
-scenario("same", same)
+local ZoneProgress, CashService = mod("ZoneProgress"), mod("CashService")
+CashService.add(A, 2000000)
+for _, z in { "SunkenKingdom", "BillionaireHills" } do
+	local ok, msg = ZoneProgress.purchase(A, z)
+	info("unlock " .. z .. " (in-memory save)", tostring(ok) .. " " .. tostring(msg))
+end
+scenario("same MainStreet", function()
+	sameFor("MainStreet")
+end)
+scenario("same SunkenKingdom", function()
+	sameFor("SunkenKingdom")
+end)
+scenario("same BillionaireHills", function()
+	sameFor("BillionaireHills")
+end)
+scenario("swap", swapAll)
 scenario("odds", odds)
 scenario("parts", partsBudget)
 section = "errors"
