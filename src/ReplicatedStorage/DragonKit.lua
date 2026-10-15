@@ -21,6 +21,7 @@ export type Colors = {
 	belly: Color3,
 	bone: Color3,
 	membrane: Color3,
+	wing: Color3, -- solid wing / fin membrane
 	edge: Color3,
 	gold: Color3,
 	eye: Color3,
@@ -37,6 +38,7 @@ DragonKit.WATER = {
 	belly = rgb(190, 245, 255),
 	bone = rgb(16, 60, 150),
 	membrane = rgb(130, 238, 252),
+	wing = rgb(40, 150, 215),
 	edge = rgb(70, 235, 255),
 	gold = rgb(255, 200, 60),
 	eye = rgb(120, 255, 255),
@@ -49,6 +51,7 @@ DragonKit.EMBER = { -- the pup: warm and friendly
 	belly = rgb(255, 232, 190),
 	bone = rgb(170, 60, 30),
 	membrane = rgb(255, 196, 120),
+	wing = rgb(226, 118, 52),
 	edge = rgb(255, 150, 50),
 	gold = rgb(255, 214, 80),
 	eye = rgb(255, 255, 160),
@@ -96,34 +99,56 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 		local center = a + along * 0.55
 		add(n, "Block", v3(math.max((cc - b).Magnitude * 0.5, 0.05), 0.04 * u + 0.02, along.Magnitude * 0.9), CFrame.lookAt(center, center + along, normal), color, extra)
 	end
-	local function spikeUp(n: string, at: Vector3, h: number, w: number, color: Color3, tilt: number?)
-		add(n, "Wedge", S(w, h, w * 1.3), cf(at) * CFrame.Angles(rad(tilt or 0), 0, 0), color, { mat = METAL })
+	local function spikeUp(n: string, at: Vector3, h: number, w: number, color: Color3, tilt: number?, anim: any?)
+		add(n, "Wedge", S(w, h, w * 1.3), cf(at) * CFrame.Angles(rad(tilt or 0), 0, 0), color, { mat = METAL, anim = anim })
 	end
 	local function sway(amp: number, speed: number, phase: number, pivot: Vector3): any
 		return { kind = "swing", axis = "Y", amp = amp, speed = speed, phase = phase, pivot = cf(pivot) }
 	end
 
-	-- BODY: four overlapping balls, light belly plates underneath, spikes along the back
-	local bodyZ = { 0.9, 0.25, -0.4, -0.95 }
-	local bodySize = { v3(1.7, 1.55, 1.5), v3(1.9, 1.75, 1.5), v3(1.9, 1.75, 1.4), v3(1.6, 1.5, 1.2) }
+	-- a tapered cylinder from rig-space point a to b, d0 -> d1 thick (design units); over = how far it overlaps the next piece
+	local function seg(n: string, a: Vector3, b: Vector3, d0: number, d1: number, color: Color3, extra: { [string]: any }?, over: number?)
+		local len = (b - a).Magnitude * (over or 1.3)
+		local d = (d0 + d1) / 2 * u
+		add(n, "Cylinder", v3(d, len, d), CFrame.lookAt((a + b) / 2, b) * CFrame.Angles(rad(90), 0, 0), color, extra)
+	end
+
+	-- BODY: three big overlapping balls (chest, belly, rump), a row of light belly plates underneath, spikes along the back
+	local bodyZ = { 0.95, 0.1, -0.85 }
+	local bodySize = { v3(2.5, 2.5, 2.2), v3(2.8, 2.6, 2.4), v3(2.6, 2.5, 2.1) }
 	for i, z in bodyZ do
-		add("Body" .. i, "Ball", S(bodySize[i].X, bodySize[i].Y, bodySize[i].Z), cf(P(0, 0.05 + (i % 2) * 0.05, z)), if i % 2 == 0 then c.back2 else c.back)
-		add("BellyPlate" .. i, "Block", S(1.05, 0.3, 0.55), cf(P(0, -0.8, z)), c.belly)
-		spikeUp("BackSpike" .. i, P(0, 0.95, z), 0.6, 0.22, c.gold)
+		add("Body" .. i, "Ball", S(bodySize[i].X, bodySize[i].Y, bodySize[i].Z), cf(P(0, 0.3, z)), if i % 2 == 0 then c.back2 else c.back)
 	end
-	add("BellyPlate5", "Block", S(0.9, 0.28, 0.5), cf(P(0, -0.7, 1.45)), c.belly)
+	for i = 1, 7 do
+		local z = 1.5 - (i - 1) * 0.45
+		local w = 1.5 - math.abs(z - 0.1) * 0.35
+		add("BellyPlate" .. i, "Block", S(w, 0.22, 0.5), cf(P(0, -0.92 + math.abs(z - 0.1) * 0.12, z)), c.belly)
+	end
+	for i, z in { 1.3, 0.65, 0, -0.65, -1.25 } do
+		spikeUp("BackSpike" .. i, P(0, 1.45, z), 0.65, 0.24, c.gold)
+	end
 
-	-- NECK: five balls in an S curve (rising, then leaning forward), a gold spike on each
-	local neck = { P(0, 0.6, -1.2), P(0, 1.25, -1.65), P(0, 1.95, -1.85), P(0, 2.65, -2.05), P(0, 3.15, -2.45) }
-	local neckR = { 0.62, 0.56, 0.5, 0.46, 0.44 }
+	-- NECK: three thick tapered cylinders (thick at the shoulders, thinner toward the head), a light strip down the front,
+	-- gold spikes on the back of the neck
+	local neck = { P(0, 0.9, -1.0), P(0, 1.55, -1.65), P(0, 2.15, -2.15), P(0, 2.65, -2.6) }
+	local neckD = { 1.5, 1.25, 1.05, 0.95 }
+	for i = 1, 3 do
+		local an = sway(2 + i, 1.1, i * 0.35, neck[1])
+		seg("Neck" .. i, neck[i], neck[i + 1], neckD[i], neckD[i + 1], if i % 2 == 0 then c.back2 else c.back, { anim = an })
+		local off = D(0, -0.05, -neckD[i] * 0.4)
+		seg("NeckBelly" .. i, neck[i] + off, neck[i + 1] + off, 0.5, 0.45, c.belly, { anim = an }, 1.1)
+	end
 	for i, pos in neck do
-		add("Neck" .. i, "Ball", S(neckR[i] * 2, neckR[i] * 2, neckR[i] * 2), cf(pos), if i % 2 == 0 then c.back2 else c.back, { anim = sway(2 + i, 1.1, i * 0.35, neck[1]) })
-		add("NeckSpike" .. i, "Wedge", S(0.2, 0.5, 0.3), cf(pos + v3(0, neckR[i] * u * 0.95, 0)), c.gold, { mat = METAL, anim = sway(2 + i, 1.1, i * 0.35, neck[1]) })
+		spikeUp("NeckSpike" .. i, pos + D(0, neckD[i] * 0.45, neckD[i] * 0.4), 0.55, 0.22, c.gold, 25)(props[#props] :: any).anim = sway(2 + i, 1.1, i * 0.35, neck[1])
 	end
-	add("NeckBelly", "Block", S(0.5, 2.6, 0.3), cf(P(0, 1.85, -1.55)) * CFrame.Angles(rad(-14), 0, 0), c.belly)
 
-	-- HEAD (neck joint H0 at the end of the neck)
-	local H0 = P(0, 3.1, -2.75)
+	-- HEAD (neck joint H0 at the end of the neck): the Blender head at 1.4x, tilted down, on a short thick neck end
+	local H0 = P(0, 2.75, -2.7)
+	local HS = 1.4
+	local hr = CFrame.Angles(rad(-12), 0, 0)
+	local function hp(x: number, y: number, z: number): Vector3 -- a point in head space
+		return H0 + hr * (D(x, y, z) * HS)
+	end
 	if meshes then
 		local col = {
 			Skull = c.back,
@@ -132,7 +157,7 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			Teeth = { color = rgb(250, 250, 255), skip = not DragonKit.SPIKES_FIXED },
 			Nostrils = c.dark,
 			Horns = { color = c.gold, mat = METAL },
-			CheekFins = { color = c.membrane, neon = true, trans = 0.3 },
+			CheekFins = { color = c.wing, trans = 0.1 },
 			Sockets = c.dark,
 			Eyes = { color = c.eye, neon = true },
 			Crest = { color = c.gold, mat = METAL, skip = not DragonKit.SPIKES_FIXED },
@@ -141,118 +166,144 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			n = "HeadMesh",
 			on = "LowerTorso",
 			model = "DragonHead",
-			at = cf(H0),
-			fit = { axis = "Z", size = 4.3 * u },
+			at = cf(H0) * hr,
+			fit = { axis = "Z", size = 4.3 * u * HS },
 			colors = col,
-			partAnim = { Jaw = { kind = "swing", axis = "X", amp = 11, speed = 1.6, pivot = cf(H0 + v3(0, 0.1 * u, -0.25 * u)) } },
+			partAnim = {
+				Jaw = { kind = "swing", axis = "X", amp = 11, speed = 1.6, pivot = cf(hp(0, 0.1, -0.25)) * hr },
+			},
 		})
 		if not DragonKit.SPIKES_FIXED then
 			for i = 1, 3 do
-				spikeUp("Crest" .. i, H0 + D(0, 1.0, -0.15 + i * 0.4), 0.55 - i * 0.08, 0.2, c.gold)
+				spikeUp("Crest" .. i, hp(0, 1.0, -0.15 + i * 0.4), (0.55 - i * 0.08) * HS, 0.2 * HS, c.gold, -12)
 			end
 		end
 	else
-		add("Head", "Ball", S(1.1, 1.0, 1.2), cf(H0 + D(0, 0.5, -0.5)), c.back)
-		add("Snout", "Block", S(0.72, 0.55, 1.7), cf(H0 + D(0, 0.42, -1.6)), c.back2)
-		add("SnoutTip", "Block", S(0.52, 0.4, 0.4), cf(H0 + D(0, 0.38, -2.55)), c.back2)
+		add("Head", "Ball", S(1.5, 1.4, 1.7), cf(hp(0, 0.5, -0.5)) * hr, c.back)
+		add("Snout", "Block", S(1.0, 0.8, 2.3), cf(hp(0, 0.42, -1.6)) * hr, c.back2)
+		add("SnoutTip", "Block", S(0.72, 0.56, 0.56), cf(hp(0, 0.38, -2.55)) * hr, c.back2)
 		add(
 			"Jaw",
 			"Block",
-			S(0.56, 0.2, 1.9),
-			cf(H0 + D(0, 0.08, -1.45)),
+			S(0.78, 0.28, 2.6),
+			cf(hp(0, 0.08, -1.45)) * hr,
 			c.belly,
-			{ anim = { kind = "swing", axis = "X", amp = 11, speed = 1.6, pivot = cf(H0 + D(0, 0.1, -0.25)) } }
+			{ anim = { kind = "swing", axis = "X", amp = 11, speed = 1.6, pivot = cf(hp(0, 0.1, -0.25)) * hr } }
 		)
 		for _, s in { -1, 1 } do
-			add("Nostril" .. s, "Ball", S(0.12, 0.1, 0.1), cf(H0 + D(s * 0.15, 0.63, -2.72)), c.dark)
-			add("Eye" .. s, "Ball", S(0.3, 0.3, 0.3), cf(H0 + D(s * 0.5, 0.65, -0.85)), c.eye, { neon = true })
-			limb("HornA" .. s, H0 + D(s * 0.33, 1.0, -0.15), H0 + D(s * 0.5, 1.4, 0.7), 0.26, c.gold, { mat = METAL })
-			limb("HornB" .. s, H0 + D(s * 0.5, 1.4, 0.7), H0 + D(s * 0.66, 1.3, 1.65), 0.16, c.gold, { mat = METAL })
-			add("CheekFin" .. s, "Block", S(0.06, 0.6, 0.9), cf(H0 + D(s * 0.7, 0.2, 0.05)) * CFrame.Angles(0, rad(-s * 20), 0), c.membrane, { neon = true, trans = 0.3 })
+			add("Nostril" .. s, "Ball", S(0.17, 0.14, 0.14), cf(hp(s * 0.15, 0.63, -2.72)) * hr, c.dark)
+			add("Eye" .. s, "Ball", S(0.42, 0.42, 0.42), cf(hp(s * 0.5, 0.65, -0.85)) * hr, c.eye, { neon = true })
+			limb("HornA" .. s, hp(s * 0.33, 1.0, -0.15), hp(s * 0.5, 1.4, 0.7), 0.36, c.gold, { mat = METAL })
+			limb("HornB" .. s, hp(s * 0.5, 1.4, 0.7), hp(s * 0.66, 1.3, 1.65), 0.22, c.gold, { mat = METAL })
+			add("CheekFin" .. s, "Block", S(0.08, 0.84, 1.26), cf(hp(s * 0.7, 0.2, 0.05)) * hr * CFrame.Angles(0, rad(-s * 20), 0), c.wing)
 		end
 		for i = 1, 3 do
-			spikeUp("Crest" .. i, H0 + D(0, 1.0, -0.15 + i * 0.4), 0.55 - i * 0.08, 0.2, c.gold)
+			spikeUp("Crest" .. i, hp(0, 1.0, -0.15 + i * 0.4), (0.55 - i * 0.08) * HS, 0.2 * HS, c.gold, -12)
 		end
 	end
-	fx[#fx + 1] = { on = "Snout", kind = "puff", color = rgb(170, 235, 255), rate = 20, size = 2.0 * u, at = v3(0, 0, -(if meshes then 1.2 else 0.85) * u), aura = true }
+	fx[#fx + 1] = {
+		on = "Snout",
+		kind = "puff",
+		color = rgb(170, 235, 255),
+		rate = 20,
+		size = 2.0 * u,
+		at = v3(0, 0, -(if meshes then 1.2 else 0.85) * u * HS),
+		aura = true,
+	}
 
-	-- WINGS: arm bone, four finger bones and translucent membrane panels, flapping slowly about the shoulder
+	-- WINGS (65% size): arm bone, four finger bones and solid membrane panels, angled up and back from the shoulders, flapping about the shoulder
+	local ws = 0.65
 	for _, s in { 1, -1 } do
 		local side = if s > 0 then "R" else "L"
-		local S0 = P(s * 0.8, 1.05, -0.2)
+		local S0 = P(s * 1.0, 1.25, -0.2)
 		local flapAnim = { kind = "swing", axis = "Z", amp = s * flap, speed = 1.3, pivot = cf(S0) }
+		local wr = CFrame.Angles(0, -s * rad(25), s * rad(28)) -- up and back
+		local function wp(x: number, y: number, z: number): Vector3 -- a wing-space offset (design units, before the 65%) -> rig space
+			return S0 + wr * (D(x, y, z) * ws)
+		end
 		if meshes then
 			table.insert(props, {
 				n = "Wing" .. side,
 				on = "LowerTorso",
 				model = if s > 0 then "DragonWingL" else "DragonWingR", -- (Blender's X arrives mirrored: the ...L file reaches toward +X)
-				at = cf(S0),
-				fit = { axis = "X", size = 6.4 * u },
+				at = cf(S0) * wr,
+				fit = { axis = "X", size = 6.4 * u * ws },
 				anim = flapAnim,
 				colors = {
-					Bones = c.bone,
+					Bones = { color = c.bone:Lerp(c.edge, 0.3), neon = true },
 					Claw = { color = c.gold, mat = METAL, skip = not DragonKit.SPIKES_FIXED },
-					Membrane = { color = c.membrane, neon = true, trans = 0.35 },
+					Membrane = { color = c.wing, trans = 0.05 },
 					Edge = { color = c.edge, neon = true },
 				},
 			})
 			if not DragonKit.SPIKES_FIXED then
-				add("WingClaw" .. side, "Wedge", S(0.2, 0.5, 0.25), cf(S0 + D(s * 3.95, 2.4, -0.85)), c.gold, { mat = METAL, anim = flapAnim })
+				add("WingClaw" .. side, "Wedge", S(0.2 * ws, 0.5 * ws, 0.25 * ws), cf(wp(s * 3.95, 2.4, -0.85)) * wr, c.gold, { mat = METAL, anim = flapAnim })
 			end
 		else
-			local E = P(s * 2.7, 2.45, 0.4)
-			local W = P(s * 4.6, 3.15, -0.7)
-			local T = { P(s * 6.8, 2.75, -1.5), P(s * 6.6, 1.25, 0.7), P(s * 5.3, 0.15, 1.9), P(s * 3.5, -0.05, 2.3) }
-			local function anim(): any
-				return flapAnim
-			end
-			add("WingJoint" .. side, "Ball", S(0.7, 0.7, 0.7), cf(S0), c.bone, { anim = anim() })
-			limb("WingArm" .. side, S0, E, 0.3, c.bone, { anim = anim() })
-			limb("WingFore" .. side, E, W, 0.24, c.edge, { anim = anim(), neon = true })
+			local E = wp(s * 1.9, 1.4, 0.6)
+			local W = wp(s * 3.8, 2.1, -0.5)
+			local T = { wp(s * 6.0, 1.7, -1.3), wp(s * 5.8, 0.2, 0.9), wp(s * 4.5, -0.9, 2.1), wp(s * 2.7, -1.1, 2.5) }
+			add("WingJoint" .. side, "Ball", S(0.6, 0.6, 0.6), cf(S0), c.bone, { anim = flapAnim })
+			limb("WingArm" .. side, S0, E, 0.3, c.bone, { anim = flapAnim })
+			limb("WingFore" .. side, E, W, 0.24, c.edge, { anim = flapAnim, neon = true })
 			for i, t in T do
-				limb("WingFinger" .. side .. i, W, t, 0.15, c.bone, { anim = anim() })
+				limb("WingFinger" .. side .. i, W, t, 0.15, c.bone, { anim = flapAnim })
 			end
-			add("WingClaw" .. side, "Wedge", S(0.2, 0.5, 0.25), cf(W + D(s * 0.15, 0.3, -0.35)), c.gold, { mat = METAL, anim = anim() })
-			local mem = { neon = true, trans = 0.35, anim = anim() }
-			tri("Membrane" .. side .. 1, W, T[1], T[2], c.membrane, mem)
-			tri("Membrane" .. side .. 2, W, T[2], T[3], c.membrane, mem)
-			tri("Membrane" .. side .. 3, W, T[3], T[4], c.membrane, mem)
-			tri("Membrane" .. side .. 4, E, W, T[4], c.membrane, mem)
+			add("WingClaw" .. side, "Wedge", S(0.15, 0.35, 0.2), cf(W + D(s * 0.1, 0.2, -0.25)), c.gold, { mat = METAL, anim = flapAnim })
+			local mem = { trans = 0.05, anim = flapAnim }
+			tri("Membrane" .. side .. 1, W, T[1], T[2], c.wing, mem)
+			tri("Membrane" .. side .. 2, W, T[2], T[3], c.wing, mem)
+			tri("Membrane" .. side .. 3, W, T[3], T[4], c.wing, mem)
+			tri("Membrane" .. side .. 4, E, W, T[4], c.wing, mem)
 		end
 	end
 
-	-- LEGS: four legs that stand on the ground (feet bottoms at y = ground), claws on the toes, a slow diagonal step in idle
+	-- LEGS: four thick bent legs that stand on the ground: tapered thigh and shin, a flat foot with three claws, a slow diagonal step in idle
 	local legs = {
-		{ "FrontR", 1, v3(0.85, -0.5, -0.75), v3(0.95, -1.3, -0.95), v3(0.9, -2.0, -0.8), -1.0 },
-		{ "FrontL", -1, v3(0.85, -0.5, -0.75), v3(0.95, -1.3, -0.95), v3(0.9, -2.0, -0.8), -1.0 },
-		{ "HindR", 1, v3(0.95, -0.45, 0.95), v3(1.1, -1.25, 0.7), v3(1.0, -1.95, 1.2), 1.0 },
-		{ "HindL", -1, v3(0.95, -0.45, 0.95), v3(1.1, -1.25, 0.7), v3(1.0, -1.95, 1.2), 1.0 },
+		{ "FrontR", 1, v3(1.05, -0.2, -0.85), v3(1.4, -1.15, -1.15), v3(1.2, -2.0, -0.95), -1.0 },
+		{ "FrontL", -1, v3(1.05, -0.2, -0.85), v3(1.4, -1.15, -1.15), v3(1.2, -2.0, -0.95), -1.0 },
+		{ "HindR", 1, v3(1.1, -0.1, 0.95), v3(1.5, -1.1, 0.55), v3(1.2, -2.0, 1.15), 1.0 },
+		{ "HindL", -1, v3(1.1, -0.1, 0.95), v3(1.5, -1.1, 0.55), v3(1.2, -2.0, 1.15), 1.0 },
 	}
 	for i, l in legs do
 		local name, s, hip, knee, ankle = l[1], l[2], l[3], l[4], l[5]
 		local hipP = P(s * hip.X, hip.Y, hip.Z)
-		local la = { kind = "swing", axis = "X", amp = 7, speed = 1.5, phase = if i == 1 or i == 4 then 0 else math.pi, pivot = cf(hipP) }
-		limb("Thigh" .. name, hipP, P(s * knee.X, knee.Y, knee.Z), 0.6, c.back, { anim = la })
-		limb("Shin" .. name, P(s * knee.X, knee.Y, knee.Z), P(s * ankle.X, ankle.Y, ankle.Z), 0.42, c.back2, { anim = la })
-		add("Foot" .. name, "Block", S(0.64, 0.2, 0.95), cf(P(s * ankle.X, -2.15, ankle.Z - 0.12)), c.back, { anim = la })
-		for k = -1, 1, 2 do
-			add("Claw" .. name .. k, "Wedge", S(0.14, 0.2, 0.38), cf(P(s * ankle.X + k * 0.2, -2.14, ankle.Z - 0.7)), c.gold, { mat = METAL, anim = la })
+		local kneeP = P(s * knee.X, knee.Y, knee.Z)
+		local ankleP = P(s * ankle.X, ankle.Y, ankle.Z)
+		local la = {
+			kind = "swing",
+			axis = "X",
+			amp = 5,
+			speed = 1.5,
+			phase = if i == 1 or i == 4 then 0 else math.pi,
+			pivot = cf(hipP),
+		}
+		seg("Thigh" .. name, hipP, kneeP, 1.0, 0.8, c.back, { anim = la })
+		add("Knee" .. name, "Ball", S(0.85, 0.85, 0.85), cf(kneeP), c.back, { anim = la })
+		seg("Shin" .. name, kneeP, ankleP, 0.75, 0.62, c.back2, { anim = la }, 1.15)
+		add("Foot" .. name, "Block", S(0.95, 0.24, 1.25), cf(P(s * ankle.X, -2.13, ankle.Z - 0.2)), c.back, { anim = la })
+		for k = -1, 1 do
+			add("Claw" .. name .. k, "Wedge", S(0.17, 0.22, 0.42), cf(P(s * ankle.X + k * 0.3, -2.13, ankle.Z - 0.95)), c.gold, { mat = METAL, anim = la })
 		end
 	end
 
-	-- TAIL: tapering balls sweeping back, gold spikes along the top, ends in a spiked fin
+	-- TAIL: thick at the rump, tapering back; tapered overlapping cylinders, a light strip underneath, gold spikes along the top
 	local tailPts = {}
 	local tailN = if meshes then 5 else 8
 	for i = 0, 7 do
-		table.insert(tailPts, P(0, -0.1 - i * 0.14, 1.5 + i * 0.58))
+		table.insert(tailPts, P(0, 0.05 - i * 0.12, 1.5 + i * 0.7))
 	end
 	local pivot0 = tailPts[1]
-	for i = 1, tailN do
-		local r = 0.56 - (i - 1) * 0.055
-		add("Tail" .. i, "Ball", S(r * 2, r * 1.8, r * 2.3), cf(tailPts[i]), if i % 2 == 0 then c.back2 else c.back, { anim = sway(2 + i * 1.2, 1.2, i * 0.4, pivot0) })
-		if i % 2 == 1 then
-			add("TailSpike" .. i, "Wedge", S(0.2, 0.45, 0.3), cf(tailPts[i] + v3(0, r * u * 0.9, 0)), c.gold, { mat = METAL, anim = sway(2 + i * 1.2, 1.2, i * 0.4, pivot0) })
+	for i = 1, tailN - 1 do
+		local d0 = 1.35 - (i - 1) * 0.14
+		local d1 = d0 - 0.14
+		local an = sway(2 + i * 1.2, 1.2, i * 0.4, pivot0)
+		seg("Tail" .. i, tailPts[i], tailPts[i + 1], d0, d1, if i % 2 == 0 then c.back2 else c.back, { anim = an })
+		if i <= 4 then
+			local off = D(0, -d0 * 0.4, 0)
+			seg("TailBelly" .. i, tailPts[i] + off, tailPts[i + 1] + off, 0.45, 0.4, c.belly, { anim = an }, 1.1)
 		end
+		spikeUp("TailSpike" .. i, (tailPts[i] + tailPts[i + 1]) / 2 + D(0, d0 * 0.5, 0), 0.5, 0.22, c.gold)(props[#props] :: any).anim = an
 	end
 	if meshes then
 		table.insert(props, {
@@ -262,7 +313,11 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 			at = cf(tailPts[tailN]),
 			fit = { axis = "Z", size = 3.2 * u },
 			anim = sway(14, 1.2, 2.2, pivot0),
-			colors = { Segments = c.back, Fin = { color = c.membrane, neon = true, trans = 0.25 }, Spikes = { color = c.gold, mat = METAL, skip = not DragonKit.SPIKES_FIXED } },
+			colors = {
+				Segments = c.back,
+				Fin = { color = c.wing, trans = 0.1 },
+				Spikes = { color = c.gold, mat = METAL, skip = not DragonKit.SPIKES_FIXED },
+			},
 		})
 		if not DragonKit.SPIKES_FIXED then
 			local a = sway(14, 1.2, 2.2, pivot0)
@@ -274,24 +329,17 @@ function DragonKit.build(o: { u: number?, ground: number?, colors: Colors?, mesh
 	else
 		local tip = tailPts[8]
 		local a = sway(14, 1.2, 3.3, pivot0)
-		add("TailFinV", "Block", S(0.06, 1.7, 1.5), cf(tip + D(0, 0, 0.85)), c.membrane, { neon = true, trans = 0.25, anim = a })
-		add("TailFinH", "Block", S(1.8, 0.06, 1.5), cf(tip + D(0, 0, 0.85)), c.membrane, { neon = true, trans = 0.25, anim = a })
+		add("TailFinV", "Block", S(0.06, 1.7, 1.5), cf(tip + D(0, 0, 0.85)), c.wing, { trans = 0.1, anim = a })
+		add("TailFinH", "Block", S(1.8, 0.06, 1.5), cf(tip + D(0, 0, 0.85)), c.wing, { trans = 0.1, anim = a })
 		add("TailTipSpike", "Wedge", S(0.26, 0.3, 0.9), cf(tip + D(0, 0, 1.8)) * CFrame.Angles(rad(90), 0, 0), c.gold, { mat = METAL, anim = a })
 	end
 
-	-- dorsal fins down the back (glowing), and the water glow underfoot
-	for i, z in { 0.7, 0.0, -0.7 } do
-		add(
-			"DorsalFin" .. i,
-			"Block",
-			S(0.06, 0.8, 0.55),
-			cf(P(0, 1.15, z)),
-			c.membrane,
-			{ neon = true, trans = 0.35, anim = { kind = "swing", axis = "X", amp = 5, speed = 2, phase = i } }
-		)
+	-- solid dorsal fins between the back spikes
+	for i, z in { 0.95, 0.3, -0.35 } do
+		add("DorsalFin" .. i, "Block", S(0.06, 0.7, 0.5), cf(P(0, 1.4, z)), c.wing, { trans = 0.1, anim = { kind = "swing", axis = "X", amp = 5, speed = 2, phase = i } })
 	end
 	fx[#fx + 1] = { on = "Body2", kind = "drop", color = rgb(170, 235, 255), rate = 14, size = 1.4 * u, aura = true }
-	fx[#fx + 1] = { on = "Neck3", kind = "bubble", color = rgb(190, 235, 255), rate = 6, size = 1.2 * u, aura = true }
+	fx[#fx + 1] = { on = "Neck2", kind = "bubble", color = rgb(190, 235, 255), rate = 6, size = 1.2 * u, aura = true }
 	fx[#fx + 1] = { on = "Eye1", kind = "spark", color = c.eye, rate = 3, size = 0.6 * u }
 	return props, fx
 end
@@ -299,7 +347,14 @@ end
 -- The Dragon Pup: the same dragon at about a third of the size in warm colours.
 function DragonKit.pup(meshes: boolean?): any
 	local props, fx = DragonKit.build({ u = 0.4, colors = DragonKit.EMBER, meshes = meshes ~= false, flap = 22 })
-	return { hideBody = true, scale = 1, skin = DragonKit.EMBER.back, props = props, fx = fx, light = Color3.fromRGB(255, 190, 120) }
+	return {
+		hideBody = true,
+		scale = 1,
+		skin = DragonKit.EMBER.back,
+		props = props,
+		fx = fx,
+		light = Color3.fromRGB(255, 190, 120),
+	}
 end
 
 return DragonKit

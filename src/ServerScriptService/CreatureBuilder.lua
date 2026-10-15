@@ -9,7 +9,6 @@
 -- written on each animated prop (Anim*). Prop offsets are in the body part's own space.
 
 local CollectionService = game:GetService("CollectionService")
-local ContentProvider = game:GetService("ContentProvider")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -31,6 +30,14 @@ local FACE: { CreatureSpecs.Prop } = {
 	{ n = "FaceEyeR", on = "Head", shape = "Ball", size = Vector3.new(0.22, 0.36, 0.14), at = CFrame.new(0.28, 0.12, -0.6), color = INK },
 	{ n = "FaceSmile", on = "Head", shape = "Disc", size = Vector3.new(0.58, 0.58, 0.06), at = CFrame.new(0, -0.2, -0.6), color = INK },
 	{ n = "FaceSmileMask", on = "Head", shape = "Disc", size = Vector3.new(0.58, 0.58, 0.06), at = CFrame.new(0, -0.08, -0.612), color = NOOB_YELLOW },
+}
+-- The stern face (Legendary, Secret, Epic knights): the same big dark eyes, brows angled down toward the nose, a flat mouth.
+local STERN: { CreatureSpecs.Prop } = {
+	{ n = "FaceEyeL", on = "Head", shape = "Ball", size = Vector3.new(0.22, 0.32, 0.14), at = CFrame.new(-0.28, 0.08, -0.6), color = INK },
+	{ n = "FaceEyeR", on = "Head", shape = "Ball", size = Vector3.new(0.22, 0.32, 0.14), at = CFrame.new(0.28, 0.08, -0.6), color = INK },
+	{ n = "FaceBrowL", on = "Head", shape = "Block", size = Vector3.new(0.4, 0.09, 0.07), at = CFrame.new(-0.28, 0.33, -0.6) * CFrame.Angles(0, 0, rad(-24)), color = INK },
+	{ n = "FaceBrowR", on = "Head", shape = "Block", size = Vector3.new(0.4, 0.09, 0.07), at = CFrame.new(0.28, 0.33, -0.6) * CFrame.Angles(0, 0, rad(24)), color = INK },
+	{ n = "FaceMouth", on = "Head", shape = "Block", size = Vector3.new(0.42, 0.08, 0.07), at = CFrame.new(0, -0.28, -0.6), color = INK },
 }
 
 local SPRITES = {
@@ -103,28 +110,6 @@ local function makeEmitter(fx: CreatureSpecs.Fx, scale: number): ParticleEmitter
 	e:SetAttribute("Aura", true) -- every emitter is gated by distance (CreatureAnim.setAura), not only the rarity aura
 	e.Enabled = false
 	return e
-end
-
--- A catalogue face (spec.face = "rbxassetid://<image id>") is only used if it really loads; otherwise the creature
--- keeps the part-built default smile. Checked once per id.
-local faceOk: { [string]: boolean } = {}
-local function faceLoads(id: string): boolean
-	if faceOk[id] == nil then
-		local probe = Instance.new("Decal")
-		probe.Texture = id
-		local status: Enum.AssetFetchStatus? = nil
-		local ok = pcall(function()
-			ContentProvider:PreloadAsync({ probe }, function(_, s)
-				status = s
-			end)
-		end)
-		probe:Destroy()
-		faceOk[id] = ok and status == Enum.AssetFetchStatus.Success
-		if not faceOk[id] then
-			warn("[CreatureBuilder] face did not load, using the default smile:", id)
-		end
-	end
-	return faceOk[id]
 end
 
 local function meshMaster(name: string): MeshPart?
@@ -431,7 +416,6 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		end
 	end
 	local head = bodyOf(model, "Head")
-	local faceDecal = false
 	if head then
 		for _, d in head:GetChildren() do
 			if d:IsA("Decal") then
@@ -442,13 +426,6 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 			local face = Instance.new("Decal")
 			face.Name = "face"
 			face.Texture = "rbxasset://textures/face.png"
-			face.Face = Enum.NormalId.Front
-			face.Parent = head
-		elseif spec.face and faceLoads(spec.face) then -- the creature's own catalogue face (big, readable)
-			faceDecal = true
-			local face = Instance.new("Decal")
-			face.Name = "face"
-			face.Texture = spec.face
 			face.Face = Enum.NormalId.Front
 			face.Parent = head
 		end
@@ -468,8 +445,8 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 	local folder = Instance.new("Folder")
 	folder.Name = PROPS_FOLDER
 	local all: { CreatureSpecs.Prop } = table.clone(spec.props)
-	if noob and not faceDecal then -- a clear classic face made of parts (renders in the card viewports too): big black eyes + a smile
-		for _, f in FACE do
+	if noob then -- a clear face made of parts (renders in the card viewports too): big black eyes + a smile, or stern brows + flat mouth
+		for _, f in (if spec.face == "stern" then STERN else FACE) do
 			table.insert(all, f)
 		end
 	end

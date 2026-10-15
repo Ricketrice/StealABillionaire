@@ -51,7 +51,7 @@ export type Spec = {
 	fx: { Fx }?,
 	light: Color3?,
 	own: boolean?, -- non-humanoid (fish, owl, snail, newt, golem): keeps the recoloured R15 body instead of the noob
-	face: string?, -- humanoids: catalogue face image ("rbxassetid://..."); nil = the default part-built smile
+	face: string?, -- humanoids: "smile" (default) or "stern", both built from parts
 	hideBody: boolean?, -- hide the R15 body (props make the whole creature)
 	halo: Color3?, -- spinning ring on the ground
 	sound: string?,
@@ -735,6 +735,7 @@ CreatureSpecs.tide_warden = { -- Tide Warden (L): Aquaris's champion; coral crow
 -- on the ground, big finger-boned wings with glowing membrane panels (they flap), a spiked tail that sways. The rig only walks it.
 -- DRAGON_MESHES: false = every piece from plain parts; true = the Blender head, wings and tail tip from ServerStorage.Imports035.
 local DragonKit = require(script.Parent:WaitForChild("DragonKit"))
+local WorkerCatalogue = require(script.Parent:WaitForChild("WorkerCatalogue"))
 local DRAGON_MESHES = true
 local function aquaris(): Spec
 	local props, fx = DragonKit.build({ u = 1, colors = DragonKit.WATER, meshes = DRAGON_MESHES })
@@ -1475,39 +1476,9 @@ type Polish = {
 	set: { [string]: any }?, -- spec fields: light, halo, sound
 }
 
--- Face catalogue (free Creator Store face decals, each checked to load in Studio on 2026-10-16; the ids are the IMAGE ids the
--- decals resolve to). One field per creature below (`faceOf`), change them here. The builder falls back to the default smile
--- if one ever fails to load.
-local FACES = {
-	angry = "rbxassetid://91718245554912", -- angry frown, brows down
-	angry2 = "rbxassetid://115235921239202", -- grumpy frown
-	stern = "rbxassetid://15539331496", -- serious, heavy brows
-	suspicious = "rbxassetid://80659697191573", -- narrow eyes, scheming frown
-	happy = "rbxassetid://155406534", -- big goofy grin
-	cool = "rbxassetid://139147174838791", -- sunglasses and a smirk
-	scholar = "rbxassetid://308995820", -- round glasses, calm
-	neutral = "rbxassetid://926088892", -- dots and a line
-}
-local faceOf = {
-	broke_bob = "happy",
-	delivery_dave = "happy",
-	training_dummy = "neutral",
-	street_hustler = "cool",
-	business_betty = "happy",
-	security_sam = "stern",
-	crypto_carl = "angry2",
-	ceo_chad = "cool",
-	mystery_millionaire = "angry",
-	puffer_guard = "stern",
-	mermaid_mage = "scholar",
-	shark_knight = "angry",
-	tide_warden = "stern",
-	butler_barnaby = "happy",
-	bookling = "scholar",
-	chef_pierre = "happy",
-	oil_baron_oswald = "scholar",
-	the_trillionaire = "suspicious",
-}
+-- Faces are part-built only (no decal / asset ids): "smile" (default) or "stern" (angled brows + flat mouth), set per creature
+-- in applyPolish: Legendary and Secret are always stern, plus the Epic knights listed here.
+local STERN_EPIC = { shark_knight = true }
 local YELLOW = rgb(245, 205, 48)
 local NEON_CYAN = rgb(80, 255, 230)
 
@@ -1993,9 +1964,10 @@ local function applyPolish()
 				table.insert(spec.fx, f)
 			end
 		end
-		local face = faceOf[id]
-		if face and not spec.own and not spec.hideBody then
-			spec.face = FACES[face]
+		if not spec.own and not spec.hideBody then
+			local w = WorkerCatalogue.get(id)
+			local r = w and w.rarity
+			spec.face = if r == "Legendary" or r == "Secret" or STERN_EPIC[id] then "stern" else "smile"
 		end
 		for k, v in pol.set or {} do
 			(spec :: any)[k] = v
