@@ -19,6 +19,7 @@ local UIStyle = require(ReplicatedStorage:WaitForChild("UIStyle"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local templates = ReplicatedStorage:WaitForChild("WorkerPreviews")
 local CustomWorkers = require(ReplicatedStorage:WaitForChild("CustomWorkers"))
+local CreatureAnim = require(ReplicatedStorage:WaitForChild("CreatureAnim"))
 
 local WorkerPreview = {}
 WorkerPreview.MAX_ACTIVE = if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then 12 else 24
@@ -76,6 +77,26 @@ local function ensureSpinLoop()
 	end)
 end
 
+-- 035: previews of creatures play the same code-driven idle as in the world (one shared loop while any is live).
+local animating: { [any]: CreatureAnim.State } = {}
+local animConn: RBXScriptConnection? = nil
+local function ensureAnimLoop()
+	if animConn or next(animating) == nil then
+		return
+	end
+	animConn = RunService.RenderStepped:Connect(function()
+		if next(animating) == nil then
+			animConn:Disconnect()
+			animConn = nil
+			return
+		end
+		local t = os.clock()
+		for _, state in animating do
+			CreatureAnim.step(state, t)
+		end
+	end)
+end
+
 local function placeholder(container: GuiObject, workerId: string?)
 	local worker = workerId and WorkerCatalogue.get(workerId)
 	local color = worker and UIStyle.Rarity[worker.rarity] or UIStyle.Colors.TextMuted
@@ -102,6 +123,7 @@ function WorkerPreview.mount(container: GuiObject, workerId: string, opts: { rot
 	local fallback: Instance? = nil
 
 	local function clear()
+		animating[handle] = nil
 		if handle._model then
 			handle._model:Destroy()
 			handle._model = nil
@@ -118,7 +140,9 @@ function WorkerPreview.mount(container: GuiObject, workerId: string, opts: { rot
 		local entry = CustomWorkers.get(id)
 		local avatars = entry and entry.rig == "avatar" and ReplicatedStorage:FindFirstChild("WorkerPreviews019R")
 		local custom = entry and ReplicatedStorage:FindFirstChild("WorkerPreviews019")
-		local templ = (avatars and avatars:FindFirstChild(id)) or (custom and custom:FindFirstChild(id)) or templates:FindFirstChild(id)
+		local creatures = ReplicatedStorage:FindFirstChild("CreatureModels")
+		local creature = creatures and creatures:FindFirstChild(id)
+		local templ = creature or (avatars and avatars:FindFirstChild(id)) or (custom and custom:FindFirstChild(id)) or templates:FindFirstChild(id)
 		if not templ then
 			if vp then vp.Visible = false end
 			fallback = placeholder(container, id)
@@ -135,9 +159,22 @@ function WorkerPreview.mount(container: GuiObject, workerId: string, opts: { rot
 		vp.Visible = true
 		vp.ImageColor3 = handle._tint or Color3.new(1, 1, 1)
 		local model = templ:Clone()
+		if creature then
+			for _, d in model:GetChildren() do
+				if d:IsA("LuaSourceContainer") then
+					d:Destroy()
+				end
+			end
+		end
 		model:PivotTo(CFrame.Angles(0, math.rad(handle._yaw), 0))
 		model.Parent = vp:FindFirstChildOfClass("WorldModel")
 		handle._model = model
+		if creature then
+			local state = CreatureAnim.bind(model)
+			CreatureAnim.setAura(state, true)
+			animating[handle] = state
+			ensureAnimLoop()
+		end
 		frame(model, vp.CurrentCamera)
 		vp.Parent = container
 	end

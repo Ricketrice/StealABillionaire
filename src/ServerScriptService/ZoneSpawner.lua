@@ -20,6 +20,10 @@ export type Config = {
 	lifetime: number,
 	walkSpeed: number,
 	shouldSpawn: (() -> boolean)?,
+	-- 035: rolls the creature when the wanderer spawns; returns the model to spawn and the rolled worker id
+	-- (nil = spawn the plain template and roll at the steal, as before).
+	pick: (() -> (Model, string?))?,
+	adopt: ((npc: Model, workerId: string) -> ())?,
 }
 
 local ZoneSpawner = {}
@@ -78,13 +82,24 @@ local function trySpawn(zone: ZoneArea, config: Config)
 		return -- every spawn point is occupied; try again next interval
 	end
 
-	local ok, result = pcall(NPCWanderer.spawn, config.template, zone, point, config.walkSpeed)
+	local template, rolledId = config.template, nil
+	if config.pick then
+		template, rolledId = config.pick()
+	end
+	local ok, result = pcall(NPCWanderer.spawn, template, zone, point, config.walkSpeed)
 	if not ok then
 		warn("[ZoneSpawner]", zone.folder.Name, "failed to spawn", config.template.Name, "-", result)
 		return
 	end
 
+	if rolledId and config.adopt then
+		config.adopt(result, rolledId)
+	end
 	NPCClaim.attach(result, zone)
+	local prompt = (result:FindFirstChild("HumanoidRootPart") :: Instance?) and result.HumanoidRootPart:FindFirstChild("StealPrompt")
+	if rolledId and prompt then
+		prompt.ObjectText = result:GetAttribute("PromptName") or result.Name
+	end
 	scheduleDespawn(zone, result, config.lifetime)
 	print(("[ZoneSpawner] %s: spawned %s at %s (%d/%d active)"):format(
 		zone.folder.Name, config.template.Name, point.Name, countActive(zone), config.maxNPCs))

@@ -23,6 +23,9 @@ local ZoneArea = require(script.Parent:WaitForChild("ZoneArea"))
 local ZoneSpawner = require(script.Parent:WaitForChild("ZoneSpawner"))
 local ZoneProgress = require(script.Parent:WaitForChild("ZoneProgress"))
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("ZoneConfig"))
+local CustomWorkerRigs = require(script.Parent:WaitForChild("CustomWorkerRigs"))
+local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
+local WorkerService = require(script.Parent:WaitForChild("WorkerService"))
 
 -- A steal can only start once the player's data has loaded and they have room for another worker.
 -- Reserving a mystery NPC secretly rolls which worker it is. A completed steal reveals it to
@@ -89,9 +92,32 @@ end
 local zonesFolder = workspace:WaitForChild("Zones")
 local npcModels = ServerStorage:WaitForChild("NPCModels")
 
+-- 035: wanderers are rolled when they spawn (same odds as the steal used) and show the real creature, so you see
+-- what you are stealing. Zones/ids without a creature model keep the plain mystery NPC and roll at the steal.
+local function creaturePicker(zoneId: string, mystery: Model): (() -> (Model, string?))?
+	if not WorkerCatalogue.ZONES[zoneId] then
+		return nil
+	end
+	return function()
+		local ok, workerId = pcall(WorkerService.rollWorkerId, zoneId)
+		if ok and workerId then
+			local template = CustomWorkerRigs.getTemplate(workerId)
+			if template and template:GetAttribute("CreatureId") then
+				return template, workerId
+			end
+		end
+		return mystery, nil
+	end
+end
+
 for _, settings in ZONES do
+	local mystery = npcModels:WaitForChild(settings.npcModel)
 	ZoneSpawner.start(ZoneArea.new(zonesFolder:WaitForChild(settings.zone)), {
-		template = npcModels:WaitForChild(settings.npcModel),
+		template = mystery,
+		pick = creaturePicker(settings.zone, mystery),
+		adopt = function(npc: Model, workerId: string)
+			WorkerReveal.adoptRolled(npc, settings.zone, workerId)
+		end,
 		spawnInterval = settings.spawnInterval,
 		maxNPCs = settings.maxNPCs,
 		lifetime = settings.lifetime,

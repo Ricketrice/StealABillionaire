@@ -1,0 +1,376 @@
+-- Studio location: ServerScriptService.DevTest_Creature035 (Script)
+-- DevTest_Creature035  (Milestone 035) -- STUDIO-ONLY solo test of the creature models. Inert unless Studio started
+-- the session with StudioTestService and the argument "creature035" (1 client, in-memory save: ServerStorage
+-- StudioMemoryStore = true). Launch from Edit with
+--   task.spawn(function() game:GetService("StudioTestService"):ExecuteMultiplayerTestAsync(1, "creature035") end)
+-- and watch with `TAG=T035 tools/test_guard.sh creature035`. Results: "@@T035|".
+--   models   every spec has a model within its rarity budget, R15 names, Humanoid, Animate; signature items exist;
+--            animated props bind; all roster ids that have a spec are listed (those without are reported)
+--   same     wanderer (rolled at spawn) = template = carried = placed = rebuilt-on-pad: same name + colour signature;
+--            carried scale <= 1.3, pad scale <= 1.6; reveal fires (WorkerUid, Rarity) on catch; name tag text
+--   odds     SIMULATED: 10,000 rolls per zone are within tolerance of the catalogue's rarity odds
+--   parts    SIMULATED: 12 lots x 6 pads and x 14 pads filled with creatures drawn by the odds: Workspace part total,
+--            Common/Rare average parts (<= 25 wanted)
+
+local RunService = game:GetService("RunService")
+if not RunService:IsStudio() then
+	return
+end
+local StudioTestService = game:GetService("StudioTestService")
+local okArgs, args = pcall(function()
+	return StudioTestService:GetTestArgs()
+end)
+if not (okArgs and args == "creature035") then
+	return
+end
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
+local CollectionService = game:GetService("CollectionService")
+
+local lines, passed, failed, simulated = {}, 0, 0, 0
+local section = "setup"
+local function note(kind: string, name: string, detail: any?)
+	local line = ("%s | %s: %s | %s"):format(kind, section, name, tostring(detail or ""))
+	table.insert(lines, line)
+	print("@@T035|" .. line)
+end
+local function finish(state: string)
+	local summary = ("%s passed=%d failed=%d (simulated checks=%d)"):format(state, passed, failed, simulated)
+	print("@@T035|SUMMARY " .. summary)
+	StudioTestService:EndTest(summary .. "\n" .. table.concat(lines, "\n"))
+end
+local function expect(name: string, condition: any, detail: any?, sim: boolean?)
+	if sim then
+		simulated += 1
+	end
+	if condition then
+		passed += 1
+	else
+		failed += 1
+		note(if sim then "FAIL(SIM)" else "FAIL", name, detail)
+	end
+end
+local function info(name: string, detail: any)
+	note("INFO", name, detail)
+end
+local function waitUntil(seconds: number, check: () -> any): any
+	local deadline = os.clock() + seconds
+	repeat
+		local value = check()
+		if value then
+			return value
+		end
+		task.wait(0.1)
+	until os.clock() > deadline
+	return nil
+end
+local function scenario(name: string, run: () -> ())
+	section = name
+	local ok, err = pcall(run)
+	if not ok then
+		failed += 1
+		note("ERROR", "scenario stopped", err)
+	end
+	print("@@T035|done " .. name .. (" passed=%d failed=%d"):format(passed, failed))
+end
+local function mod(name: string)
+	return require(ServerScriptService:WaitForChild(name)) :: any
+end
+
+local PlayerData, PlotService, WorkerInventory = mod("PlayerData"), mod("PlotService"), mod("WorkerInventory")
+local NPCClaim, NPCPlacement, ZoneArea = mod("NPCClaim"), mod("NPCPlacement"), mod("ZoneArea")
+local WorkerService, WorkerAppearance, CreatureBuilder = mod("WorkerService"), mod("WorkerAppearance"), mod("CreatureBuilder")
+local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue")) :: any
+local CreatureSpecs = require(ReplicatedStorage:WaitForChild("CreatureSpecs")) :: any
+local CreatureAnim = require(ReplicatedStorage:WaitForChild("CreatureAnim")) :: any
+
+local BUDGET = { Common = 25, Rare = 40, Epic = 80, Legendary = 150, Secret = 250 }
+local ODDS = { Common = 70, Rare = 20, Epic = 8, Legendary = 1.8, Secret = 0.2 }
+local SIGNATURE = {
+	broke_bob = { "SwordBlade", "Helmet" },
+	delivery_dave = { "ScrollRoll" },
+	training_dummy = { "TargetRed" },
+	street_hustler = { "BowMid", "Apple" },
+	business_betty = { "Pole", "FlagA" },
+	security_sam = { "Shield", "Sword" },
+	crypto_carl = { "HammerHead" },
+	ceo_chad = { "Blade" },
+	mystery_millionaire = { "Shield", "Blade" },
+}
+
+local function parts(model: Instance): number
+	local n = 0
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			n += 1
+		end
+	end
+	return n
+end
+-- Name + colour of every part (sizes depend on the current scale, so they are left out).
+local function signature(model: Instance): string
+	local t = {}
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") and d.Name ~= "HumanoidRootPart" then
+			table.insert(t, d.Name .. ":" .. d.Color:ToHex())
+		end
+	end
+	table.sort(t)
+	return table.concat(t, ",")
+end
+
+local function ready(p: Player): boolean
+	local c = p.Character
+	return p.Parent ~= nil and PlayerData.isLoaded(p) and PlotService.getPlot(p) ~= nil and c ~= nil and c:FindFirstChild("HumanoidRootPart") ~= nil and WorkerInventory.isReady(p)
+end
+waitUntil(240, function()
+	for _, p in Players:GetPlayers() do
+		if ready(p) then
+			return true
+		end
+	end
+	return false
+end)
+task.wait(3)
+if not (ServerStorage:GetAttribute("StudioMemoryStore") == true or not PlayerData.isPersistent()) then
+	finish("ABORTED: run creature035 on the in-memory save (ServerStorage StudioMemoryStore = true)")
+	return
+end
+local A = Players:GetPlayers()[1]
+if not (A and ready(A)) then
+	finish("ABORTED: needs one loaded player")
+	return
+end
+local models = ReplicatedStorage:WaitForChild(CreatureBuilder.FOLDER)
+
+local function models_()
+	local missing = {}
+	for zoneId, roster in WorkerCatalogue.ZONES do
+		if zoneId == "MainStreet" or zoneId == "SunkenKingdom" or zoneId == "BillionaireHills" then
+			for _, id in roster do
+				if not CreatureSpecs[id] then
+					table.insert(missing, id)
+				end
+			end
+		end
+	end
+	info("ids without a spec yet (still their old look)", table.concat(missing, ","))
+	local count = 0
+	for id, spec in CreatureSpecs do
+		if type(spec) ~= "table" then
+			continue
+		end
+		count += 1
+		local worker = WorkerCatalogue.get(id)
+		local model = models:FindFirstChild(id)
+		expect(id .. " has a worker entry", worker ~= nil)
+		expect(id .. " has a model", model ~= nil)
+		if worker and model then
+			local n = parts(model)
+			expect(("%s parts %d within %s budget %d"):format(id, n, worker.rarity, BUDGET[worker.rarity]), n <= BUDGET[worker.rarity])
+			local h = model:FindFirstChildOfClass("Humanoid")
+			expect(
+				id .. " keeps Humanoid + Animate + R15 names",
+				h ~= nil and model:FindFirstChild("Animate") ~= nil and model:FindFirstChild("UpperTorso") ~= nil and model:FindFirstChild("RightHand") ~= nil
+			)
+			expect(id .. " tagged Creature", CollectionService:HasTag(model, "Creature"))
+			for _, sig in SIGNATURE[id] or {} do
+				expect(id .. " has signature item " .. sig, model:FindFirstChild(sig, true) ~= nil)
+			end
+			if worker.rarity ~= "Common" and worker.rarity ~= "Rare" then
+				expect(
+					id .. " (" .. worker.rarity .. ") has an aura or glow (Epic and up)",
+					model:FindFirstChildWhichIsA("ParticleEmitter", true) ~= nil or model:FindFirstChildWhichIsA("PointLight", true) ~= nil
+				)
+			end
+			local state = CreatureAnim.bind(model)
+			expect(id .. " has an animated prop", #state.items >= 1, #state.items)
+		end
+	end
+	info("creatures with a spec", count)
+end
+
+local function same()
+	local zone = ZoneArea.new(workspace.Zones.MainStreet)
+	local wanderers = waitUntil(90, function()
+		local list = {}
+		for _, npc in zone.npcFolder:GetChildren() do
+			if npc:IsA("Model") and npc:GetAttribute("LookId") then
+				table.insert(list, npc)
+			end
+		end
+		return if #list >= 2 then list else nil
+	end)
+	expect("wanderers spawn as their creature (LookId set)", wanderers ~= nil)
+	if not wanderers then
+		return
+	end
+	for _, npc in wanderers do
+		local id = npc:GetAttribute("LookId")
+		expect(("wanderer %s = its template (same parts + colours)"):format(id), signature(npc) == signature(models[id]))
+		expect("wanderer shows no identity yet (rolled, not revealed)", npc:GetAttribute("WorkerUid") == nil)
+		local root = npc:FindFirstChild("HumanoidRootPart")
+		local prompt = root and root:FindFirstChild("StealPrompt")
+		expect(
+			"steal prompt names the creature + rarity",
+			prompt ~= nil and (prompt :: any).ObjectText == npc:GetAttribute("PromptName") and npc:GetAttribute("PromptName") ~= nil,
+			prompt and (prompt :: any).ObjectText
+		)
+	end
+
+	-- catch one (real NPCClaim path: reserve -> spin -> reveal -> carry)
+	local npc = wanderers[1]
+	local id = npc:GetAttribute("LookId")
+	local sigBefore = signature(npc)
+	local root = A.Character.HumanoidRootPart :: BasePart
+	local npcRoot = npc.HumanoidRootPart :: BasePart
+	root.CFrame = npcRoot.CFrame * CFrame.new(0, 0, -3)
+	local ok, msg = NPCClaim.tryReserve(A, npc, zone)
+	expect("steal reserved", ok, msg)
+	local carried = waitUntil(15, function()
+		return npc:GetAttribute("ClaimPhase") == "Carrying" and npc:GetAttribute("WorkerUid") ~= nil
+	end)
+	expect("revealed + carried after the spin", carried ~= nil, npc:GetAttribute("ClaimPhase"))
+	expect("reveal gave the rolled creature", npc:GetAttribute("WorkerId") == id, npc:GetAttribute("WorkerId"))
+	expect("carried = same parts + colours", signature(npc) == sigBefore)
+	task.wait(0.5)
+	local want = math.min(models[id]:GetAttribute("CreatureScale") or 1, 1.3)
+	expect("carried scale capped at 1.3", math.abs((npc:GetAttribute("CreatureScale") or 0) - want) < 0.01, npc:GetAttribute("CreatureScale"))
+
+	local plot = PlotService.getPlot(A) :: Model
+	local station = plot.Stations:FindFirstChildWhichIsA("BasePart")
+	local target
+	for _, s in plot.Stations:GetChildren() do
+		if s:IsA("BasePart") and s:GetAttribute("Occupied") ~= true then
+			target = s
+			break
+		end
+	end
+	root.CFrame = (target :: BasePart).CFrame * CFrame.new(0, 4, 0)
+	task.wait(0.3)
+	local placed, pmsg = NPCPlacement.tryPlace(A, target :: BasePart)
+	expect("placed on a pad", placed, pmsg or station)
+	task.wait(0.5)
+	expect("pad = same parts + colours", signature(npc) == sigBefore)
+	local padWant = math.min(models[id]:GetAttribute("CreatureScale") or 1, 1.6)
+	expect("pad scale capped at 1.6", math.abs((npc:GetAttribute("CreatureScale") or 0) - padWant) < 0.01, npc:GetAttribute("CreatureScale"))
+
+	-- the rebuild path (saved creature on a pad after rejoin): same call WorkerInventory.spawnOnStation makes
+	local mystery = ServerStorage.NPCModels.MysteryNPC:Clone()
+	mystery.Parent = workspace
+	mystery:PivotTo(CFrame.new(0, 600, 0))
+	WorkerAppearance.apply(mystery, id)
+	expect("rebuilt-on-pad = same parts + colours", signature(mystery) == signature(models[id]))
+	mystery:Destroy()
+	for rid, spec in CreatureSpecs do
+		if type(spec) == "table" then
+			local m = ServerStorage.NPCModels.MysteryNPC:Clone()
+			m.Parent = workspace
+			m:PivotTo(CFrame.new(0, 600, 0))
+			WorkerAppearance.apply(m, rid)
+			expect(rid .. " reveal swap = template", signature(m) == signature(models[rid]))
+			m:Destroy()
+		end
+	end
+end
+
+local function odds()
+	for _, zone in { "MainStreet", "SunkenKingdom", "BillionaireHills" } do
+		local count = {}
+		for _ = 1, 10000 do
+			local r = WorkerCatalogue.get(WorkerService.rollWorkerId(zone)).rarity
+			count[r] = (count[r] or 0) + 1
+		end
+		local texts = {}
+		for rarity, want in ODDS do
+			local got = (count[rarity] or 0) / 100
+			local tol = math.max(1.2, want * 0.6)
+			table.insert(texts, ("%s %.2f%%"):format(rarity, got))
+			expect(("SIM %s %s %.2f%% vs %.1f%%"):format(zone, rarity, got, want), math.abs(got - want) <= tol, nil, true)
+		end
+		info("SIM rolls " .. zone, table.concat(texts, ", "))
+	end
+end
+
+local function partsBudget()
+	local ids = {}
+	for id, spec in CreatureSpecs do
+		if type(spec) == "table" then
+			table.insert(ids, id)
+		end
+	end
+	local byRarity = {}
+	for _, id in ids do
+		local r = WorkerCatalogue.get(id).rarity
+		byRarity[r] = byRarity[r] or {}
+		table.insert(byRarity[r], id)
+	end
+	local function draw(): string
+		local x, acc = math.random() * 100, 0
+		for _, r in { "Common", "Rare", "Epic", "Legendary", "Secret" } do
+			acc += ODDS[r]
+			if x <= acc and byRarity[r] then
+				return byRarity[r][math.random(#byRarity[r])]
+			end
+		end
+		return byRarity.Common[math.random(#byRarity.Common)]
+	end
+	local before = 0
+	for _, d in workspace:GetDescendants() do
+		if d:IsA("BasePart") then
+			before += 1
+		end
+	end
+	info("Workspace parts now", before)
+	for _, pads in { 6, 14 } do
+		local folder = Instance.new("Folder")
+		folder.Name = "Sim035"
+		folder.Parent = workspace
+		local total, cr, crN = 0, 0, 0
+		for i = 1, 12 * pads do
+			local id = draw()
+			local c = models[id]:Clone()
+			c.Parent = folder
+			c:PivotTo(CFrame.new(2000 + (i % 40) * 12, 300, (i // 40) * 12))
+			local n = parts(c)
+			total += n
+			local r = WorkerCatalogue.get(id).rarity
+			if r == "Common" or r == "Rare" then
+				cr += n
+				crN += 1
+			end
+		end
+		local after = 0
+		for _, d in workspace:GetDescendants() do
+			if d:IsA("BasePart") then
+				after += 1
+			end
+		end
+		local avg = if crN > 0 then cr / crN else 0
+		info(
+			("SIM 12 lots x %d pads"):format(pads),
+			("creatures=%d creature parts=%d Workspace total=%d (+%d) Common/Rare avg=%.1f parts"):format(12 * pads, total, after, after - before, avg)
+		)
+		expect(("SIM Common/Rare on pads average <= 25 parts (%d pads)"):format(pads), avg <= 25, avg, true)
+		folder:Destroy()
+	end
+end
+
+local errorsSeen = {}
+local LogService = game:GetService("LogService")
+LogService.MessageOut:Connect(function(message, kind)
+	if kind == Enum.MessageType.MessageError and (message:find("Creature") or message:find("ZoneSpawner") or message:find("WorkerReveal")) then
+		table.insert(errorsSeen, message)
+	end
+end)
+
+scenario("models", models_)
+scenario("same", same)
+scenario("odds", odds)
+scenario("parts", partsBudget)
+section = "errors"
+expect("no creature / spawner errors in the log", #errorsSeen == 0, table.concat(errorsSeen, " | "))
+finish("DONE")

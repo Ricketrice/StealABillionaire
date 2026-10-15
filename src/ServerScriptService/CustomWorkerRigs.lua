@@ -14,6 +14,8 @@ local ServerStorage = game:GetService("ServerStorage")
 local CustomWorkers = require(ReplicatedStorage:WaitForChild("CustomWorkers"))
 local NPCAnimation = require(script.Parent:WaitForChild("NPCAnimation"))
 local NPCWanderer = require(script.Parent:WaitForChild("NPCWanderer"))
+local CollectionService = game:GetService("CollectionService")
+local CreatureBuilder = require(script.Parent:WaitForChild("CreatureBuilder")) -- 035: builds ReplicatedStorage.CreatureModels
 
 local CustomWorkerRigs = {}
 
@@ -22,6 +24,12 @@ local AVATAR_RIGS_FOLDER = "WorkerRigs019R" -- real Roblox avatars, for workers 
 
 -- The rig template for a worker, or nil if it has no custom model (or it is switched off).
 function CustomWorkerRigs.getTemplate(workerId: string): Model?
+	-- 035: the one creature model every place clones; creatures without a spec yet fall back to the 019 rigs.
+	local creatures = ReplicatedStorage:FindFirstChild(CreatureBuilder.FOLDER)
+	local creature = creatures and creatures:FindFirstChild(workerId)
+	if creature and creature:IsA("Model") then
+		return creature
+	end
 	local custom = CustomWorkers.get(workerId)
 	if not custom then
 		return nil
@@ -71,6 +79,12 @@ function CustomWorkerRigs.apply(npc: Model, workerId: string): boolean
 	npc.PrimaryPart = root
 	fresh:Destroy()
 
+	if template:GetAttribute("CreatureId") then
+		npc:SetAttribute("CreatureId", template:GetAttribute("CreatureId"))
+		npc:SetAttribute("CreatureScale", template:GetAttribute("CreatureScale"))
+		npc:SetAttribute("CreatureBuiltScale", template:GetAttribute("CreatureScale"))
+		CollectionService:AddTag(npc, CreatureBuilder.TAG)
+	end
 	if npc:IsDescendantOf(workspace) then
 		NPCAnimation.attach(npc) -- the old rig's animation tracks went with its Humanoid
 	end

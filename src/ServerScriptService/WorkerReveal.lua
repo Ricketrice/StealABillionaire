@@ -43,6 +43,17 @@ function WorkerReveal.roll(_player: Player, npc: Model, zone: { folder: Instance
 	pending[npc] = WorkerService.newIdentity(WorkerService.rollWorkerId(zoneId, zone.odds), zoneId)
 end
 
+-- 035: a wanderer that was rolled when it spawned and already wears its creature's look. `npc` was cloned from
+-- the creature's model, so the look is the final one; the steal only reveals the identity (card + fanfare).
+function WorkerReveal.adoptRolled(npc: Model, zoneId: string, workerId: string)
+	local identity = WorkerService.newIdentity(workerId, zoneId)
+	pending[npc] = identity
+	npc:SetAttribute("CreatureBuiltScale", npc:GetAttribute("CreatureScale"))
+	npc:SetAttribute("LookId", workerId)
+	local worker = WorkerCatalogue.get(workerId)
+	npc:SetAttribute("PromptName", ("%s (%s)"):format(worker and worker.name or workerId, worker and worker.rarity or "?"))
+end
+
 -- Applies the rolled identity and look. Returns false if this NPC was never rolled.
 function WorkerReveal.reveal(npc: Model): boolean
 	local identity = pending[npc]
@@ -51,7 +62,9 @@ function WorkerReveal.reveal(npc: Model): boolean
 		return false
 	end
 	WorkerService.apply(npc, identity)
-	WorkerAppearance.apply(npc, identity.workerId)
+	if npc:GetAttribute("LookId") ~= identity.workerId then
+		WorkerAppearance.apply(npc, identity.workerId)
+	end
 	return true
 end
 

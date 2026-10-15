@@ -119,7 +119,7 @@ end
 local function fighterModel(entry: Entry, platform: BasePart, folder: Instance): (Model?, Frame?)
 	local id = entry.id
 	local source = nil
-	for _, name in { "WorkerPreviews019R", "WorkerPreviews019", "WorkerPreviews" } do
+	for _, name in { "CreatureModels", "WorkerPreviews019R", "WorkerPreviews019", "WorkerPreviews" } do
 		local previews = ReplicatedStorage:FindFirstChild(name)
 		source = source or (previews and previews:FindFirstChild(id))
 	end
