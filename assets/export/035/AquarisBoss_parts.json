@@ -1,0 +1,252 @@
+{
+ "model_tris": 8478,
+ "meshparts": 49,
+ "parts_with_world_fx": 64,
+ "parts_with_captured_fx": 54,
+ "tris_by_piece": {
+  "TailC": 536,
+  "TailB": 160,
+  "TailA": 228,
+  "Body": 1208,
+  "Neck": 636,
+  "Head": 2202,
+  "Jaw": 248,
+  "LegFR": 344,
+  "LegHR": 344,
+  "LegFL": 344,
+  "LegHL": 344,
+  "WingR": 942,
+  "WingL": 942
+ },
+ "tris_per_mesh": {
+  "AquarisBoss_TailC_Blue": 164,
+  "AquarisBoss_TailC_Deep": 52,
+  "AquarisBoss_TailB_Blue": 100,
+  "AquarisBoss_TailB_Deep": 48,
+  "AquarisBoss_TailB_Ice": 12,
+  "AquarisBoss_TailA_Blue": 96,
+  "AquarisBoss_TailA_Deep": 64,
+  "AquarisBoss_TailA_Ice": 68,
+  "AquarisBoss_Body_Blue": 144,
+  "AquarisBoss_Body_Deep": 312,
+  "AquarisBoss_Body_Ice": 268,
+  "AquarisBoss_Neck_Blue": 254,
+  "AquarisBoss_Neck_Deep": 24,
+  "AquarisBoss_Neck_Ice": 262,
+  "AquarisBoss_Head_Blue": 186,
+  "AquarisBoss_Head_Deep": 266,
+  "AquarisBoss_Head_Ice": 260,
+  "AquarisBoss_Head_Glow": 592,
+  "AquarisBoss_Head_Ink": 352,
+  "AquarisBoss_Head_Tooth": 48,
+  "AquarisBoss_Head_Gold": 498,
+  "AquarisBoss_Neck_Glow": 96,
+  "AquarisBoss_Jaw_Ice": 176,
+  "AquarisBoss_Jaw_Gold": 48,
+  "AquarisBoss_Jaw_Tooth": 24,
+  "AquarisBoss_Body_Gold": 476,
+  "AquarisBoss_Body_Glow": 8,
+  "AquarisBoss_TailC_Gold": 80,
+  "AquarisBoss_TailC_Glow": 240,
+  "AquarisBoss_LegFR_Blue": 244,
+  "AquarisBoss_LegFR_Gold": 64,
+  "AquarisBoss_LegFR_Claw": 36,
+  "AquarisBoss_LegHR_Blue": 244,
+  "AquarisBoss_LegHR_Gold": 64,
+  "AquarisBoss_LegHR_Claw": 36,
+  "AquarisBoss_LegFL_Blue": 244,
+  "AquarisBoss_LegFL_Gold": 64,
+  "AquarisBoss_LegFL_Claw": 36,
+  "AquarisBoss_LegHL_Blue": 244,
+  "AquarisBoss_LegHL_Gold": 64,
+  "AquarisBoss_LegHL_Claw": 36,
+  "AquarisBoss_WingR_Membrane": 468,
+  "AquarisBoss_WingR_Deep": 208,
+  "AquarisBoss_WingR_Ice": 176,
+  "AquarisBoss_WingR_Gold": 90,
+  "AquarisBoss_WingL_Membrane": 468,
+  "AquarisBoss_WingL_Deep": 208,
+  "AquarisBoss_WingL_Ice": 176,
+  "AquarisBoss_WingL_Gold": 90
+ },
+ "fx_mesh_tris": {
+  "AquarisBossFX_Ring": 488,
+  "AquarisBossFX_StreamR": 188,
+  "AquarisBossFX_StreamL": 188
+ },
+ "bubbles_world": [
+  [
+   -2.36,
+   10.48,
+   4.88,
+   0.2
+  ],
+  [
+   2.8,
+   9.94,
+   2.77,
+   0.15
+  ],
+  [
+   2.39,
+   4.78,
+   6.2,
+   0.15
+  ],
+  [
+   5.01,
+   -3.83,
+   6.0,
+   0.15
+  ],
+  [
+   -5.22,
+   6.13,
+   1.17,
+   0.13
+  ],
+  [
+   -1.93,
+   -1.64,
+   1.98,
+   0.11
+  ],
+  [
+   3.81,
+   -2.75,
+   1.96,
+   0.11
+  ],
+  [
+   4.5,
+   4.19,
+   6.72,
+   0.24
+  ],
+  [
+   1.04,
+   10.49,
+   4.42,
+   0.21
+  ],
+  [
+   4.28,
+   8.45,
+   5.63,
+   0.18
+  ],
+  [
+   -4.42,
+   1.66,
+   6.94,
+   0.16
+  ],
+  [
+   1.99,
+   -0.1,
+   5.0,
+   0.13
+  ]
+ ],
+ "bubbles_captured": [
+  [
+   1.8,
+   -2.4,
+   6.0,
+   0.1
+  ],
+  [
+   -2.0,
+   1.0,
+   4.6,
+   0.12
+  ],
+  [
+   1.6,
+   4.5,
+   4.0,
+   0.09
+  ],
+  [
+   -1.6,
+   7.5,
+   3.0,
+   0.1
+  ],
+  [
+   0.2,
+   -3.0,
+   8.2,
+   0.08
+  ]
+ ],
+ "size_at_scale1_studs": [
+  2.67,
+  7.09,
+  3.61
+ ],
+ "joints_export_frame": {
+  "Neck (Body->Neck)": [
+   0.0,
+   -0.933,
+   1.383
+  ],
+  "Head (Neck->Head)": [
+   0.0,
+   -1.5,
+   2.667
+  ],
+  "Jaw hinge": [
+   0.0,
+   -1.8,
+   2.567
+  ],
+  "TailA (Body->TailA)": [
+   0.0,
+   0.733,
+   1.2
+  ],
+  "TailB (TailA->TailB)": [
+   0.0,
+   1.833,
+   0.717
+  ],
+  "TailC (TailB->TailC)": [
+   0.0,
+   2.633,
+   0.433
+  ],
+  "WingR shoulder": [
+   0.233,
+   -0.767,
+   1.783
+  ],
+  "WingL shoulder": [
+   -0.233,
+   -0.767,
+   1.783
+  ],
+  "LegFR hip": [
+   0.267,
+   -0.767,
+   1.3
+  ],
+  "LegFL hip": [
+   -0.267,
+   -0.767,
+   1.3
+  ],
+  "LegHR hip": [
+   0.317,
+   0.5,
+   1.2
+  ],
+  "LegHL hip": [
+   -0.317,
+   0.5,
+   1.2
+  ]
+ },
+ "export_scale": "1 unit = 1 stud at spec.scale 1; world = x3",
+ "naming": "AquarisBoss_<Piece>_<Colour>; anchor AquarisBoss_Anchor at the origin (ground under the waist)"
+}

@@ -32,3 +32,8 @@ World wild = `spec.scale` 3 (model as built). `CreatureScaler`: carried <= 1.3, 
 4. Tests: `creature035` solo (budget, animated parts bind, carried <= 1.3, pad <= 1.6) + a triangle-total check <= 14k + flag-off = old look.
 5. Do not touch rarity, odds, spawn logic, capture, worker ids or income. Rarity is shown by the design and presentation.
 Open for the owner: per-colour MeshParts (no uploads) vs one texture atlas (needs an uploaded asset id).
+
+## Production pass (branch `art-aquaris`) - ready to import, NOT imported
+- Script `tools/blender/build_035_aquaris_boss.py` -> `assets/blender/creatures/AquarisBoss.blend`, `assets/export/035/AquarisBoss.fbx`, `AquarisBossFX.fbx`, `AquarisBoss_parts.json` (copies in `~/Documents/035`). Preview sheet `~/Pictures/035_preview/boss/aquaris_boss_sheet.png`.
+- 49 MeshParts named `AquarisBoss_<Piece>_<Colour>`, 8,478 tris, biggest mesh 592. Pieces: Head, Jaw, Neck, Body, TailA/B/C, WingR/L, LegFR/FL/HR/HL. FX meshes: Ring, StreamR, StreamL (864 tris); bubbles = plain Neon spheres (positions in the json).
+- Import: Studio 3D Importer, one Model per FBX (Imports035: `AquarisBoss`, `AquarisBossFX`); the FBX is in Blender metres so Studio shows it 100x: do not resize, `CreatureBuilder` scales with `fit`. Size at spec.scale 1 = 2.7 x 7.1 x 3.6 studs (world = x3).
