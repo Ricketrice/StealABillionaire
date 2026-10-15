@@ -1,7 +1,7 @@
 # Project Status
 _Keep under ~60 lines. Replace sections at each milestone end; don't append history._
 
-**Current milestone:** 033 — Core loop + monetization, built and tested; waiting for the owner's play-check. **Last finished:** 032 — Boss Heist + Speed.
+**Current milestone:** 034 — Steal a Boss (D41-D43), branch `milestone-034`. **Built in Studio (2026-10-15):** Phase 1 lane + Hideout Camp, Phase 2 zones (Knight's Keep, Sunken Kingdom, Ember Academy), Phase 3 Spell Run course, Phase 4 text reskin + hidden battle stats. **Waiting:** owner imports `assets/export/034/*.fbx` into `ServerStorage.Imports034`; then `Build032.B1_Vault("castle")` (Sir Ironclad + treasury), kit swap, all tests (2-client tests need Studio restarted + browser closed), measurements, final report. Backups: `backups/pre034b.rbxl`, `_Backups.Pre034b_Scripts`; parked originals in `ServerStorage._Parked034`. **Last finished:** 033 — Core loop + monetization.
 **Save schema:** 3 (optional fields: 029 `hub.daily/play/seen/offline/index/settings/favs`; 030 `hub.peak`; 031 `hub.race`; 032 `hub.heist/speed`; 033 `hub.pads/intro/receipts/passes/starter/born` + the worker record's `level`). **Map:** `Workspace.World.SkyCity`, built by `tools/build027`.
 
 ## Built
