@@ -734,7 +734,7 @@ local function aquaris(): Spec
 		local ang = t * 5.2
 		local r = 0.45 + math.sin(t * math.pi) * 0.5
 		local pos = v3(math.sin(ang) * 1.5 * (1 - t * 0.35), -2.7 + t * 4.6, math.cos(ang) * 0.9 * (1 - t * 0.35) + 0.4)
-		local shade = if i % 2 == 0 then rgb(40, 150, 215) else rgb(70, 190, 235)
+		local shade = if i % 2 == 0 then rgb(18, 84, 176) else rgb(70, 214, 240)
 		table.insert(props, P("Seg" .. i, "LowerTorso", "Ball", v3(r * 2, r * 2, r * 2), cf(pos), shade, { mat = Enum.Material.SmoothPlastic }))
 		if i % 3 == 0 then -- back frills
 			table.insert(
@@ -745,10 +745,13 @@ local function aquaris(): Spec
 					"Block",
 					v3(0.08, r * 1.3, r * 1.2),
 					cf(pos + v3(0, r * 0.95, 0.1)),
-					rgb(150, 235, 255),
-					{ trans = 0.25, anim = { kind = "swing", axis = "Z", amp = 8, speed = 2.2, phase = i * 0.5 } }
+					rgb(130, 245, 255),
+					{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Z", amp = 8, speed = 2.2, phase = i * 0.5 } }
 				)
 			)
+		end
+		if i % 3 == 2 then -- gold belly plates
+			table.insert(props, P("BellyPlate" .. i, "LowerTorso", "Block", v3(r * 1.3, r * 0.4, 0.16), cf(pos + v3(0, 0, -r * 0.92)), GOLD, { mat = METAL }))
 		end
 		if i % 4 == 1 then -- pearly belly scales
 			table.insert(props, P("Scale" .. i, "LowerTorso", "Ball", v3(r * 0.8, r * 0.8, r * 0.8), cf(pos + v3(0, 0, -r * 0.75)), rgb(240, 250, 255), { neon = true }))
@@ -768,18 +771,25 @@ local function aquaris(): Spec
 		),
 		P("Snout", "LowerTorso", "Block", v3(0.9, 0.55, 0.9), cf(head + v3(0, -0.05, -1.05)), rgb(70, 190, 235)),
 		P("Mouth", "LowerTorso", "Block", v3(0.3, 0.3, 0.3), cf(head + v3(0, -0.3, -1.55)), rgb(20, 60, 110)),
-		P("EyeL", "LowerTorso", "Ball", v3(0.3, 0.3, 0.3), cf(head + v3(-0.55, 0.3, -0.65)), rgb(255, 240, 120), { neon = true }),
-		P("EyeR", "LowerTorso", "Ball", v3(0.3, 0.3, 0.3), cf(head + v3(0.55, 0.3, -0.65)), rgb(255, 240, 120), { neon = true }),
-		P("HornL", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(-0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(18)), rgb(255, 235, 180)),
-		P("HornR", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(-18)), rgb(255, 235, 180)),
+		P("EyeL", "LowerTorso", "Ball", v3(0.46, 0.46, 0.4), cf(head + v3(-0.55, 0.3, -0.65)), rgb(190, 255, 255), { neon = true }),
+		P("EyeR", "LowerTorso", "Ball", v3(0.46, 0.46, 0.4), cf(head + v3(0.55, 0.3, -0.65)), rgb(190, 255, 255), { neon = true }),
+		P("PupilL", "LowerTorso", "Ball", v3(0.2, 0.3, 0.14), cf(head + v3(-0.55, 0.3, -0.88)), rgb(10, 30, 60)),
+		P("PupilR", "LowerTorso", "Ball", v3(0.2, 0.3, 0.14), cf(head + v3(0.55, 0.3, -0.88)), rgb(10, 30, 60)),
+		P("HornL", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(-0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(18)), rgb(255, 205, 70), { mat = METAL }),
+		P("HornR", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(-18)), rgb(255, 205, 70), { mat = METAL }),
+		P("HeadSpikeA", "LowerTorso", "Wedge", v3(0.3, 0.8, 0.4), cf(head + v3(0, 0.75, -0.2)), rgb(255, 205, 70), { mat = METAL }),
+		P("HeadSpikeB", "LowerTorso", "Wedge", v3(0.26, 0.7, 0.36), cf(head + v3(0, 0.7, 0.35)), rgb(255, 205, 70), { mat = METAL }),
+		P("HeadSpikeC", "LowerTorso", "Wedge", v3(0.22, 0.6, 0.3), cf(head + v3(0, 0.6, 0.85)), rgb(255, 205, 70), { mat = METAL }),
+		P("CheekSpikeL", "LowerTorso", "Wedge", v3(0.3, 0.6, 0.3), cf(head + v3(-0.8, -0.1, 0.2)) * CFrame.Angles(0, 0, rad(90)), rgb(255, 205, 70), { mat = METAL }),
+		P("CheekSpikeR", "LowerTorso", "Wedge", v3(0.3, 0.6, 0.3), cf(head + v3(0.8, -0.1, 0.2)) * CFrame.Angles(0, 0, rad(-90)), rgb(255, 205, 70), { mat = METAL }),
 		P(
 			"FinL",
 			"LowerTorso",
 			"Block",
 			v3(1.0, 0.1, 0.9),
 			cf(head + v3(-1.1, 0.0, 0.5)),
-			rgb(150, 235, 255),
-			{ trans = 0.25, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6 } }
+			rgb(130, 245, 255),
+			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6 } }
 		),
 		P(
 			"FinR",
@@ -787,8 +797,8 @@ local function aquaris(): Spec
 			"Block",
 			v3(1.0, 0.1, 0.9),
 			cf(head + v3(1.1, 0.0, 0.5)),
-			rgb(150, 235, 255),
-			{ trans = 0.25, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6, phase = 3 } }
+			rgb(130, 245, 255),
+			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6, phase = 3 } }
 		),
 		P(
 			"TailFinA",
@@ -796,8 +806,8 @@ local function aquaris(): Spec
 			"Block",
 			v3(1.4, 0.1, 0.9),
 			cf(v3(0, -2.9, 0.4)),
-			rgb(150, 235, 255),
-			{ trans = 0.25, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4 } }
+			rgb(130, 245, 255),
+			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4 } }
 		),
 		P(
 			"TailFinB",
@@ -805,8 +815,8 @@ local function aquaris(): Spec
 			"Block",
 			v3(0.9, 0.1, 1.4),
 			cf(v3(0, -2.9, 0.4)),
-			rgb(150, 235, 255),
-			{ trans = 0.25, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4, phase = 1 } }
+			rgb(130, 245, 255),
+			{ trans = 0.3, neon = true, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4, phase = 1 } }
 		),
 		P("Pool", "LowerTorso", "Cylinder", v3(5.4, 0.1, 5.4), cf(0, -3.15, 0.2), rgb(90, 200, 255), { neon = true, trans = 0.5, anim = { kind = "spin", axis = "Y", amp = 25 } }),
 	}
@@ -822,6 +832,8 @@ local function aquaris(): Spec
 			{ on = "Mouth", kind = "puff", color = rgb(150, 220, 255), rate = 22, size = 2.2, aura = true }, -- the water breath
 			{ on = "Seg10", kind = "bubble", color = rgb(190, 235, 255), rate = 10, size = 1.6, aura = true },
 			{ on = "Head", kind = "spark", color = rgb(210, 245, 255), rate = 8, aura = true },
+			{ on = "Seg14", kind = "drop", color = rgb(170, 235, 255), rate = 16, size = 1.5, aura = true }, -- water droplets rain off the body
+			{ on = "Seg6", kind = "drop", color = rgb(120, 210, 255), rate = 10, size = 1.2, aura = true },
 		},
 		light = rgb(120, 210, 255),
 		halo = rgb(90, 200, 255),
@@ -1302,8 +1314,8 @@ end
 
 function Kit.pads(color: Color3): { Prop }
 	return {
-		P("PadL", "LeftUpperArm", "Ball", v3(1.2, 0.7, 1.2), cf(0, 0.42, 0), color),
-		P("PadR", "RightUpperArm", "Ball", v3(1.2, 0.7, 1.2), cf(0, 0.42, 0), color),
+		P("PadL", "LeftUpperArm", "Ball", v3(0.95, 0.56, 0.95), cf(0, 0.38, 0), color),
+		P("PadR", "RightUpperArm", "Ball", v3(0.95, 0.56, 0.95), cf(0, 0.38, 0), color),
 	}
 end
 
@@ -1319,7 +1331,7 @@ function Kit.cape(color: Color3, hem: Color3, w: number, h: number): { Prop }
 				"UpperTorso",
 				"Block",
 				v3(w * (0.82 + 0.16 * i), step, 0.1),
-				cf(0, 0.6 - step * (i - 0.5), 0.62 + 0.07 * i),
+				cf(0, 0.6 - step * (i - 0.5), 0.56 + 0.07 * i),
 				color,
 				{ anim = { kind = "swing", axis = "X", amp = 3 + 3 * i, speed = 1.8, phase = i * 0.4, pivot = cf(0, 0.7, 0.62) } }
 			)
@@ -1344,7 +1356,7 @@ end
 -- optional Neon fuller. Returns the props and a trail emitter for the swing.
 function Kit.sword(o: { name: string, len: number, w: number, blade: Color3, edge: Color3?, guard: Color3, grip: Color3, amp: number?, speed: number? }): ({ Prop }, Fx)
 	local anim = { kind = "swing", axis = "X", amp = o.amp or 40, speed = o.speed or 2.0 }
-	local y = -0.25
+	local y = -0.02
 	local out: { Prop } = {
 		P("Grip", "RightHand", "Cylinder", v3(0.22, 0.85, 0.22), lay(cf(0, y, 0.1)), o.grip, { anim = anim }),
 		P("Pommel", "RightHand", "Ball", v3(0.34, 0.34, 0.34), cf(0, y, 0.55), o.guard, { mat = METAL, anim = anim }),
@@ -1419,14 +1431,14 @@ function Kit.armor(o: Armor): { Prop }
 	local t = o.tier
 	local crestColor = o.crestColor or o.trim
 	if groups.helm then
-		add(P(o.helmName or "HelmCap", "Head", "Ball", v3(1.42, 0.95, 1.42), cf(0, 0.62, 0.02), o.main, { mat = METAL }))
-		add(P("HelmBrim", "Head", "Cylinder", v3(1.46, 0.14, 1.46), cf(0, 0.3, 0.02), o.trim, { mat = METAL }))
-		add(P("CheekL", "Head", "Block", v3(0.14, 0.7, 0.5), cf(-0.66, 0, 0.12), o.main, { mat = METAL }))
-		add(P("CheekR", "Head", "Block", v3(0.14, 0.7, 0.5), cf(0.66, 0, 0.12), o.main, { mat = METAL }))
-		add(P("VisorGlow", "Head", "Block", v3(0.9, 0.09, 0.1), cf(0, 0.44, -0.7), o.glow, { neon = true }))
+		add(P(o.helmName or "HelmCap", "Head", "Ball", v3(1.5, 0.95, 1.4), cf(0, 0.72, 0.02), o.main, { mat = METAL }))
+		add(P("HelmBrim", "Head", "Cylinder", v3(1.4, 0.12, 1.3), cf(0, 0.46, 0.02), o.trim, { mat = METAL }))
+		add(P("CheekL", "Head", "Block", v3(0.14, 0.7, 0.5), cf(-0.72, -0.02, 0.15), o.main, { mat = METAL }))
+		add(P("CheekR", "Head", "Block", v3(0.14, 0.7, 0.5), cf(0.72, -0.02, 0.15), o.main, { mat = METAL }))
+		add(P("VisorGlow", "Head", "Block", v3(0.9, 0.09, 0.08), cf(0, 0.56, -0.62), o.glow, { neon = true }))
 		local crest = o.crest or "plume"
 		if crest == "plume" then
-			add(P("Plume", "Head", "Block", v3(0.22, 0.7 + 0.25 * t, 1.3), cf(0, 1.2, 0.1), crestColor, { anim = { kind = "swing", axis = "X", amp = 9, speed = 2.2 } }))
+			add(P("Plume", "Head", "Block", v3(0.22, 0.7 + 0.25 * t, 1.3), cf(0, 1.25, 0.1), crestColor, { anim = { kind = "swing", axis = "X", amp = 9, speed = 2.2 } }))
 			add(P("PlumeBase", "Head", "Block", v3(0.3, 0.3, 0.6), cf(0, 1.05, -0.1), o.trim, { mat = METAL }))
 		elseif crest == "horns" then
 			for _, s in { -1, 1 } do
@@ -1457,9 +1469,9 @@ function Kit.armor(o: Armor): { Prop }
 	if groups.shoulders then
 		for _, s in { -1, 1 } do
 			local side = if s < 0 then "Left" else "Right"
-			add(P("Pauldron" .. s, side .. "UpperArm", "Ball", v3(1.3 + 0.12 * t, 0.9 + 0.08 * t, 1.3 + 0.12 * t), cf(0, 0.4, 0), o.main, { mat = METAL }))
-			add(P("PauldronRim" .. s, side .. "UpperArm", "Cylinder", v3(1.3 + 0.12 * t, 0.12, 1.3 + 0.12 * t), cf(0, 0.12, 0), o.trim, { mat = METAL }))
-			add(P("PauldronSpike" .. s, side .. "UpperArm", "Wedge", v3(0.3, 0.55 + 0.2 * t, 0.3), cf(0, 0.95 + 0.06 * t, 0), o.trim, { mat = METAL }))
+			add(P("Pauldron" .. s, side .. "UpperArm", "Ball", v3(1.05 + 0.1 * t, 0.72 + 0.06 * t, 1.05 + 0.1 * t), cf(0, 0.38, 0), o.main, { mat = METAL }))
+			add(P("PauldronRim" .. s, side .. "UpperArm", "Cylinder", v3(1.05 + 0.1 * t, 0.1, 1.05 + 0.1 * t), cf(0, 0.12, 0), o.trim, { mat = METAL }))
+			add(P("PauldronSpike" .. s, side .. "UpperArm", "Wedge", v3(0.26, 0.45 + 0.16 * t, 0.26), cf(0, 0.78 + 0.05 * t, 0), o.trim, { mat = METAL }))
 			if t >= 2 then
 				add(
 					P(
@@ -1495,14 +1507,14 @@ function Kit.armor(o: Armor): { Prop }
 	end
 	if groups.gauntlets then
 		for _, s in { "Left", "Right" } do
-			add(P("Gauntlet" .. s, s .. "LowerArm", "Block", v3(1.18, 0.95, 1.18), cf(0, -0.05, 0), o.main, { mat = METAL }))
-			add(P("GauntletRim" .. s, s .. "LowerArm", "Cylinder", v3(1.24, 0.12, 1.24), cf(0, 0.42, 0), o.trim, { mat = METAL }))
+			add(P("Gauntlet" .. s, s .. "LowerArm", "Block", v3(1.14, 0.85, 1.14), cf(0, -0.02, 0), o.main, { mat = METAL }))
+			add(P("GauntletRim" .. s, s .. "LowerArm", "Cylinder", v3(1.24, 0.12, 1.24), cf(0, 0.36, 0), o.trim, { mat = METAL }))
 		end
 	end
 	if groups.boots then
 		for _, s in { "Left", "Right" } do
 			add(P("Boot" .. s, s .. "Foot", "Block", v3(1.15, 0.55, 1.4), cf(0, 0.1, -0.1), o.main, { mat = METAL }))
-			add(P("Greave" .. s, s .. "LowerLeg", "Block", v3(1.15, 1.0, 1.15), cf(0, 0, 0), o.main, { mat = METAL }))
+			add(P("Greave" .. s, s .. "LowerLeg", "Block", v3(1.1, 0.85, 1.1), cf(0, 0, 0), o.main, { mat = METAL }))
 			if t >= 2 then
 				add(P("Knee" .. s, s .. "UpperLeg", "Ball", v3(0.95, 0.95, 0.95), cf(0, -0.45, -0.4), o.trim, { mat = METAL }))
 			end
@@ -1511,6 +1523,24 @@ function Kit.armor(o: Armor): { Prop }
 	if groups.cape and o.cape then
 		for _, p in Kit.cape(o.cape, o.capeHem or o.trim, 1.9 + 0.1 * t, 3.0 + 0.4 * t) do
 			add(p)
+		end
+	end
+	return out
+end
+
+-- A bow in the left hand: grip, three curved limb segments per side bending toward the archer, and a taut string.
+function Kit.bow(wood: Color3, string: Color3): { Prop }
+	local out: { Prop } = {
+		P("BowMid", "LeftHand", "Block", v3(0.2, 0.9, 0.22), cf(0, 0, -0.6), wood),
+		P("BowString", "LeftHand", "Block", v3(0.04, 3.3, 0.04), cf(0, 0, -0.18), string, { anim = { kind = "push", axis = "Z", amp = 0.28, speed = 2.6 } }),
+	}
+	local segs = { { 0.62, -0.56, 12 }, { 1.2, -0.45, 28 }, { 1.7, -0.27, 46 } } -- y, z, tilt toward the archer (degrees)
+	for i, sg in segs do
+		for _, d in { 1, -1 } do
+			table.insert(
+				out,
+				P("BowLimb" .. i .. (if d > 0 then "T" else "B"), "LeftHand", "Block", v3(0.15, 0.7, 0.18), cf(0, d * sg[1], sg[2]) * CFrame.Angles(rad(d * sg[3]), 0, 0), wood)
+			)
 		end
 	end
 	return out
@@ -1581,7 +1611,8 @@ local function polishList(): { [string]: Polish }
 	}
 	L.street_hustler = { -- Apple Archer (R)
 		outfit = { top = rgb(34, 120, 70), waist = rgb(70, 50, 36), arms = rgb(34, 120, 70), hands = rgb(210, 170, 60), legs = rgb(56, 60, 80), feet = rgb(48, 34, 28) },
-		add = { Kit.sash(rgb(230, 60, 50)), Kit.pads(rgb(120, 76, 40)), Kit.belt(rgb(70, 50, 36), GOLD) },
+		drop = { "BowMid", "BowTop", "BowBottom", "BowString" },
+		add = { Kit.sash(rgb(230, 60, 50)), Kit.pads(rgb(120, 76, 40)), Kit.belt(rgb(70, 50, 36), GOLD), Kit.bow(rgb(150, 98, 52), rgb(245, 245, 238)) },
 		fx = { { on = "Apple", kind = "spark", color = rgb(255, 90, 80), rate = 2 } },
 	}
 	L.business_betty = { -- Banner Bearer (R)
@@ -1591,7 +1622,7 @@ local function polishList(): { [string]: Polish }
 	}
 	do
 		local blade, trail = sword("Sword", 2.6, 0.5, rgb(225, 232, 242), rgb(90, 200, 255), rgb(205, 212, 226), LEATHER, 35)
-		local shield = Kit.shield({ w = 2.2, h = 3.0, face = rgb(40, 100, 220), rim = rgb(205, 212, 226), emblem = WHITE, at = cf(-0.5, 0.4, -1.15) })
+		local shield = Kit.shield({ w = 2.2, h = 3.0, face = rgb(40, 100, 220), rim = rgb(205, 212, 226), emblem = WHITE, at = cf(-0.45, 0.1, -0.75) })
 		L.security_sam = { -- Shield Knight (E)
 			outfit = { top = rgb(38, 48, 90), waist = rgb(28, 32, 60), arms = rgb(38, 48, 90), hands = STEEL, legs = rgb(28, 34, 62), feet = STEEL_D },
 			drop = { "Helm", "HelmTop", "Visor", "Crest", "PauldronL", "PauldronR", "ChestPlate", "ChestStripe", "ShieldBorder", "Shield", "ShieldBoss", "Sword", "SwordGuard" },
@@ -1667,7 +1698,7 @@ local function polishList(): { [string]: Polish }
 	end
 	do
 		local blade, trail = sword("Blade", 4.8, 0.95, rgb(205, 212, 226), rgb(255, 110, 30), rgb(150, 158, 175), rgb(60, 40, 40), 35)
-		local shield = Kit.shield({ w = 2.7, h = 3.6, face = rgb(100, 18, 28), rim = rgb(150, 158, 175), emblem = rgb(255, 110, 30), at = cf(-0.7, 0.4, -1.36), neon = true })
+		local shield = Kit.shield({ w = 2.7, h = 3.6, face = rgb(100, 18, 28), rim = rgb(150, 158, 175), emblem = rgb(255, 110, 30), at = cf(-0.55, 0.15, -0.85), neon = true })
 		L.mystery_millionaire = { -- Sir Ironclad (S): dark iron, lava accents, horns
 			outfit = { top = rgb(40, 42, 54), waist = rgb(28, 30, 40), arms = rgb(40, 42, 54), hands = rgb(30, 30, 36), legs = rgb(30, 32, 42), feet = rgb(20, 20, 26) },
 			drop = {
@@ -1710,7 +1741,20 @@ local function polishList(): { [string]: Polish }
 	L.bubble_fish = {
 		skin = YELLOW,
 		outfit = { top = rgb(30, 160, 170), waist = rgb(20, 60, 110), arms = rgb(30, 160, 170), hands = rgb(255, 150, 40), legs = rgb(20, 60, 110), feet = rgb(255, 150, 40) },
-		add = { Kit.scarf(rgb(255, 150, 40)), Kit.belt(rgb(250, 200, 40), WHITE) },
+		add = {
+			Kit.belt(rgb(250, 200, 40), WHITE),
+			{
+				P("BigEyeL", "Head", "Ball", v3(0.55, 0.62, 0.3), cf(-0.3, 0.14, -0.58), WHITE),
+				P("BigEyeR", "Head", "Ball", v3(0.55, 0.62, 0.3), cf(0.3, 0.14, -0.58), WHITE),
+				P("PupilL", "Head", "Ball", v3(0.28, 0.36, 0.14), cf(-0.3, 0.14, -0.7), INK),
+				P("PupilR", "Head", "Ball", v3(0.28, 0.36, 0.14), cf(0.3, 0.14, -0.7), INK),
+				P("DorsalFin", "UpperTorso", "Wedge", v3(0.16, 1.3, 1.0), cf(0, 0.2, 0.75), rgb(255, 120, 40), { anim = { kind = "swing", axis = "X", amp = 8, speed = 3 } }),
+				P("TailFin", "LowerTorso", "Block", v3(0.14, 1.0, 0.9), cf(0, -0.35, 0.8), rgb(255, 150, 40), { anim = { kind = "swing", axis = "Y", amp = 14, speed = 3.2 } }),
+				P("ArmFinL", "LeftUpperArm", "Block", v3(0.1, 0.8, 0.8), cf(-0.55, -0.1, 0.1), rgb(255, 150, 40)),
+				P("ArmFinR", "RightUpperArm", "Block", v3(0.1, 0.8, 0.8), cf(0.55, -0.1, 0.1), rgb(255, 150, 40)),
+			},
+		},
+		fx = { { on = "Tank", kind = "bubble", color = rgb(190, 235, 255), rate = 8, size = 1.5, aura = true } },
 	}
 	L.hermit_porter = {
 		outfit = { top = rgb(40, 110, 160), waist = rgb(30, 40, 90), arms = rgb(40, 110, 160), hands = rgb(240, 140, 40), legs = rgb(30, 40, 90), feet = rgb(40, 36, 50) },
@@ -1891,6 +1935,8 @@ local function polishList(): { [string]: Polish }
 		set = { sound = "legendary_chime" },
 	}
 	L.the_trillionaire = { -- Ignis (S)
+		drop = { "EyeL", "EyeR" },
+		tweak = { BeardFlame = { at = cf(0, -1.25, -0.4) } },
 		outfit = { top = rgb(40, 16, 30), waist = rgb(255, 170, 40), arms = rgb(40, 16, 30), hands = rgb(255, 170, 40), legs = rgb(30, 12, 22), feet = rgb(255, 170, 40) },
 		recolor = {
 			Brim = rgb(40, 14, 34),
@@ -1906,6 +1952,8 @@ local function polishList(): { [string]: Polish }
 	}
 	return L
 end
+
+local HEAD_KEEP = { Beard = true, BeardFlame = true, HoodBack = true } -- sit on the chin / back of the head
 
 local function applyPolish()
 	for id, pol in polishList() do
@@ -1948,6 +1996,15 @@ local function applyPolish()
 			if tw then
 				for k, v in tw do
 					(p :: any)[k] = v
+				end
+			end
+		end
+		if not spec.own and not spec.hideBody then -- classic noob: the head reads, so hats and head decor are 20% smaller
+			for _, p in props do
+				if p.on == "Head" and not HEAD_KEEP[p.n or ""] then
+					local at = p.at.Position
+					p.size = p.size * 0.8
+					p.at = CFrame.new(at.X * 0.8, at.Y * 0.8 + 0.1, at.Z * 0.8) * p.at.Rotation
 				end
 			end
 		end

@@ -10,7 +10,7 @@
 --            carried scale <= 1.3, pad scale <= 1.6; reveal fires (WorkerUid, Rarity) on catch; name tag text
 --   odds     SIMULATED: 10,000 rolls per zone are within tolerance of the catalogue's rarity odds
 --   parts    SIMULATED: 12 lots x 6 pads and x 14 pads filled with creatures drawn by the odds: Workspace part total,
---            Common/Rare average parts (<= 35 wanted)
+--            Common/Rare average parts (<= 40 wanted)
 --   cap      real server, player standing in each zone: wanderers reach the cap (10 Knight's Keep, 8 Sunken Kingdom /
 --            Ember Academy for one player) and never exceed it; most spawn within ~125 studs of the player; wanderers
 --            more than 80 studs away are Dormant (frozen), near ones are not; parts of the zone's wanderers at the cap
@@ -90,7 +90,7 @@ local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"
 local CreatureSpecs = require(ReplicatedStorage:WaitForChild("CreatureSpecs")) :: any
 local CreatureAnim = require(ReplicatedStorage:WaitForChild("CreatureAnim")) :: any
 
-local BUDGET = { Common = 30, Rare = 45, Epic = 80, Legendary = 150, Secret = 250 }
+local BUDGET = { Common = 34, Rare = 49, Epic = 80, Legendary = 150, Secret = 250 }
 local ODDS = { Common = 70, Rare = 20, Epic = 8, Legendary = 1.8, Secret = 0.2 }
 local SIGNATURE = {
 	broke_bob = { "SwordBlade", "Helmet" },
@@ -371,7 +371,7 @@ local function partsBudget()
 			("SIM 12 lots x %d pads"):format(pads),
 			("creatures=%d creature parts=%d Workspace total=%d (+%d) Common/Rare avg=%.1f parts"):format(12 * pads, total, after, after - before, avg)
 		)
-		expect(("SIM Common/Rare on pads average <= 35 parts (%d pads)"):format(pads), avg <= 35, avg, true)
+		expect(("SIM Common/Rare on pads average <= 40 parts (%d pads)"):format(pads), avg <= 40, avg, true)
 		folder:Destroy()
 	end
 end

@@ -22,6 +22,15 @@ local PROPS_FOLDER = "CreatureProps"
 
 local rad = math.rad
 local NOOB_YELLOW = Color3.fromRGB(245, 205, 48)
+local INK = Color3.fromRGB(14, 14, 20)
+-- The classic face, in head space (front = -Z): two big oval eyes and a crescent smile (a black disc with a yellow disc
+-- laid over its upper part).
+local FACE: { CreatureSpecs.Prop } = {
+	{ n = "FaceEyeL", on = "Head", shape = "Ball", size = Vector3.new(0.22, 0.36, 0.14), at = CFrame.new(-0.28, 0.12, -0.6), color = INK },
+	{ n = "FaceEyeR", on = "Head", shape = "Ball", size = Vector3.new(0.22, 0.36, 0.14), at = CFrame.new(0.28, 0.12, -0.6), color = INK },
+	{ n = "FaceSmile", on = "Head", shape = "Disc", size = Vector3.new(0.58, 0.58, 0.06), at = CFrame.new(0, -0.2, -0.6), color = INK },
+	{ n = "FaceSmileMask", on = "Head", shape = "Disc", size = Vector3.new(0.58, 0.58, 0.06), at = CFrame.new(0, -0.08, -0.612), color = NOOB_YELLOW },
+}
 
 local SPRITES = {
 	spark = "rbxasset://textures/particles/sparkles_main.dds",
@@ -72,6 +81,15 @@ local function makeEmitter(fx: CreatureSpecs.Fx, scale: number): ParticleEmitter
 		e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 1) })
 		e.Acceleration = Vector3.new(0, 3 * scale, 0)
 		e.LightEmission = 0.5
+	elseif fx.kind == "drop" then -- falling water droplets
+		e.Texture = SPRITES.spark
+		e.Lifetime = NumberRange.new(0.9, 1.5)
+		e.Speed = NumberRange.new(0.5 * scale, 1.5 * scale)
+		e.SpreadAngle = Vector2.new(180, 180)
+		e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.35 * s), NumberSequenceKeypoint.new(1, 0.1 * s) })
+		e.Acceleration = Vector3.new(0, -14 * scale, 0)
+		e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 0.9) })
+		e.LightEmission = 0.4
 	else -- smoke
 		e.Texture = SPRITES.smoke
 		e.Lifetime = NumberRange.new(1, 1.8)
@@ -219,6 +237,63 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 				j[1].Part0, j[1].Part1 = a, b
 			end
 		end
+		-- Classic noob proportions: torso 2x2x1 (upper 1.6 + lower 0.4), arms and legs 1x2x1 hanging straight, a head a little
+		-- wider than tall. The parts are re-sized and re-stacked and every joint attachment moved to the new seam, so the
+		-- rig still animates.
+		local function part(name: string): BasePart
+			return model:FindFirstChild(name) :: BasePart
+		end
+		local lt, ut, head0 = part("LowerTorso"), part("UpperTorso"), part("Head")
+		local ltC = lt.Position
+		local sign = {} :: { [string]: number }
+		for _, side in { "Left", "Right" } do
+			sign[side] = if part(side .. "UpperArm").Position.X >= ut.Position.X then 1 else -1
+		end
+		local function put(name: string, size: Vector3, center: Vector3)
+			local pt = part(name)
+			pt.Size = size
+			pt.CFrame = CFrame.new(center) * pt.CFrame.Rotation
+		end
+		local utC = Vector3.new(ltC.X, ltC.Y + 1.0, ltC.Z)
+		local utTop = utC.Y + 0.8
+		local ltBottom = ltC.Y - 0.2
+		put("LowerTorso", Vector3.new(2, 0.4, 1), ltC)
+		put("UpperTorso", Vector3.new(2, 1.6, 1), utC)
+		put("Head", Vector3.new(1.32, 1.2, 1.2), Vector3.new(utC.X, utTop + 0.6, utC.Z))
+		local joint = {} :: { [string]: Vector3 }
+		joint.Waist = Vector3.new(utC.X, ltC.Y + 0.2, utC.Z)
+		joint.Neck = Vector3.new(utC.X, utTop, utC.Z)
+		for _, side in { "Left", "Right" } do
+			local sx = utC.X + sign[side] * 1.5
+			local lx = utC.X + sign[side] * 0.5
+			put(side .. "UpperArm", Vector3.new(1, 0.9, 1), Vector3.new(sx, utTop - 0.45, utC.Z))
+			put(side .. "LowerArm", Vector3.new(1, 0.8, 1), Vector3.new(sx, utTop - 1.3, utC.Z))
+			put(side .. "Hand", Vector3.new(1, 0.3, 1), Vector3.new(sx, utTop - 1.85, utC.Z))
+			joint[side .. "Shoulder"] = Vector3.new(sx, utTop - 0.3, utC.Z)
+			joint[side .. "Elbow"] = Vector3.new(sx, utTop - 0.9, utC.Z)
+			joint[side .. "Wrist"] = Vector3.new(sx, utTop - 1.7, utC.Z)
+			put(side .. "UpperLeg", Vector3.new(1, 0.9, 1), Vector3.new(lx, ltBottom - 0.45, utC.Z))
+			put(side .. "LowerLeg", Vector3.new(1, 0.75, 1), Vector3.new(lx, ltBottom - 1.275, utC.Z))
+			put(side .. "Foot", Vector3.new(1, 0.35, 1.2), Vector3.new(lx, ltBottom - 1.825, utC.Z - 0.1))
+			joint[side .. "Hip"] = Vector3.new(lx, ltBottom, utC.Z)
+			joint[side .. "Knee"] = Vector3.new(lx, ltBottom - 0.9, utC.Z)
+			joint[side .. "Ankle"] = Vector3.new(lx, ltBottom - 1.65, utC.Z)
+		end
+		for _, c in model:GetDescendants() do
+			if c:IsA("AnimationConstraint") and c.Attachment0 and c.Attachment1 then
+				local at0, at1 = c.Attachment0, c.Attachment1
+				local world = joint[c.Name]
+				if c.Name == "Root" then
+					world = at0.WorldPosition -- the root part did not move
+				end
+				if world then
+					local p0, p1 = at0.Parent :: BasePart, at1.Parent :: BasePart
+					at0.Position = p0.CFrame:PointToObjectSpace(world)
+					at1.Position = p1.CFrame:PointToObjectSpace(world)
+				end
+			end
+		end
+		head0.Name = "Head"
 	end
 	local out = spec.outfit or {}
 	local top = out.UpperTorso or Color3.fromRGB(80, 120, 200)
@@ -252,11 +327,13 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 				d:Destroy()
 			end
 		end
-		local face = Instance.new("Decal")
-		face.Name = "face"
-		face.Texture = "rbxasset://textures/face.png"
-		face.Face = Enum.NormalId.Front
-		face.Parent = head
+		if not noob then
+			local face = Instance.new("Decal")
+			face.Name = "face"
+			face.Texture = "rbxasset://textures/face.png"
+			face.Face = Enum.NormalId.Front
+			face.Parent = head
+		end
 	end
 
 	if spec.hideBody then -- the creature is built entirely from props (seahorse, serpent); the rig only walks it
@@ -272,7 +349,13 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 	end
 	local folder = Instance.new("Folder")
 	folder.Name = PROPS_FOLDER
-	for _, prop in spec.props do
+	local all: { CreatureSpecs.Prop } = table.clone(spec.props)
+	if noob then -- a clear classic face made of parts (renders in the card viewports too): big black eyes + a smile
+		for _, f in FACE do
+			table.insert(all, f)
+		end
+	end
+	for _, prop in all do
 		local body = bodyOf(model, prop.on)
 		if body then
 			local part = makeProp(prop, body)
