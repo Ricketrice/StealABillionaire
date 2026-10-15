@@ -6,13 +6,15 @@
 -- for creatures in the world and by WorkerPreview for Index / reveal / inventory previews.
 --   local state = CreatureAnim.bind(model)     collect animated props + aura emitters (call again after a rescale)
 --   CreatureAnim.step(state, t)                 pose every prop at time t
---   CreatureAnim.setAura(state, on)             aura particles on/off (distance / Low effects)
+--   CreatureAnim.setAura(state, on, tier?)      aura particles on/off (distance / Low effects); emitters with an AuraTier only run for that tier
+--   CreatureAnim.setFx(state, tier?)            effect PARTS (attribute FxTier = World / Captured) shown for that tier, hidden when nil. Bind hides
+--                                               them, so previews (Index / reveal, which never call setFx) show only the static model
 --   CreatureAnim.rest(state)                    back to the build pose
 
 local CreatureAnim = {}
 
 export type Item = { part: BasePart, weld: Weld, kind: string, axis: string, amp: number, speed: number, phase: number, base: CFrame, pivot: CFrame, size: Vector3 }
-export type State = { model: Model, scale: number, items: { Item }, auras: { ParticleEmitter } }
+export type State = { model: Model, scale: number, items: { Item }, auras: { ParticleEmitter }, fx: { BasePart }, tier: string? }
 
 local AXES = { X = Vector3.xAxis, Y = Vector3.yAxis, Z = Vector3.zAxis }
 
@@ -23,7 +25,7 @@ end
 
 function CreatureAnim.bind(model: Model): State
 	local s = model:GetAttribute("CreatureScale") or 1
-	local state: State = { model = model, scale = s, items = {}, auras = {} }
+	local state: State = { model = model, scale = s, items = {}, auras = {}, fx = {}, tier = nil }
 	for _, d in model:GetDescendants() do
 		if d:IsA("BasePart") and d:GetAttribute("AnimKind") then
 			local weld = d:FindFirstChildOfClass("Weld")
@@ -43,6 +45,10 @@ function CreatureAnim.bind(model: Model): State
 			end
 		elseif d:IsA("ParticleEmitter") and d:GetAttribute("Aura") then
 			table.insert(state.auras, d)
+		end
+		if d:IsA("BasePart") and d:GetAttribute("FxTier") then
+			table.insert(state.fx, d)
+			d.LocalTransparencyModifier = 1
 		end
 	end
 	return state
@@ -75,11 +81,23 @@ function CreatureAnim.rest(state: State)
 	end
 end
 
-function CreatureAnim.setAura(state: State, on: boolean)
+function CreatureAnim.setAura(state: State, on: boolean, tier: string?)
 	for _, e in state.auras do
-		if e.Enabled ~= on then
-			e.Enabled = on
+		local t = e:GetAttribute("AuraTier")
+		local want = on and (t == nil or t == tier)
+		if e.Enabled ~= want then
+			e.Enabled = want
 		end
+	end
+end
+
+function CreatureAnim.setFx(state: State, tier: string?)
+	if state.tier == tier then
+		return
+	end
+	state.tier = tier
+	for _, p in state.fx do
+		p.LocalTransparencyModifier = if tier ~= nil and p:GetAttribute("FxTier") == tier then 0 else 1
 	end
 end
 

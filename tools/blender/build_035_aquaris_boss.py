@@ -583,8 +583,10 @@ def export_fbx(objs, path):
     bpy.ops.export_scene.fbx(filepath=path, use_selection=True, axis_forward="-Z", axis_up="Y", global_scale=1.0, apply_unit_scale=True, bake_space_transform=False, mesh_smooth_type="FACE")
 
 
-mexp = [export_copy(o, o.name, -ORIGIN) for o in model_objs] + [anchor("AquarisBoss_Anchor")]
-fexp = [export_copy(o, o.name, -ORIGIN + V((0, 0, 0))) for o in [fx_ring] + streams] + [anchor("AquarisBossFX_Anchor")]
+for o in model_objs + [fx_ring] + streams:
+    o.name = o.name + "_src"  # free the final names, or Blender suffixes the export copies with .001
+mexp = [export_copy(o, o.name[:-4], -ORIGIN) for o in model_objs] + [anchor("AquarisBoss_Anchor")]
+fexp = [export_copy(o, o.name[:-4], -ORIGIN) for o in [fx_ring] + streams] + [anchor("AquarisBossFX_Anchor")]
 for c in mexp + fexp:
     c.hide_render = True
 export_fbx(mexp, os.path.join(EXPORT_REPO, "AquarisBoss.fbx"))

@@ -48,10 +48,14 @@ RunService.Heartbeat:Connect(function(dt)
 			if state then
 				if near then
 					CreatureAnim.step(state, t)
-					CreatureAnim.setAura(state, not low)
+					-- wild = full (World) effects, carried / on a pad = subtle (Captured); Low effects = none
+					local tier = if low then nil elseif model:GetAttribute("ClaimPhase") then "Captured" else "World"
+					CreatureAnim.setAura(state, not low, tier)
+					CreatureAnim.setFx(state, tier)
 					awake[model] = true
 				elseif awake[model] then
 					CreatureAnim.setAura(state, false)
+					CreatureAnim.setFx(state, nil)
 					awake[model] = nil
 				end
 			end

@@ -35,13 +35,14 @@ export type Prop = {
 	trans: number?, -- Transparency
 	mesh: string?, -- Imports035 master; size = the stud size it is scaled to
 	model: string?, -- Imports035 model (all its mesh parts); fit = { axis, size } scales it, colors / partAnim per mesh part
-	fit: { axis: string, size: number }?,
+	fit: { axis: string?, size: number?, k: number? }?, -- k = a fixed scale (the boss FBX imports 100x: k = 0.01)
+	tier: string?, -- effect part: World (wild only) or Captured (carried / on a pad); see CreatureAnim.setFx
 	colors: { [string]: any }?,
 	partAnim: { [string]: any }?,
 	anim: { kind: string, axis: string?, amp: number, speed: number?, phase: number?, pivot: CFrame? }?,
 }
 
-export type Fx = { on: string, kind: string, color: Color3, rate: number?, at: Vector3?, size: number?, aura: boolean? }
+export type Fx = { on: string, kind: string, color: Color3, rate: number?, at: Vector3?, size: number?, aura: boolean?, tier: string? }
 
 export type Spec = {
 	scale: number?,
@@ -750,7 +751,106 @@ local function aquaris(): Spec
 		sound = "boss_roar",
 	}
 end
-CreatureSpecs.aquaris = aquaris()
+-- Aquaris BOSS (035 art pass, owner-approved V5 design): 49 Blender MeshParts from ServerStorage.Imports035.AquarisBoss, one per moving piece x
+-- colour (`<Piece>_<Colour>`: Head Jaw Neck Body TailA/B/C WingR/L LegFR/FL/HR/HL), plus AquarisBossFX (water ring + two streams) and bubble parts.
+-- Colours are part Color / Material only (no textures). Anim: CreatureAnim moves each piece's weld about its joint (parts_json joints). Effects have
+-- tiers: World = wild creature only, Captured = carried / on a pad (CreatureAnim.setFx / setAura tier); Index + reveal previews show the static model
+-- (eyes, gem, fin edges are Neon parts). AQUARIS_BOSS = false builds the DragonKit dragon below instead (the previous Aquaris, kept as the fallback).
+local AQUARIS_BOSS = true
+CreatureSpecs.AQUARIS_BOSS = AQUARIS_BOSS
+local function aquarisBoss(): Spec
+	local G, ZC = -2.25, -1.1 -- ground under the rig; the model is centred on the rig (its anchor is under the waist)
+	local at = cf(0, G, ZC)
+	local function pv(bx: number, by: number, bz: number): CFrame -- a Blender-frame joint (parts json) -> a pivot in rig space (Studio: x mirrored, y up = z, z back = y)
+		return cf(-bx, G + bz, by + ZC)
+	end
+	local BLUE, DEEP, ICE, BOSS_GOLD, CYAN = rgb(31, 95, 209), rgb(23, 63, 153), rgb(168, 240, 255), rgb(255, 200, 61), rgb(63, 230, 255)
+	local function swing(axis: string, amp: number, speed: number, phase: number, pivot: CFrame): any
+		return { kind = "swing", axis = axis, amp = amp, speed = speed, phase = phase, pivot = pivot }
+	end
+	local neck, tailA = pv(0.000, -0.933, 1.383), pv(0.000, 0.733, 1.200)
+	local props: { any } = {
+		{
+			n = "Boss",
+			on = "LowerTorso",
+			model = "AquarisBoss",
+			at = at,
+			fit = { k = 0.01 },
+			colors = {
+				Blue = BLUE,
+				Deep = DEEP,
+				Ice = ICE,
+				Gold = { color = BOSS_GOLD, mat = Enum.Material.Metal },
+				Glow = { color = CYAN, neon = true },
+				Claw = rgb(228, 242, 255),
+				Ink = rgb(7, 18, 37),
+				Membrane = rgb(59, 134, 230),
+				Tooth = rgb(244, 250, 255),
+			},
+			partAnim = {
+				Jaw = swing("X", 9, 1.6, 0, pv(0.000, -1.800, 2.567)),
+				Neck = swing("Y", 3, 1.1, 0, neck),
+				Head = swing("Y", 3, 1.1, 0, neck),
+				TailA = swing("Y", 2, 1.2, 0.4, tailA),
+				TailB = swing("Y", 4, 1.2, 0.4, tailA),
+				TailC = swing("Y", 7, 1.2, 0.4, tailA),
+				WingR = swing("Z", -16, 1.3, 0, pv(0.233, -0.767, 1.783)), -- the Blender +X wing arrives at -X in Studio
+				WingL = swing("Z", 16, 1.3, 0, pv(-0.233, -0.767, 1.783)),
+				LegFR = swing("X", 3, 1.5, 0, pv(0.267, -0.767, 1.300)),
+				LegHL = swing("X", 3, 1.5, 0, pv(-0.317, 0.500, 1.200)),
+				LegFL = swing("X", 3, 1.5, math.pi, pv(-0.267, -0.767, 1.300)),
+				LegHR = swing("X", 3, 1.5, math.pi, pv(0.317, 0.500, 1.200)),
+			},
+		},
+		{
+			n = "BossFx",
+			on = "LowerTorso",
+			model = "AquarisBossFX",
+			at = at,
+			fit = { k = 0.01 },
+			tier = "World",
+			colors = {
+				Ring = { color = CYAN, neon = true, trans = 0.45 },
+				StreamR = { color = CYAN, neon = true, trans = 0.5 },
+				StreamL = { color = CYAN, neon = true, trans = 0.5 },
+			},
+			partAnim = { Ring = { kind = "spin", axis = "Y", amp = 14, speed = 1, pivot = cf(0, G, ZC + 0.633) } },
+		},
+	}
+	local function bubbles(list: { { number } }, tag: string, tier: string)
+		for i, b in list do
+			props[#props + 1] = {
+				n = tag .. i,
+				on = "LowerTorso",
+				shape = "Ball",
+				size = v3(b[4], b[4], b[4]),
+				at = cf(b[1], G + b[3], b[2] + ZC),
+				color = CYAN,
+				neon = true,
+				trans = 0.35,
+				tier = tier,
+				anim = { kind = "bob", amp = 0.18, speed = 1.2, phase = i },
+			}
+		end
+	end
+	bubbles({ { 0.79, 1.63, 3.13, 0.13 }, { -0.93, 0.92, 2.95, 0.10 }, { -0.80, 2.07, 1.23, 0.10 }, { -1.67, 2.00, -1.64, 0.10 }, { 1.74, 0.39, 1.68, 0.09 }, { 0.64, 0.66, -0.91, 0.07 }, { -1.27, 0.65, -1.28, 0.07 }, { -1.50, 2.24, 1.03, 0.16 }, { -0.35, 1.47, 3.13, 0.14 }, { -1.43, 1.88, 2.45, 0.12 }, { 1.47, 2.31, 0.19, 0.11 }, { -0.66, 1.67, -0.40, 0.09 } }, "BubbleW", "World")
+	bubbles({ { -0.60, 2.00, -1.17, 0.07 }, { 0.67, 1.53, -0.03, 0.08 }, { -0.53, 1.33, 1.13, 0.06 }, { 0.53, 1.00, 2.13, 0.07 }, { -0.07, 2.73, -1.37, 0.05 } }, "BubbleC", "Captured")
+	return {
+		hideBody = true,
+		scale = 3,
+		skin = BLUE,
+		props = props,
+		fx = {
+			{ on = "Body_Blue", kind = "bubble", color = rgb(170, 235, 255), rate = 10, size = 1.4, aura = true, tier = "World" },
+			{ on = "Neck_Blue", kind = "drop", color = rgb(170, 235, 255), rate = 8, size = 1.2, aura = true, tier = "World" },
+			{ on = "Head_Blue", kind = "bubble", color = rgb(190, 235, 255), rate = 3, size = 0.5, aura = true, tier = "Captured" },
+		},
+		light = rgb(120, 210, 255),
+		sound = "boss_roar",
+	}
+end
+
+CreatureSpecs.aquaris = if AQUARIS_BOSS then aquarisBoss() else aquaris()
 
 -- ================================ EMBER ACADEMY ================================
 local FIRE, FLAME, EMBER_RED, ROBE, STONE = rgb(255, 140, 40), rgb(255, 210, 70), rgb(200, 50, 40), rgb(170, 40, 40), rgb(130, 128, 140)

@@ -107,6 +107,9 @@ local function makeEmitter(fx: CreatureSpecs.Fx, scale: number): ParticleEmitter
 		e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 1) })
 		e.LightEmission = 0.1
 	end
+	if fx.tier then
+		e:SetAttribute("AuraTier", fx.tier)
+	end
 	e:SetAttribute("Aura", true) -- every emitter is gated by distance (CreatureAnim.setAura), not only the rarity aura
 	e.Enabled = false
 	return e
@@ -173,10 +176,11 @@ local function makeModelParts(prop: any, body: BasePart): { BasePart }
 	end
 	local ext = hi - lo
 	local fit = prop.fit or { axis = "Z", size = ext.Z }
-	local k = fit.size / (if fit.axis == "X" then ext.X elseif fit.axis == "Y" then ext.Y else ext.Z)
+	local k = fit.k or (fit.size / (if fit.axis == "X" then ext.X elseif fit.axis == "Y" then ext.Y else ext.Z)) -- fit.k = a fixed import scale (the boss FBX arrives 100x: k = 0.01)
 	for _, m in meshes do
 		local key = m.Name:match("_(.+)$") or m.Name
-		local look: any = prop.colors and prop.colors[key]
+		local piece, colour = key:match("^([^_]+)_(.+)$") -- parts are named <Piece>_<Colour>: colours by key or by colour, anims by key or by piece
+		local look: any = prop.colors and (prop.colors[key] or (colour and prop.colors[colour]))
 		if look and type(look) == "table" and look.skip then
 			continue -- a mesh part the spec replaces with plain parts
 		end
@@ -205,7 +209,10 @@ local function makeModelParts(prop: any, body: BasePart): { BasePart }
 		local weld = Instance.new("Weld")
 		weld.Part0, weld.Part1, weld.C0 = body, part, offset
 		weld.Parent = part
-		local a = (prop.partAnim and prop.partAnim[key]) or prop.anim
+		local a = (prop.partAnim and (prop.partAnim[key] or (piece and prop.partAnim[piece]))) or prop.anim
+		if prop.tier then
+			part:SetAttribute("FxTier", prop.tier) -- World / Captured effect part: shown by CreatureAnim.setFx only
+		end
 		if a then
 			setAnim(part, a, offset)
 		end
@@ -257,6 +264,9 @@ local function makeProp(prop: CreatureSpecs.Prop, body: BasePart): BasePart?
 		part = p
 	end
 	part.Name = prop.n or prop.on
+	if prop.tier then
+		part:SetAttribute("FxTier", prop.tier)
+	end
 	part.Color = prop.color
 	part.Transparency = prop.trans or 0
 	part.Material = if prop.neon then Enum.Material.Neon else (prop.mat or Enum.Material.SmoothPlastic)
