@@ -30,6 +30,7 @@ export type Prop = {
 	color: Color3,
 	mat: Enum.Material?,
 	neon: boolean?,
+	trans: number?, -- Transparency
 	mesh: string?, -- Imports035 master; size = the stud size it is scaled to
 	anim: { kind: string, axis: string?, amp: number, speed: number?, phase: number?, pivot: CFrame? }?,
 }
@@ -43,6 +44,7 @@ export type Spec = {
 	props: { Prop },
 	fx: { Fx }?,
 	light: Color3?,
+	hideBody: boolean?, -- hide the R15 body (props make the whole creature)
 	halo: Color3?, -- spinning ring on the ground
 	sound: string?,
 }
@@ -430,5 +432,369 @@ CreatureSpecs.mystery_millionaire = { -- Sir Ironclad (S): the boss, giant dark 
 	light = rgb(255, 150, 60),
 	halo = rgb(255, 120, 40),
 }
+
+-- ================================ SUNKEN KINGDOM ================================
+-- Short prop constructor for the zones below: P(name, body part, shape, size, at, colour, extra fields).
+local function P(n: string, on: string, shape: string, size: Vector3, at: CFrame, color: Color3, extra: { [string]: any }?): Prop
+	local prop: any = { n = n, on = on, shape = shape, size = size, at = at, color = color }
+	for k, v in extra or {} do
+		prop[k] = v
+	end
+	return prop
+end
+local TEAL, NAVY, PEARL, SAND = rgb(40, 170, 180), rgb(30, 70, 120), rgb(250, 240, 245), rgb(230, 205, 150)
+local GLASS = Enum.Material.Glass
+
+CreatureSpecs.bubble_fish = { -- Bubble Fish (C): diver in a goldfish-bowl helmet, blows bubbles
+	skin = SKIN,
+	outfit = outfit({ top = TEAL, waist = NAVY, arms = TEAL, legs = NAVY, feet = rgb(255, 150, 40) }),
+	props = {
+		P("Bowl", "Head", "Ball", v3(2.1, 2.1, 2.1), cf(0, 0.1, 0), rgb(170, 225, 255), { trans = 0.7, mat = GLASS }),
+		P("Goldfish", "Head", "Ball", v3(0.45, 0.4, 0.8), cf(0.5, 1.15, 0), rgb(255, 150, 30), { anim = { kind = "bob", amp = 0.1, speed = 2.2 } }),
+		P("Tank", "UpperTorso", "Cylinder", v3(0.7, 1.7, 0.7), cf(0, 0.2, 0.75), rgb(250, 200, 40), { mat = METAL }),
+		P("FinL", "LeftFoot", "Block", v3(0.9, 0.1, 1.5), cf(0, -0.2, -0.6), rgb(255, 150, 40), { anim = { kind = "swing", axis = "X", amp = 8, speed = 3 } }),
+		P("FinR", "RightFoot", "Block", v3(0.9, 0.1, 1.5), cf(0, -0.2, -0.6), rgb(255, 150, 40), { anim = { kind = "swing", axis = "X", amp = 8, speed = 3, phase = 2 } }),
+	},
+	fx = { { on = "Head", kind = "bubble", color = rgb(190, 235, 255), rate = 3, at = v3(0, 1.1, 0) } },
+}
+
+CreatureSpecs.hermit_porter = { -- Hermit Porter (C): a shell backpack stacked with crates
+	skin = SKIN_D,
+	outfit = outfit({ top = rgb(160, 110, 70), waist = rgb(110, 80, 50), arms = rgb(160, 110, 70), legs = rgb(110, 80, 50), feet = rgb(70, 50, 34) }),
+	props = {
+		P("Shell", "UpperTorso", "Ball", v3(2.3, 2.1, 1.9), cf(0, 0.2, 1.0), rgb(255, 205, 190)),
+		P("ShellStripe", "UpperTorso", "Ball", v3(1.5, 1.45, 1.3), cf(0, 0.2, 1.3), rgb(240, 150, 140)),
+		P(
+			"CrateA",
+			"UpperTorso",
+			"Block",
+			v3(1.5, 1.0, 1.2),
+			cf(0, 1.65, 1.0),
+			rgb(160, 110, 60),
+			{ mat = Enum.Material.Wood, anim = { kind = "swing", axis = "Z", amp = 3, speed = 1.6 } }
+		),
+		P(
+			"CrateB",
+			"UpperTorso",
+			"Block",
+			v3(1.1, 0.8, 0.9),
+			cf(0.1, 2.5, 1.0),
+			rgb(190, 135, 75),
+			{ mat = Enum.Material.Wood, anim = { kind = "swing", axis = "Z", amp = 5, speed = 1.6, phase = 1 } }
+		),
+		P("HatBrim", "Head", "Cylinder", v3(2.0, 0.1, 2.0), cf(0, 0.5, 0), SAND),
+		P("HatTop", "Head", "Ball", v3(1.2, 0.8, 1.2), cf(0, 0.75, 0), SAND),
+	},
+}
+
+CreatureSpecs.coral_snail = { -- Coral Snail (C): coral shell, eye stalks on its hat
+	skin = rgb(255, 180, 190),
+	outfit = outfit({ top = rgb(255, 160, 170), waist = rgb(240, 130, 150), arms = rgb(255, 180, 190), legs = rgb(240, 130, 150), feet = rgb(220, 110, 130) }),
+	props = {
+		P("Shell", "UpperTorso", "Ball", v3(2.1, 1.9, 1.8), cf(0, 0.1, 0.95), rgb(255, 120, 110)),
+		P("ShellSwirl", "UpperTorso", "Ball", v3(1.2, 1.1, 1.0), cf(0, 0.1, 1.5), rgb(255, 200, 170)),
+		P("SpikeA", "UpperTorso", "Block", v3(0.25, 0.7, 0.25), cf(0, 1.25, 1.0) * CFrame.Angles(rad(15), 0, 0), rgb(255, 170, 60)),
+		P("SpikeB", "UpperTorso", "Block", v3(0.25, 0.7, 0.25), cf(0.8, 0.9, 1.0) * CFrame.Angles(0, 0, rad(-40)), rgb(255, 170, 60)),
+		P("SpikeC", "UpperTorso", "Block", v3(0.25, 0.7, 0.25), cf(-0.8, 0.9, 1.0) * CFrame.Angles(0, 0, rad(40)), rgb(255, 170, 60)),
+		P(
+			"StalkL",
+			"Head",
+			"Cylinder",
+			v3(0.14, 0.9, 0.14),
+			cf(-0.3, 0.95, 0),
+			rgb(255, 160, 170),
+			{ anim = { kind = "swing", axis = "Z", amp = 12, speed = 2.1, pivot = cf(-0.3, 0.5, 0) } }
+		),
+		P(
+			"StalkR",
+			"Head",
+			"Cylinder",
+			v3(0.14, 0.9, 0.14),
+			cf(0.3, 0.95, 0),
+			rgb(255, 160, 170),
+			{ anim = { kind = "swing", axis = "Z", amp = 12, speed = 2.1, phase = 1.5, pivot = cf(0.3, 0.5, 0) } }
+		),
+		P(
+			"EyeL",
+			"Head",
+			"Ball",
+			v3(0.4, 0.4, 0.4),
+			cf(-0.3, 1.45, 0),
+			rgb(255, 255, 255),
+			{ anim = { kind = "swing", axis = "Z", amp = 12, speed = 2.1, pivot = cf(-0.3, 0.5, 0) } }
+		),
+		P(
+			"EyeR",
+			"Head",
+			"Ball",
+			v3(0.4, 0.4, 0.4),
+			cf(0.3, 1.45, 0),
+			rgb(255, 255, 255),
+			{ anim = { kind = "swing", axis = "Z", amp = 12, speed = 2.1, phase = 1.5, pivot = cf(0.3, 0.5, 0) } }
+		),
+	},
+}
+
+CreatureSpecs.puffer_guard = { -- Puffer Guard (R): spiky round belly that puffs, spear
+	skin = rgb(255, 225, 120),
+	outfit = outfit({ top = rgb(255, 215, 90), waist = rgb(230, 170, 50), arms = rgb(255, 215, 90), legs = rgb(230, 170, 50), feet = rgb(200, 140, 40) }),
+	props = {
+		P("Belly", "UpperTorso", "Ball", v3(2.5, 2.3, 1.7), cf(0, -0.1, -0.2), rgb(255, 240, 170), { anim = { kind = "pulse", amp = 0.07, speed = 1.8 } }),
+		P("SpikeTop", "UpperTorso", "Block", v3(0.16, 0.6, 0.16), cf(0, 1.15, -0.2), rgb(255, 150, 40)),
+		P("SpikeL", "UpperTorso", "Block", v3(0.6, 0.16, 0.16), cf(-1.35, -0.1, -0.2), rgb(255, 150, 40)),
+		P("SpikeR", "UpperTorso", "Block", v3(0.6, 0.16, 0.16), cf(1.35, -0.1, -0.2), rgb(255, 150, 40)),
+		P("SpikeFL", "UpperTorso", "Block", v3(0.16, 0.16, 0.6), cf(-0.6, 0.5, -1.0), rgb(255, 150, 40)),
+		P("SpikeFR", "UpperTorso", "Block", v3(0.16, 0.16, 0.6), cf(0.6, 0.5, -1.0), rgb(255, 150, 40)),
+		P("SpikeBottom", "UpperTorso", "Block", v3(0.16, 0.16, 0.6), cf(0, -0.7, -1.0), rgb(255, 150, 40)),
+		P("Helm", "Head", "Ball", v3(1.5, 0.9, 1.5), cf(0, 0.5, 0), rgb(150, 160, 175), { mat = METAL }),
+		P("HelmFin", "Head", "Block", v3(0.15, 0.7, 0.9), cf(0, 1.0, 0), rgb(255, 150, 40)),
+		P("SpearShaft", "RightHand", "Block", v3(0.16, 0.16, 3.6), cf(0, -0.25, -1.6), WOOD, { anim = { kind = "push", axis = "Z", amp = 0.4, speed = 2.2 } }),
+		P(
+			"SpearTip",
+			"RightHand",
+			"Block",
+			v3(0.35, 0.12, 0.7),
+			cf(0, -0.25, -3.5),
+			rgb(210, 220, 230),
+			{ mat = METAL, anim = { kind = "push", axis = "Z", amp = 0.4, speed = 2.2 } }
+		),
+	},
+	fx = { { on = "SpearTip", kind = "bubble", color = rgb(200, 235, 255), rate = 2 } },
+}
+
+CreatureSpecs.mermaid_mage = { -- Mermaid Mage (R): fin skirt, pearl staff, bubble spells
+	skin = rgb(255, 214, 190),
+	outfit = outfit({ top = rgb(150, 90, 200), waist = TEAL, arms = rgb(255, 214, 190), legs = TEAL, feet = TEAL }),
+	props = {
+		P("Skirt", "LowerTorso", "Block", v3(2.0, 1.8, 1.3), cf(0, -1.3, 0), TEAL),
+		P(
+			"TailFin",
+			"LowerTorso",
+			"Block",
+			v3(2.1, 0.15, 1.7),
+			cf(0, -2.4, 0.2),
+			rgb(90, 220, 200),
+			{ anim = { kind = "swing", axis = "X", amp = 10, speed = 2.4, pivot = cf(0, -2.0, 0) } }
+		),
+		P("ShellL", "UpperTorso", "Ball", v3(0.6, 0.5, 0.4), cf(-0.4, 0.5, -0.6), rgb(255, 190, 200)),
+		P("ShellR", "UpperTorso", "Ball", v3(0.6, 0.5, 0.4), cf(0.4, 0.5, -0.6), rgb(255, 190, 200)),
+		P(
+			"Hair",
+			"Head",
+			"Block",
+			v3(1.4, 2.2, 0.45),
+			cf(0, -0.8, 0.55),
+			rgb(60, 190, 190),
+			{ anim = { kind = "swing", axis = "X", amp = 6, speed = 1.7, pivot = cf(0, 0.4, 0.5) } }
+		),
+		P("Crown", "Head", "Block", v3(1.3, 0.3, 1.3), cf(0, 0.55, 0), rgb(255, 215, 100), { mat = METAL }),
+		P("StaffShaft", "RightHand", "Cylinder", v3(0.2, 4.6, 0.2), cf(0, 1.7, -0.45), rgb(220, 190, 150)),
+		P("StaffPearl", "RightHand", "Ball", v3(0.8, 0.8, 0.8), cf(0, 4.2, -0.45), PEARL, { neon = true, anim = { kind = "bob", amp = 0.12, speed = 2.6 } }),
+	},
+	fx = { { on = "StaffPearl", kind = "bubble", color = rgb(190, 235, 255), rate = 6 } },
+}
+
+CreatureSpecs.shark_knight = { -- Shark Knight (E): shark-helm, fin, sword; wave aura
+	skin = SKIN,
+	outfit = outfit({ top = rgb(110, 130, 160), waist = rgb(70, 85, 110), arms = rgb(110, 130, 160), legs = rgb(70, 85, 110), feet = rgb(110, 130, 160) }),
+	props = {
+		P("SharkHood", "Head", "Ball", v3(1.85, 1.6, 1.95), cf(0, 0.25, 0.05), rgb(120, 140, 165)),
+		P("Snout", "Head", "Block", v3(1.0, 0.7, 1.1), cf(0, -0.05, -0.95), rgb(185, 200, 215)),
+		P("Teeth", "Head", "Block", v3(0.95, 0.12, 0.12), cf(0, -0.38, -1.4), rgb(255, 255, 255)),
+		P("EyeL", "Head", "Disc", v3(0.22, 0.22, 0.1), cf(-0.5, 0.3, -0.92), rgb(20, 20, 30)),
+		P("EyeR", "Head", "Disc", v3(0.22, 0.22, 0.1), cf(0.5, 0.3, -0.92), rgb(20, 20, 30)),
+		P("DorsalHead", "Head", "Block", v3(0.18, 1.1, 0.9), cf(0, 1.0, 0.45) * CFrame.Angles(rad(-25), 0, 0), rgb(95, 115, 140)),
+		P("PauldronL", "LeftUpperArm", "Ball", v3(1.25, 0.9, 1.25), cf(0, 0.4, 0), STEEL, { mat = METAL }),
+		P("PauldronR", "RightUpperArm", "Ball", v3(1.25, 0.9, 1.25), cf(0, 0.4, 0), STEEL, { mat = METAL }),
+		P("Chest", "UpperTorso", "Block", v3(2.15, 1.5, 1.25), cf(0, 0.05, 0), STEEL, { mat = METAL }),
+		P(
+			"BackFin",
+			"UpperTorso",
+			"Block",
+			v3(0.2, 1.7, 1.1),
+			cf(0, 0.5, 0.85) * CFrame.Angles(rad(-20), 0, 0),
+			rgb(95, 115, 140),
+			{ anim = { kind = "swing", axis = "X", amp = 5, speed = 2.0, pivot = cf(0, -0.3, 0.7) } }
+		),
+		P("Blade", "RightHand", "Block", v3(0.25, 0.1, 2.7), cf(0, -0.25, -1.5), rgb(215, 235, 250), { mat = METAL, anim = { kind = "swing", axis = "X", amp = 40, speed = 2.0 } }),
+		P("Guard", "RightHand", "Block", v3(0.9, 0.16, 0.18), cf(0, -0.25, -0.2), GOLD, { anim = { kind = "swing", axis = "X", amp = 40, speed = 2.0 } }),
+	},
+	fx = { { on = "Blade", kind = "bubble", color = rgb(170, 225, 255), rate = 4, aura = true } },
+	light = rgb(120, 190, 255),
+}
+
+CreatureSpecs.pearl_seahorse = { -- Pearl Seahorse (E): a seahorse riding a bubble, pearl in its tail
+	hideBody = true,
+	skin = PEARL,
+	props = {
+		P("Bubble", "LowerTorso", "Ball", v3(4.3, 4.3, 4.3), cf(0, 0.1, 0), rgb(170, 225, 255), { trans = 0.78, mat = GLASS, anim = { kind = "pulse", amp = 0.03, speed = 1.4 } }),
+		P("Belly", "LowerTorso", "Ball", v3(1.3, 1.7, 1.1), cf(0, -0.2, 0), rgb(255, 215, 235)),
+		P("Neck", "LowerTorso", "Ball", v3(1.0, 1.3, 0.9), cf(0, 0.9, -0.25), rgb(255, 200, 225)),
+		P("Head", "LowerTorso", "Ball", v3(1.1, 1.0, 1.4), cf(0, 1.6, -0.55), PEARL),
+		P("Snout", "LowerTorso", "Block", v3(0.4, 0.35, 0.9), cf(0, 1.5, -1.35), rgb(255, 215, 235)),
+		P("Eye", "LowerTorso", "Ball", v3(0.25, 0.25, 0.25), cf(0.4, 1.8, -0.9), rgb(20, 20, 40)),
+		P("CrownA", "LowerTorso", "Block", v3(0.14, 0.5, 0.2), cf(0, 2.2, -0.4), rgb(255, 200, 80), { neon = true }),
+		P("CrownB", "LowerTorso", "Block", v3(0.14, 0.4, 0.2), cf(0, 2.15, -0.1), rgb(255, 200, 80), { neon = true }),
+		P(
+			"Dorsal",
+			"LowerTorso",
+			"Block",
+			v3(0.1, 0.9, 0.6),
+			cf(0, 0.2, 0.65),
+			rgb(255, 150, 190),
+			{ anim = { kind = "swing", axis = "X", amp = 14, speed = 3.0, pivot = cf(0, 0, 0.5) } }
+		),
+		P("Tail1", "LowerTorso", "Ball", v3(0.85, 0.85, 0.85), cf(0, -1.1, 0.3), rgb(255, 200, 225)),
+		P("Tail2", "LowerTorso", "Ball", v3(0.65, 0.65, 0.65), cf(0, -1.55, 0.75), rgb(255, 200, 225)),
+		P("Tail3", "LowerTorso", "Ball", v3(0.5, 0.5, 0.5), cf(0, -1.3, 1.25), rgb(255, 200, 225)),
+		P("TailPearl", "LowerTorso", "Ball", v3(0.65, 0.65, 0.65), cf(0, -0.8, 1.35), PEARL, { neon = true, anim = { kind = "bob", amp = 0.1, speed = 2.5 } }),
+	},
+	fx = { { on = "Bubble", kind = "bubble", color = rgb(210, 240, 255), rate = 4, aura = true }, { on = "TailPearl", kind = "spark", color = rgb(255, 245, 255), rate = 3 } },
+	light = rgb(255, 225, 245),
+}
+
+CreatureSpecs.tide_warden = { -- Tide Warden (L): Aquaris's champion; coral crown, trident, water swirl
+	scale = 1.3,
+	skin = SKIN,
+	outfit = outfit({ top = rgb(30, 110, 160), waist = rgb(20, 70, 110), arms = rgb(30, 110, 160), legs = rgb(20, 80, 120), feet = rgb(30, 110, 160) }),
+	props = {
+		P("Helm", "Head", "Cylinder", v3(1.5, 1.3, 1.5), cf(0, 0.12, 0), rgb(60, 170, 190), { mat = METAL }),
+		P("HelmTop", "Head", "Ball", v3(1.5, 1.0, 1.5), cf(0, 0.58, 0), rgb(60, 170, 190), { mat = METAL }),
+		P("Visor", "Head", "Block", v3(1.05, 0.14, 0.1), cf(0, 0.1, -0.7), rgb(15, 25, 50)),
+		P("Coral1", "Head", "Block", v3(0.2, 1.0, 0.2), cf(0, 1.3, 0), rgb(255, 120, 110)),
+		P("Coral2", "Head", "Block", v3(0.2, 0.8, 0.2), cf(0.5, 1.1, 0) * CFrame.Angles(0, 0, rad(-30)), rgb(255, 150, 120)),
+		P("Coral3", "Head", "Block", v3(0.2, 0.8, 0.2), cf(-0.5, 1.1, 0) * CFrame.Angles(0, 0, rad(30)), rgb(255, 150, 120)),
+		P("Coral4", "Head", "Block", v3(0.2, 0.6, 0.2), cf(0.85, 0.9, 0) * CFrame.Angles(0, 0, rad(-60)), rgb(255, 120, 110)),
+		P("Coral5", "Head", "Block", v3(0.2, 0.6, 0.2), cf(-0.85, 0.9, 0) * CFrame.Angles(0, 0, rad(60)), rgb(255, 120, 110)),
+		P("ShellPauldronL", "LeftUpperArm", "Ball", v3(1.6, 1.1, 1.6), cf(0, 0.4, 0), rgb(255, 215, 215)),
+		P("ShellPauldronR", "RightUpperArm", "Ball", v3(1.6, 1.1, 1.6), cf(0, 0.4, 0), rgb(255, 215, 215)),
+		P("Chest", "UpperTorso", "Block", v3(2.2, 1.55, 1.3), cf(0, 0.05, 0), rgb(60, 170, 190), { mat = METAL }),
+		P("ChestPearl", "UpperTorso", "Ball", v3(0.7, 0.7, 0.4), cf(0, 0.1, -0.68), PEARL, { neon = true }),
+		P(
+			"Kelp",
+			"UpperTorso",
+			"Block",
+			v3(2.0, 3.4, 0.1),
+			cf(0, -0.9, 0.72),
+			rgb(40, 150, 80),
+			{ anim = { kind = "swing", axis = "X", amp = 7, speed = 1.9, pivot = cf(0, 0.8, 0.7) } }
+		),
+		P("TridentShaft", "RightHand", "Cylinder", v3(0.24, 5.6, 0.24), cf(0, 2.0, -0.45), GOLD, { mat = METAL, anim = { kind = "swing", axis = "X", amp = 6, speed = 1.5 } }),
+		P("TridentMid", "RightHand", "Block", v3(0.18, 1.1, 0.18), cf(0, 5.3, -0.45), GOLD, { mat = METAL, anim = { kind = "swing", axis = "X", amp = 6, speed = 1.5 } }),
+		P("TridentL", "RightHand", "Block", v3(0.18, 0.9, 0.18), cf(-0.5, 5.15, -0.45), GOLD, { mat = METAL, anim = { kind = "swing", axis = "X", amp = 6, speed = 1.5 } }),
+		P("TridentR", "RightHand", "Block", v3(0.18, 0.9, 0.18), cf(0.5, 5.15, -0.45), GOLD, { mat = METAL, anim = { kind = "swing", axis = "X", amp = 6, speed = 1.5 } }),
+		P("TridentBar", "RightHand", "Block", v3(1.2, 0.18, 0.18), cf(0, 4.7, -0.45), GOLD, { mat = METAL, anim = { kind = "swing", axis = "X", amp = 6, speed = 1.5 } }),
+	},
+	fx = {
+		{ on = "UpperTorso", kind = "bubble", color = rgb(150, 220, 255), rate = 8, size = 1.3, aura = true },
+		{ on = "TridentMid", kind = "spark", color = rgb(160, 230, 255), rate = 6 },
+	},
+	light = rgb(110, 210, 255),
+	halo = rgb(90, 200, 255),
+}
+
+-- Aquaris (S): the water dragon, a coiled serpent built from balls along a curve; the rig only walks it.
+local function aquaris(): Spec
+	local props: { Prop } = {}
+	local count = 20
+	for i = 1, count do
+		local t = i / count -- 0 = tail tip, 1 = neck
+		local ang = t * 5.2
+		local r = 0.45 + math.sin(t * math.pi) * 0.5
+		local pos = v3(math.sin(ang) * 1.5 * (1 - t * 0.35), -2.7 + t * 4.6, math.cos(ang) * 0.9 * (1 - t * 0.35) + 0.4)
+		local shade = if i % 2 == 0 then rgb(40, 150, 215) else rgb(70, 190, 235)
+		table.insert(props, P("Seg" .. i, "LowerTorso", "Ball", v3(r * 2, r * 2, r * 2), cf(pos), shade, { mat = Enum.Material.SmoothPlastic }))
+		if i % 3 == 0 then -- back frills
+			table.insert(
+				props,
+				P(
+					"Frill" .. i,
+					"LowerTorso",
+					"Block",
+					v3(0.08, r * 1.3, r * 1.2),
+					cf(pos + v3(0, r * 0.95, 0.1)),
+					rgb(150, 235, 255),
+					{ trans = 0.25, anim = { kind = "swing", axis = "Z", amp = 8, speed = 2.2, phase = i * 0.5 } }
+				)
+			)
+		end
+		if i % 4 == 1 then -- pearly belly scales
+			table.insert(props, P("Scale" .. i, "LowerTorso", "Ball", v3(r * 0.8, r * 0.8, r * 0.8), cf(pos + v3(0, 0, -r * 0.75)), rgb(240, 250, 255), { neon = true }))
+		end
+	end
+	local head = v3(0, 2.7, -0.8)
+	local extra: { Prop } = {
+		P("Head", "LowerTorso", "Ball", v3(1.5, 1.2, 1.9), cf(head), rgb(40, 150, 215)),
+		P(
+			"Jaw",
+			"LowerTorso",
+			"Block",
+			v3(1.0, 0.3, 1.2),
+			cf(head + v3(0, -0.55, -0.55)),
+			rgb(30, 110, 180),
+			{ anim = { kind = "swing", axis = "X", amp = 8, speed = 1.6, pivot = cf(head + v3(0, -0.4, 0.2)) } }
+		),
+		P("Snout", "LowerTorso", "Block", v3(0.9, 0.55, 0.9), cf(head + v3(0, -0.05, -1.05)), rgb(70, 190, 235)),
+		P("Mouth", "LowerTorso", "Block", v3(0.3, 0.3, 0.3), cf(head + v3(0, -0.3, -1.55)), rgb(20, 60, 110)),
+		P("EyeL", "LowerTorso", "Ball", v3(0.3, 0.3, 0.3), cf(head + v3(-0.55, 0.3, -0.65)), rgb(255, 240, 120), { neon = true }),
+		P("EyeR", "LowerTorso", "Ball", v3(0.3, 0.3, 0.3), cf(head + v3(0.55, 0.3, -0.65)), rgb(255, 240, 120), { neon = true }),
+		P("HornL", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(-0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(18)), rgb(255, 235, 180)),
+		P("HornR", "LowerTorso", "Block", v3(0.18, 1.1, 0.18), cf(head + v3(0.5, 0.85, 0.3)) * CFrame.Angles(rad(-20), 0, rad(-18)), rgb(255, 235, 180)),
+		P(
+			"FinL",
+			"LowerTorso",
+			"Block",
+			v3(1.0, 0.1, 0.9),
+			cf(head + v3(-1.1, 0.0, 0.5)),
+			rgb(150, 235, 255),
+			{ trans = 0.25, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6 } }
+		),
+		P(
+			"FinR",
+			"LowerTorso",
+			"Block",
+			v3(1.0, 0.1, 0.9),
+			cf(head + v3(1.1, 0.0, 0.5)),
+			rgb(150, 235, 255),
+			{ trans = 0.25, anim = { kind = "swing", axis = "Z", amp = 18, speed = 2.6, phase = 3 } }
+		),
+		P(
+			"TailFinA",
+			"LowerTorso",
+			"Block",
+			v3(1.4, 0.1, 0.9),
+			cf(v3(0, -2.9, 0.4)),
+			rgb(150, 235, 255),
+			{ trans = 0.25, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4 } }
+		),
+		P(
+			"TailFinB",
+			"LowerTorso",
+			"Block",
+			v3(0.9, 0.1, 1.4),
+			cf(v3(0, -2.9, 0.4)),
+			rgb(150, 235, 255),
+			{ trans = 0.25, anim = { kind = "swing", axis = "Y", amp = 15, speed = 2.4, phase = 1 } }
+		),
+		P("Pool", "LowerTorso", "Cylinder", v3(5.4, 0.1, 5.4), cf(0, -3.15, 0.2), rgb(90, 200, 255), { neon = true, trans = 0.5, anim = { kind = "spin", axis = "Y", amp = 25 } }),
+	}
+	for _, p in extra do
+		table.insert(props, p)
+	end
+	return {
+		hideBody = true,
+		scale = 3,
+		skin = rgb(40, 150, 215),
+		props = props,
+		fx = {
+			{ on = "Mouth", kind = "puff", color = rgb(150, 220, 255), rate = 22, size = 2.2, aura = true }, -- the water breath
+			{ on = "Seg10", kind = "bubble", color = rgb(190, 235, 255), rate = 10, size = 1.6, aura = true },
+			{ on = "Head", kind = "spark", color = rgb(210, 245, 255), rate = 8, aura = true },
+		},
+		light = rgb(120, 210, 255),
+		halo = rgb(90, 200, 255),
+	}
+end
+CreatureSpecs.aquaris = aquaris()
 
 return CreatureSpecs

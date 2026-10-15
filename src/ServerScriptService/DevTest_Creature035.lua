@@ -99,6 +99,15 @@ local SIGNATURE = {
 	crypto_carl = { "HammerHead" },
 	ceo_chad = { "Blade" },
 	mystery_millionaire = { "Shield", "Blade" },
+	bubble_fish = { "Bowl", "Tank" },
+	hermit_porter = { "Shell", "CrateA" },
+	coral_snail = { "Shell", "StalkL" },
+	puffer_guard = { "Belly", "SpearShaft" },
+	mermaid_mage = { "StaffShaft", "StaffPearl" },
+	shark_knight = { "SharkHood", "Blade" },
+	pearl_seahorse = { "Bubble", "TailPearl" },
+	tide_warden = { "TridentShaft", "Coral1" },
+	aquaris = { "Head", "Mouth", "Seg10" },
 }
 
 local function parts(model: Instance): number

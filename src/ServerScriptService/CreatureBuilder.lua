@@ -80,10 +80,8 @@ local function makeEmitter(fx: CreatureSpecs.Fx, scale: number): ParticleEmitter
 		e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 1) })
 		e.LightEmission = 0.1
 	end
-	if fx.aura then
-		e:SetAttribute("Aura", true)
-		e.Enabled = false -- switched on by CreatureAnim.setAura for creatures near the camera
-	end
+	e:SetAttribute("Aura", true) -- every emitter is gated by distance (CreatureAnim.setAura), not only the rarity aura
+	e.Enabled = false
 	return e
 end
 
@@ -140,6 +138,7 @@ local function makeProp(prop: CreatureSpecs.Prop, body: BasePart): BasePart?
 	end
 	part.Name = prop.n or prop.on
 	part.Color = prop.color
+	part.Transparency = prop.trans or 0
 	part.Material = if prop.neon then Enum.Material.Neon else (prop.mat or Enum.Material.SmoothPlastic)
 	part.CanCollide, part.CanTouch, part.CanQuery = false, false, false
 	part.Massless = true
@@ -210,6 +209,17 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		face.Parent = head
 	end
 
+	if spec.hideBody then -- the creature is built entirely from props (seahorse, serpent); the rig only walks it
+		for _, part in model:GetChildren() do
+			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+				part.Transparency = 1
+			end
+		end
+		local face = head and head:FindFirstChild("face")
+		if face and face:IsA("Decal") then
+			face.Transparency = 1
+		end
+	end
 	local folder = Instance.new("Folder")
 	folder.Name = PROPS_FOLDER
 	for _, prop in spec.props do
@@ -227,7 +237,7 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 
 	local scale = spec.scale or 1
 	for _, fx in spec.fx or {} do
-		local body = bodyOf(model, fx.on)
+		local body = bodyOf(model, fx.on) or (folder:FindFirstChild(fx.on) :: BasePart?)
 		if body then
 			local att = Instance.new("Attachment")
 			att.Name = "FxAttachment"
