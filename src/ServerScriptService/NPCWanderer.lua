@@ -69,7 +69,7 @@ local function walkTo(npc: Model, humanoid: Humanoid, root: BasePart, zone: Zone
 	humanoid:MoveTo(destination)
 
 	local deadline = os.clock() + timeout
-	while reached == nil and os.clock() < deadline and isActive(npc, humanoid, zone) do
+	while reached == nil and os.clock() < deadline and isActive(npc, humanoid, zone) and npc:GetAttribute("Dormant") ~= true do
 		task.wait(0.1)
 	end
 	connection:Disconnect()
@@ -85,6 +85,10 @@ local function wander(npc: Model, humanoid: Humanoid, root: BasePart, zone: Zone
 	task.wait(math.random() * PAUSE_BETWEEN_WALKS)
 
 	while isActive(npc, humanoid, zone) do
+		if npc:GetAttribute("Dormant") == true then -- 035: nobody near, stand still until a player comes close
+			task.wait(0.5)
+			continue
+		end
 		if not zone:contains(root.Position) then
 			-- Only happens if something pushed it out; the next destination brings it back inside.
 			warn("[NPCWanderer]", npc.Name, "is outside", zone.folder.Name, "at", root.Position)

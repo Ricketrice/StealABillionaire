@@ -11,6 +11,9 @@
 --   odds     SIMULATED: 10,000 rolls per zone are within tolerance of the catalogue's rarity odds
 --   parts    SIMULATED: 12 lots x 6 pads and x 14 pads filled with creatures drawn by the odds: Workspace part total,
 --            Common/Rare average parts (<= 25 wanted)
+--   cap      real server, player standing in each zone: wanderers reach the cap (10 Knight's Keep, 8 Sunken Kingdom /
+--            Ember Academy for one player) and never exceed it; most spawn within ~125 studs of the player; wanderers
+--            more than 80 studs away are Dormant (frozen), near ones are not; parts of the zone's wanderers at the cap
 
 local RunService = game:GetService("RunService")
 if not RunService:IsStudio() then
@@ -373,6 +376,64 @@ local function partsBudget()
 	end
 end
 
+local function capFor(zoneName: string, want: number)
+	local zone = ZoneArea.new(workspace.Zones[zoneName])
+	local root = A.Character.HumanoidRootPart :: BasePart
+	local points = zone:getSpawnPoints()
+	local home = points[math.ceil(#points / 2)].Position + Vector3.new(0, 4, 0)
+	root.CFrame = CFrame.new(home)
+	task.wait(1)
+	local dists, maxSeen = {}, 0
+	local conn = zone.npcFolder.ChildAdded:Connect(function(npc)
+		task.wait(0.2)
+		local r = npc:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if r then
+			table.insert(dists, (r.Position - root.Position).Magnitude)
+		end
+	end)
+	local full = waitUntil(110, function()
+		local n = #zone.npcFolder:GetChildren()
+		maxSeen = math.max(maxSeen, n)
+		return if n >= want then n else nil
+	end)
+	-- keep sampling for a while: the cap must hold while spawns and despawns continue
+	local untilT = os.clock() + 15
+	while os.clock() < untilT do
+		maxSeen = math.max(maxSeen, #zone.npcFolder:GetChildren())
+		task.wait(0.25)
+	end
+	conn:Disconnect()
+	expect(("%s wanderers reach the cap %d with one player"):format(zoneName, want), full ~= nil, maxSeen)
+	expect(("%s never above the cap %d"):format(zoneName, want), maxSeen <= want, maxSeen)
+	local near = 0
+	for _, d in dists do
+		if d <= 125 then
+			near += 1
+		end
+	end
+	info(("%s spawned %d wanderers"):format(zoneName, #dists), ("%d within 125 studs of the player"):format(near))
+	expect(zoneName .. " most wanderers spawn near the player", #dists == 0 or near / #dists >= 0.6, near .. "/" .. #dists, false)
+	task.wait(2.5)
+	local wrong, nearN, farN, n = 0, 0, 0, 0
+	for _, npc in zone.npcFolder:GetChildren() do
+		local r = npc:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if r then
+			local d = (r.Position - root.Position).Magnitude
+			local asleep = npc:GetAttribute("Dormant") == true
+			if d <= 78 then
+				nearN += 1
+				wrong += if asleep then 1 else 0
+			elseif d >= 83 then
+				farN += 1
+				wrong += if asleep then 0 else 1
+			end
+			n += parts(npc)
+		end
+	end
+	info(zoneName .. " at the cap", ("%d wanderers, %d parts, %d within 80 studs (awake), %d farther (frozen)"):format(#zone.npcFolder:GetChildren(), n, nearN, farN))
+	expect(zoneName .. " dormant only when no player within 80 studs", wrong == 0, wrong)
+end
+
 local errorsSeen = {}
 local LogService = game:GetService("LogService")
 LogService.MessageOut:Connect(function(message, kind)
@@ -400,6 +461,15 @@ end)
 scenario("swap", swapAll)
 scenario("odds", odds)
 scenario("parts", partsBudget)
+scenario("cap MainStreet", function()
+	capFor("MainStreet", 10)
+end)
+scenario("cap SunkenKingdom", function()
+	capFor("SunkenKingdom", 8)
+end)
+scenario("cap BillionaireHills", function()
+	capFor("BillionaireHills", 8)
+end)
 section = "errors"
 expect("no creature / spawner errors in the log", #errorsSeen == 0, table.concat(errorsSeen, " | "))
 finish("DONE")

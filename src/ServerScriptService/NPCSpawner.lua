@@ -66,17 +66,68 @@ local ZONES = {
 		zone = "MainStreet", -- folder under Workspace.Zones
 		npcModel = "MysteryNPC", -- model under ServerStorage.NPCModels
 		spawnInterval = 10, -- seconds between spawns
-		maxNPCs = 6, -- active NPCs allowed in the zone at once
+		maxNPCs = 6, -- active NPCs allowed in the zone at once while nobody is in it
+		activeCap = 10, -- 035: cap with a player in the zone (+1 per extra player there, up to maxCap); spawn near players
+		maxCap = 14,
+		activeRadius = 80, -- wanderers freeze when no player is this close
 		lifetime = 60, -- seconds before an unclaimed NPC despawns
 		walkSpeed = 6, -- studs per second
 	},
 	-- Districts: fewer NPCs each so a full server stays light on mobile. Food Court (Zone 2) is
 	-- teammate-owned and has no spawner until its roster is approved.
-	{ zone = "SunkenKingdom", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true }, -- 034, ours
-	{ zone = "BeachBoardwalk", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true },
-	{ zone = "ToyTown", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true },
-	{ zone = "NeonDowntown", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true },
-	{ zone = "BillionaireHills", npcModel = "MysteryNPC", spawnInterval = 12, maxNPCs = 4, lifetime = 60, walkSpeed = 6, district = true },
+	{
+		zone = "SunkenKingdom",
+		npcModel = "MysteryNPC",
+		spawnInterval = 12,
+		maxNPCs = 4,
+		activeCap = 8,
+		maxCap = 14,
+		activeRadius = 80,
+		lifetime = 60,
+		walkSpeed = 6,
+		district = true,
+	}, -- 034, ours
+	-- Ember Academy (internal id BillionaireHills) is ours too.
+	{
+		zone = "BillionaireHills",
+		npcModel = "MysteryNPC",
+		spawnInterval = 12,
+		maxNPCs = 4,
+		activeCap = 8,
+		maxCap = 14,
+		activeRadius = 80,
+		lifetime = 60,
+		walkSpeed = 6,
+		district = true,
+	},
+	-- Teammate zones (4-7 after 034): untouched, not ours to tune.
+	{
+		zone = "BeachBoardwalk",
+		npcModel = "MysteryNPC",
+		spawnInterval = 12,
+		maxNPCs = 4,
+		lifetime = 60,
+		walkSpeed = 6,
+		district = true,
+	},
+	{
+		zone = "ToyTown",
+		npcModel = "MysteryNPC",
+		spawnInterval = 12,
+		maxNPCs = 4,
+		lifetime = 60,
+		walkSpeed = 6,
+		district = true,
+	},
+	{
+		zone = "NeonDowntown",
+		npcModel = "MysteryNPC",
+		spawnInterval = 12,
+		maxNPCs = 4,
+		lifetime = 60,
+		walkSpeed = 6,
+		district = true,
+	},
 }
 
 -- True while at least one player in the server can collect from this zone.
@@ -120,6 +171,9 @@ for _, settings in ZONES do
 		end,
 		spawnInterval = settings.spawnInterval,
 		maxNPCs = settings.maxNPCs,
+		activeCap = settings.activeCap,
+		maxCap = settings.maxCap,
+		activeRadius = settings.activeRadius,
 		lifetime = settings.lifetime,
 		walkSpeed = settings.walkSpeed,
 		shouldSpawn = if settings.district

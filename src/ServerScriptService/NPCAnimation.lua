@@ -13,6 +13,9 @@ local FADE_TIME = 0.2
 
 -- Each animated NPC's idle track, so it can be resumed after something else stopped it (e.g. carrying).
 local idleTracks: { [Model]: AnimationTrack } = setmetatable({}, { __mode = "k" }) :: any
+-- 035: wanderers with nobody near are frozen (no tracks playing); they come back when a player gets close.
+local walkTracks: { [Model]: AnimationTrack } = setmetatable({}, { __mode = "k" }) :: any
+local dormant: { [Model]: boolean } = setmetatable({}, { __mode = "k" }) :: any
 
 -- Returns the highest-weighted Animation in one of the Animate script's sets (e.g. "walk", "idle").
 local function findAnimation(animate: Instance, setName: string): Animation?
@@ -63,11 +66,15 @@ function NPCAnimation.attach(npc: Model)
 	walkTrack.Priority = Enum.AnimationPriority.Movement
 	idleTrack.Priority = Enum.AnimationPriority.Idle
 	idleTracks[npc] = idleTrack
+	walkTracks[npc] = walkTrack
 
 	-- Taller rigs take longer strides, so their walk plays slightly slower.
 	local heightScale = humanoid.HipHeight / REFERENCE_HIP_HEIGHT
 
 	local function onRunning(speed: number)
+		if dormant[npc] then
+			return
+		end
 		if speed > MOVING_THRESHOLD then
 			if not walkTrack.IsPlaying then
 				idleTrack:Stop(FADE_TIME)
@@ -98,6 +105,24 @@ function NPCAnimation.resumeIdle(npc: Model)
 		NPCAnimation.attach(npc) -- starts the idle itself
 	elseif not idleTrack.IsPlaying then
 		idleTrack:Play(FADE_TIME)
+	end
+end
+
+-- Freezes (false) or wakes (true) an NPC's animation. Used by ZoneSpawner for wanderers far from every player.
+function NPCAnimation.setActive(npc: Model, active: boolean)
+	local idleTrack, walkTrack = idleTracks[npc], walkTracks[npc]
+	if not (idleTrack and walkTrack) then
+		return
+	end
+	if active then
+		dormant[npc] = nil
+		if not walkTrack.IsPlaying and not idleTrack.IsPlaying then
+			idleTrack:Play(FADE_TIME)
+		end
+	else
+		dormant[npc] = true
+		walkTrack:Stop(0)
+		idleTrack:Stop(0)
 	end
 end
 

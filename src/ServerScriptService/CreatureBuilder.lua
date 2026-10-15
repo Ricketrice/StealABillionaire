@@ -203,7 +203,11 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 				p.CanCollide, p.CanTouch, p.CanQuery, p.Massless, p.Anchored = old.CanCollide, old.CanTouch, old.CanQuery, old.Massless, old.Anchored
 				p.TopSurface, p.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
 				for _, c in old:GetChildren() do
-					c.Parent = p
+					if c:IsA("BaseWrap") or c:IsA("WrapTarget") then -- layered-clothing cages only work on a MeshPart
+						c:Destroy()
+					else
+						c.Parent = p
+					end
 				end
 				p.Parent = model
 				old:Destroy()
