@@ -12,6 +12,8 @@ Roblox, phone-first. ~80% kids. Code lives in Studio only (no Rojo); work throug
 
 7. `docs/PIVOT.md` — planned Steal a Boss reskin (034). Don't apply it before 034.
 
+Never read `docs/RobloxGame#1/` (owner's personal notes, not for the builder).
+
 ## Hard rules
 - **Teammate zones (today's zones 2–5; shown as zones 4–7 after milestone 034) are teammate-owned. Never modify anything inside them.** Bridges/paths/gates may stop at their entrances. Our new zones 2–3 (Sunken Kingdom, Ember Academy) are ours.
 - Never change worker IDs, rarities, odds, income, economy formulas, progression or zone IDs unless the milestone prompt says so.
