@@ -266,6 +266,9 @@ local function build(): string
 	for k, s in { { -25, 10, 70 }, { 30, 12, 100 }, { 0, 14, 40 } } do
 		fishSchool(fx, at(s[1], s[2], s[3]), if k % 2 == 0 then C.fishB else C.fishA)
 	end
+	-- the blue mood (ZoneAmbience): the whole terrace + its landing, up to 60 above the sand
+	local volume = K.part({ name = "AmbienceVolume", parent = fx, ghost = true, size = Vector3.new(134, 60, 176), cf = CFrame.new(at(0, 28, 74)) })
+	volume:SetAttribute("Ambience", "Underwater")
 
 	return ("Sunken Kingdom: %d parts"):format(K.count(f))
 end

@@ -47,7 +47,7 @@ local L3 = Vector3.new(-100, Y0 + 18, -926)
 local FIELD2 = { { -100, 16, -910 }, { -100, 14, -894 }, { -100, 12, -878 }, { -100, 10, -862 } }
 local RAMP = { high = Vector3.new(-100, Y0 + 10, -856), low = Vector3.new(-100, Y0, -834) }
 local FINISH = Vector3.new(-100, Y0, -824)
-local PODIUM = Vector3.new(-92, Y0, -810)
+local PODIUM = Vector3.new(-116, Y0, -812) -- west of the finish path (the island rail is at x -86)
 
 local function platform(f: Instance, name: string, centreTop: Vector3, w: number, d: number): BasePart
 	local body = Z.block(f, name, Vector3.new(w, 2, d), centreTop - Vector3.new(0, 1, 0), C.stone, Enum.Material.Limestone)
