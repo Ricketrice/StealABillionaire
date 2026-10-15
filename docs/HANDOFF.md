@@ -24,21 +24,14 @@ Purchases (live IDs): passes 2x Cash 2033726439 (349 R$), Extra Slots 2032784431
 Decisions log: `docs/GAME_DESIGN.md` → Decisions. Order: `docs/ROADMAP.md`.
 
 ## Where we are now
-**034 in progress.** Checkpoint 1 approved and logged (D43); `backups/pre034.rbxl` made. Phases 1–3 written in code only (commit `00ff261` on `milestone-034`, "not yet checked in Studio"): lane order + gate prices, Coming-soon flags, Sunken roster + training_dummy/bookling, zone builders, Spell Run. Not yet pushed into Studio or tested. Left: run the builders in Studio, worker→creature text, Phase 4 (Sir Ironclad + reskin), all tests, measurements. Was blocked by a lost Studio MCP connection (fix: Studio open + plugin on, `/mcp` → reconnect `roblox-studio`).
+**034 built and closed** (`milestone-034`). Passed: spellrun034 65/65, base033 solo/save/duo, heist032 solo/duo. Pending, honestly unrun (owner's laptop too weak for 3 clients): pvp022 sign-timing check, lane030 T3 run-home limit (test limit raised 55 → 65 s). Owner still must: File → Save, `! git push -u origin milestone-034`, play-check zones, Dashboard renames, send teammates the zone 4–7 message.
 
-Original Checkpoint 1 approval (already applied, for reference):
-```
-Checkpoint 1 approved:
-1. Roster 3C/2R/2E/1L/1S per zone; add training_dummy ($5) and bookling ($500).
-2. Sunken Kingdom incomes as listed (x10). Prices: Sunken 50k (needs Keep), Ember 500k (needs Sunken).
-3. Teammate zones T4–T7: set gate ladder prices 2.5M / 7.5M / 25M / 75M, requiring Ember first. Gates show "Coming soon" (locked, no entry) until each teammate's zone is ready (one flag per zone). Don't change their worker data. Write a short income guideline for teammates in docs/PIVOT.md (zone 4 ~x300, 5 ~x1,000, 6 ~x3,000, 7 ~x10,000 of Main Street).
-4. Change "worker" to "creature" in all UI text. Legendary = Golden Paladin.
-Log as decisions. Studio is restarted. Make the pre034 backups and start Phase 1.
-```
-Next in 034: Phase 1 lane re-order → Phase 2 zones → imports (Blender meshes, owner imports with 3D Importer into `ServerStorage.Imports034`) → Spell Run → Sir Ironclad + text reskin → final report.
+**Owner play-check after 034:** zone creatures were plain avatars and didn't match what you catch; zones looked plain. New order, each after `/clear`: **035 Creature models** (`prompts/035.md`, one model everywhere, Common/Rare blocky like owner's reference, Epic+ beautiful and themed) → **035b Zone art pass** → **035c Zone bosses** (Sir Ironclad, Aquaris, Ignis; harder each) → 036 launch.
+
+**Weak laptop rule:** solo tests only, no 3-client runs; list unrun checks as pending.
 
 ## Then
-035 Creatures + art & detail pass (creature models, Dragon Pup fixes, heist polish, vault door trim) → 036 Launch polish + trailer kit + TikTok marketing plan + make a Roblox group → soft launch → weekly updates.
+036 Launch polish + trailer kit + TikTok marketing plan + Roblox group → soft launch → weekly updates.
 
 ## Open items
 - Owner play-check of 033 (Store tab screenshots) and the 032 stomp jump.
