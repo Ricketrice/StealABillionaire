@@ -1,7 +1,7 @@
 -- Studio location: StarterPlayer.StarterPlayerScripts.Notifications (LocalScript)
 -- Notifications
 -- Feedback for the core loop. Display only: everything shown is a real server result.
---   * toasts: failed steals, inventory actions (title "Workers"), placement on a base (title "Base").
+--   * toasts: failed steals, inventory actions (title "Creatures"), placement on a base (title "Base").
 --     UIKit.toast stacks at most 3 and folds repeats together, so rapid failures don't spam.
 --   * steal pop: "STOLEN!" over the NPC the moment the server reserves it for this player
 --     (read from the NPC's replicated ClaimedBy / ClaimPhase attributes; no extra remote).

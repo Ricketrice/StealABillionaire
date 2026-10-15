@@ -137,7 +137,7 @@ player:GetAttributeChangedSignal("Income"):Connect(updateIncome)
 updateCash()
 updateIncome()
 
--- Workers button: label + "x/6 earning" on the left, owned/capacity chip on the right
+-- Creatures button: label + "x/6 earning" on the left, owned/capacity chip on the right
 local workersButton = UIKit.button({
 	Name = "WorkersButton",
 	Kind = "Secondary",
@@ -149,7 +149,7 @@ local workersButton = UIKit.button({
 		UIKit.Signals.ToggleInventory:Fire(nil)
 	end,
 })
-UIKit.text({ Text = "WORKERS", Role = "Heading", TextSize = 15, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(1, -96, 0, 18), Parent = workersButton })
+UIKit.text({ Text = "CREATURES", Role = "Heading", TextSize = 15, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(1, -96, 0, 18), Parent = workersButton })
 local earningLabel = UIKit.text({
 	Name = "Earning",
 	Text = "0/6 earning",
@@ -230,7 +230,7 @@ local function updateWorkers()
 		local worker = WorkerCatalogue.get(entry.id)
 		local rarity = worker and worker.rarity or "Common"
 		local color = UIStyle.Rarity[rarity] or C.Text
-		carryName.Text = worker and worker.name or "Worker"
+		carryName.Text = worker and worker.name or "Creature"
 		carryTag.Text = (UIStyle.RarityGlyph[rarity] or "") .. " " .. string.upper(rarity)
 		carryTag.TextColor3 = color
 		local full = stored >= snap.slots

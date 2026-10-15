@@ -77,7 +77,7 @@ local panelScale = UIKit.make("UIScale", { Parent = panel }) :: UIScale
 
 -- header
 local header = UIKit.make("Frame", { Name = "Header", BackgroundTransparency = 1, Position = UDim2.fromOffset(S.L, S.M), Size = UDim2.new(1, -S.L * 2, 0, 36), Parent = panel })
-UIKit.text({ Text = "Workers", Role = "Title", TextSize = 24, Size = UDim2.new(0, 120, 1, 0), Parent = header })
+UIKit.text({ Text = "Creatures", Role = "Title", TextSize = 24, Size = UDim2.new(0, 120, 1, 0), Parent = header })
 local ownedChip, ownedLabel =
 	UIKit.chip({ Name = "Owned", Text = "0/" .. CAPACITY, Height = 24, Color = C.Gold, AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 116, 0.5, 0), Parent = header })
 local closeButton = UIKit.button({

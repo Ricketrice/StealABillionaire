@@ -46,7 +46,7 @@ local WorkerInventory = {}
 
 local INVENTORY_SLOTS = InventoryConfig.INVENTORY_SLOTS
 local STATION_SLOTS = InventoryConfig.STATION_SLOTS
-local TITLE = "Workers"
+local TITLE = "Creatures"
 local REQUEST_COOLDOWN = 0.2 -- seconds between a player's transfer requests
 local REFRESH_COOLDOWN = 1 -- seconds between a player's snapshot requests (each one is a full snapshot)
 local PLOT_WAIT = 10 -- seconds to wait for a plot before restoring workers

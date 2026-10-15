@@ -159,7 +159,7 @@ end
 addButton("Store", "shop", "Store", 1, function()
 	UITheme.openScreen("Store")
 end)
-addButton("Workers", "backpack", "Workers", 2, function()
+addButton("Workers", "backpack", "Creatures", 2, function()
 	UITheme.closeScreens()
 	UIKit.Signals.ToggleInventory:Fire(nil)
 end)
@@ -338,7 +338,7 @@ local function updateWorkers()
 	if entry then
 		local worker = WorkerCatalogue.get(entry.id)
 		local rarity = worker and worker.rarity or "Common"
-		carryName.Text = worker and worker.name or "Worker"
+		carryName.Text = worker and worker.name or "Creature"
 		carryTag.Text = "CARRYING  " .. (UITheme.RarityGlyph[rarity] or "") .. " " .. string.upper(rarity)
 		carryTag.TextColor3 = UITheme.Rarity[rarity] or T.Text
 		local full = stored >= snap.slots
