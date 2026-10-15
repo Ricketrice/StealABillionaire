@@ -67,3 +67,12 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - Carry/safe zones: `PvPBase` safe volumes by tag `PvPSafeZone` (`SafeHubVolume`, x -174..-139 only) + spawn radius from `SpawnLocation`; carry speed = walk x0.85 (13.6 studs/s) in `NPCCarry`.
 - Zone 6 (031): `RaceService` reads only `World.VelocityRoyale` (to parent `RaceCourse`); positions live in `ServerStorage.RaceCourse031`. `CreatureShowcase` holds the stand spot (Studio only).
 - Positions BEFORE 030 (Main Street and Zone 6 have moved, see Lane): x/z: bases -138..106 / -60..52 · spawn (-157,-4) · Main Street -348..-179 / -54..48 · plaza centre (172,-4), ring r 44, bypass 128 · Zone 2 S (160..274, 55..216) · Zone 3 far S · Zone 4 E (224..431, 7..149) · Zone 5 E-N (224..415, -167..-15) · Zone 6 N (155..331, -297..-118).
+
+## 034 (Steal a Boss)
+- Zone builders `tools/build034/` -> `ServerStorage.Build034` (Z helpers; B0_HideoutCamp, B1_KnightsKeep, B2_SunkenKingdom, B3_EmberAcademy, B4_SpellRun, B5_Kits): each rebuilds `Workspace.World.<Zone>` and parks what it replaces in `ServerStorage._Parked034.<Zone>`; run B5_Kits after any B1-B4 rebuild. Lane = `Build027.B8_Lane` (`.move()` once, attr `Moved034`; `.build()` re-runnable).
+- Spell Run: course `World.EmberAcademy.SpellRun` (FallZone, PadSpot, SpellBook models tagged `SpellBook`), race template `ServerStorage.SpellRunCourse034`; `RaceConfig.WORLD/COURSE/TEMPLATE`. Test `DevTest_SpellRun034` (`@@T034S|`, arg `spellrun034`, 2 clients, StudioMemoryStore).
+- Client motion/mood: `StarterPlayerScripts.ZoneAmbience` (tags `AmbientBob`, `SpellBook`; parts with attr `Ambience = "Underwater"`).
+- Boss: `Build032.B1_Vault("castle")` builds `ServerStorage.HeistVault032` from `ServerStorage.Imports034` (SirIronclad, TreasuryDoor); 032 build parked in `_Parked034.HeistVault032_SecurityBot`. Meshes: `tools/blender/build_034_imports.py` -> `assets/export/034`.
+- Teammate gates: `ZoneConfig.READY.<id>` (FoodCourt, BeachBoardwalk, ToyTown, NeonDowntown); `ZoneConfig.forSale/isReady`. Sunken gate/NPC area: `World.FutureZones.Our_SunkenKingdom`, `Workspace.Zones.SunkenKingdom`.
+- Money sign: `CashFormat.SYMBOL` (the only "$" in the code). Battle stats in UI: `WorkerCatalogue.SHOW_BATTLE_STATS`.
+
