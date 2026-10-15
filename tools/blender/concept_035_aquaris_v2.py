@@ -120,9 +120,9 @@ def loft(name, secs, m, side=12, ref=(0, 0, 1), up_ref=None, sub=1, caps=(True, 
     return o
 
 
-def ribbon(name, pts, widths, m, thick=0.02):
+def ribbon(name, pts, widths, m, thick=0.02, sub=3):
     secs = [(p[0], p[1], p[2], widths[i], thick, 0, 2) for i, p in enumerate(pts)]
-    return loft(name, secs, m, side=6, ref=(0, 0, 1), sub=3)
+    return loft(name, secs, m, side=6, ref=(0, 0, 1), sub=sub)
 
 
 def spike(name, base, tip, r, m, side=5):
@@ -189,8 +189,9 @@ for s, sd in ((1, "R"), (-1, "L")):
     # brow ridge: a heavy angled wedge over each eye
     loft("Brow" + sd, [(s * 0.2, -3.85, 5.56, 0.16, 0.1, 0, 3), (s * 0.5, -4.45, 5.5, 0.2, 0.11, 0, 3), (s * 0.55, -5.0, 5.28, 0.12, 0.07, 0, 3)], deep_m, side=8, ref=(0, 0, 1), sub=2)
     e, _ = ray((s * 4, -4.35, 5.18), (-s, 0, 0))
-    ell("Eye" + sd, (e.x - s * 0.02, e.y, e.z), (0.07, 0.24, 0.085), (math.radians(-18), 0, 0), glow_m, seg=10, rings=6)
-    ell("Pupil" + sd, (e.x - s * 0.02 + s * 0.05, e.y - 0.02, e.z), (0.04, 0.035, 0.08), (math.radians(-18), 0, 0), ink_m, seg=6, rings=4)
+    ell("Eye" + sd, (e.x - s * 0.02, e.y, e.z), (0.085, 0.31, 0.11), (math.radians(-20), 0, 0), glow_m, seg=10, rings=6)
+    ell("EyeRing" + sd, (e.x - s * 0.0, e.y, e.z), (0.05, 0.4, 0.17), (math.radians(-20), 0, 0), deep_m, seg=10, rings=6)
+    ell("Pupil" + sd, (e.x - s * 0.02 + s * 0.05, e.y - 0.02, e.z), (0.05, 0.035, 0.1), (math.radians(-20), 0, 0), ink_m, seg=6, rings=4)
     n_, _ = ray((s * 0.17, -9, 4.9), (0, 1, 0))
     ell("Nostril" + sd, (n_.x, n_.y + 0.02, n_.z), (0.05, 0.05, 0.045), (0, 0, 0), ink_m, seg=6, rings=4)
     # horn: one long swept-back curved horn on a gold base cone, with a short brow prong
@@ -203,17 +204,41 @@ for s, sd in ((1, "R"), (-1, "L")):
     f0, _ = ray((s * 4, -4.0, 4.8), (-s, 0, 0))
     for j in range(3):
         o = V((f0.x, f0.y + 0.18 * j, f0.z - 0.12 * j))
-        spike("Cheek%s%d" % (sd, j), o, o + V((s * 0.55, 0.95 - 0.12 * j, 0.2 - 0.34 * j)), 0.1, ice_m, side=4)
+        spike("Cheek%s%d" % (sd, j), o, o + V((s * 0.75, 1.5 - 0.2 * j, 0.3 - 0.45 * j)), 0.14, ice_m, side=4)
     # ribbon whiskers: flowing cyan ribbons from the snout
     w0, _ = ray((s * 4, -5.45, 4.85), (-s, 0, 0))
     ribbon("Whisker" + sd, [(w0.x, w0.y, w0.z), (w0.x + s * 0.5, w0.y + 0.7, w0.z - 0.35), (w0.x + s * 1.1, w0.y + 1.7, w0.z - 0.55), (w0.x + s * 1.9, w0.y + 2.8, w0.z - 0.35), (w0.x + s * 2.6, w0.y + 3.9, w0.z + 0.2)],
            [0.14, 0.12, 0.09, 0.06, 0.01], fin_m)
     # a few teeth along the upper lip
-    for j in range(3):
+    for j in range(5):
         tt, _ = ray((s * 0.22, -9, 4.78), (0, 1, 0))
-        spike("Tooth%s%d" % (sd, j), (s * 0.3, tt.y + 0.35 + 0.3 * j, tt.z - 0.08), (s * 0.3, tt.y + 0.35 + 0.3 * j, tt.z - 0.34), 0.045, white_m, side=4)
+        spike("Tooth%s%d" % (sd, j), (s * 0.3, tt.y + 0.3 + 0.24 * j, tt.z - 0.08), (s * 0.3, tt.y + 0.3 + 0.24 * j, tt.z - 0.42), 0.055, white_m, side=4)
+# bolder face: nose bridge ridge, nose-tip horn, nostril flares, chin spike, mouth line
+loft("NoseBridge", [(0, -4.3, 5.52, 0.1, 0.08, 0, 3), (0, -5.0, 5.3, 0.14, 0.1, 0, 3), (0, -5.6, 5.12, 0.12, 0.09, 0, 3)], deep_m, side=6, sub=2)
+spike("NoseHorn", (0, -5.78, 5.12), (0, -6.05, 5.55), 0.12, gold_m)
+for s_ in (1, -1):
+    ell("NostrilFlare%d" % s_, (s_ * 0.27, -5.7, 4.95), (0.12, 0.2, 0.12), (0, 0, 0), deep_m, seg=8, rings=5)
+    mm, _ = ray((s_ * 4, -5.2, 4.7), (-s_, 0, 0))
+    ribbon("MouthLine%d" % (1 if s_ > 0 else 2), [(mm.x + s_ * 0.01, -3.95, 4.78), (mm.x + s_ * 0.01, -4.6, 4.72), (mm.x + s_ * 0.01, -5.3, 4.74), (mm.x + s_ * 0.01, -5.8, 4.77)], [0.03, 0.03, 0.03, 0.02], ink_m, thick=0.03, sub=2)
+# MANE: layered fin blades fanning back from the skull and down the neck (ice, gold-tipped outer row)
+for ring_i, (y, zc, rad, ln) in enumerate(((-3.5, 5.0, 0.95, 2.0), (-2.7, 4.2, 0.95, 2.3))):
+    for k in range(7):
+        a = math.radians(-90 + k * 30)  # sweep over the top and both sides, never the underside
+        d = V((math.sin(a), 0, math.cos(a)))
+        h0, _ = ray(V((0, y, zc)) + d * 4, -d)
+        if h0 is None:
+            continue
+        o = h0 - d * 0.03
+        out = d * (0.55 + 0.05 * ring_i) + V((0, 1.0, 0)) * (0.9)
+        mid = o + out * 0.5 * ln / 1.5 + V((0, 0.15, 0.1))
+        tip = o + out * ln / 1.5 + V((0, 0.35, -0.15))
+        m_ = ice_m if (k + ring_i) % 2 == 0 else fin_m
+        ribbon("Mane%d_%d" % (ring_i, k), [(o.x, o.y, o.z), (mid.x, mid.y, mid.z), (tip.x, tip.y, tip.z)], [0.28, 0.34, 0.005], m_, thick=0.03, sub=2)
+        if False:
+            spike("ManeTip%d" % k, (tip.x, tip.y, tip.z), (tip.x + d.x * 0.35, tip.y + 0.35, tip.z + d.z * 0.25), 0.05, gold_m, side=4)
 # lower jaw: strong wedge, ice-blue underside, hinged at the cheek
 jaw = loft("Jaw", [(0, -3.9, 4.6, 0.42, 0.2, 0.25, 3), (0, -4.7, 4.5, 0.4, 0.18, 0.3, 3.2), (0, -5.4, 4.5, 0.33, 0.15, 0.25, 3.5), (0, -5.85, 4.55, 0.26, 0.12, 0.2, 3.5)], ice_m, side=10, sub=2)
+spike("ChinSpike", (0, -5.3, 4.28), (0, -5.0, 3.78), 0.1, gold_m)
 # crest: a row of back-swept gold blades on the skull, then a fin crest down neck, spine and tail
 for i, y in enumerate((-3.5, -3.15, -2.8)):
     t = top(0, y)
@@ -357,7 +382,7 @@ sc.world = bpy.data.worlds.new("w")
 sc.world.use_nodes = True
 bg = sc.world.node_tree.nodes["Background"].inputs
 bg[0].default_value, bg[1].default_value = (0.93, 0.95, 0.98, 1), 1.0
-for loc, en, rot in (((6, -8, 9), 2.4, (math.radians(50), 0, math.radians(35))), ((-7, -5, 5), 0.9, (math.radians(70), 0, math.radians(-50)))):
+for loc, en, rot in (((6, -8, 9), 1.7, (math.radians(50), 0, math.radians(35))), ((-7, -5, 5), 0.55, (math.radians(70), 0, math.radians(-50)))):
     bpy.ops.object.light_add(type="SUN", location=loc)
     L = bpy.context.active_object
     L.data.energy, L.rotation_euler = en, rot
@@ -365,8 +390,9 @@ bpy.ops.object.camera_add()
 cam = bpy.context.active_object
 cam.data.lens = 62
 sc.camera = cam
-for name, pos, tgt in (("front", (0, -24, 4.6), (0, 1.5, 3.4)), ("side", (36, 1.6, 3.6), (0, 1.6, 3.4)), ("three-quarter", (21, -23, 9.5), (0, 1.6, 3.2)), ("silhouette", (36, 1.6, 3.6), (0, 1.6, 3.4))):
+for name, pos, tgt in (("front", (0, -24, 4.6), (0, 1.5, 3.4)), ("side", (36, 1.6, 3.6), (0, 1.6, 3.4)), ("three-quarter", (21, -23, 9.5), (0, 1.6, 3.2)), ("hero-head", (10.5, -16.5, 8.2), (0.5, -3.6, 4.8)), ("silhouette", (36, 1.6, 3.6), (0, 1.6, 3.4))):
     cam.location = V(pos)
+    cam.data.lens = 90 if name == "hero-head" else 62
     cam.rotation_euler = (V(tgt) - cam.location).to_track_quat("-Z", "Y").to_euler()
     if name == "silhouette":
         black = bpy.data.materials.new("blk")
