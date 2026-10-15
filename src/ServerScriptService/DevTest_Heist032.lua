@@ -524,7 +524,7 @@ local function caught()
 	local lost = eventsOf(A, "Lost")
 	expect("capsule flies back (Lost, caught)", lost[1] ~= nil and lost[1].info.userId == A.UserId and lost[1].info.reason == "caught")
 	local shown = ask(A, "ui").message
-	expect("A told: caught, cash kept", type(shown) == "string" and shown:find("Caught") ~= nil and shown:find("cash") ~= nil, shown)
+	expect("A told: caught, coins kept", type(shown) == "string" and shown:find("Caught") ~= nil and shown:find("coins") ~= nil, shown)
 	expect("caught: no worker, marker unchanged", #newWorkers(A, before) == 0 and (marker(A) and marker(A).id) == markerBefore)
 	expect("caught: walk speed back to 16", waitUntil(2, function()
 		return near(hum(A).WalkSpeed, 16)
@@ -618,7 +618,7 @@ local function speed()
 		local r = ask(A, "speed", { action = "Buy", id = "gold" })
 		expect(
 			"not enough cash: refused, nothing charged",
-			r.result and r.result.ok == false and r.result.text == "Not enough cash yet" and cash(A) >= held,
+			r.result and r.result.ok == false and r.result.text == "Not enough coins yet" and cash(A) >= held,
 			r.result and r.result.text
 		)
 	else
@@ -700,7 +700,7 @@ local function speed()
 		ZoneProgress._test.publish(A)
 		local course = ServerStorage:WaitForChild(RaceConfig.TEMPLATE)
 		local pad = (course:FindFirstChild("StartPad") :: BasePart).Position
-		local folder = workspace.World.VelocityRoyale:FindFirstChild(RaceConfig.FOLDER)
+		local folder = workspace.World[RaceConfig.WORLD]:FindFirstChild(RaceConfig.FOLDER)
 		waitUntil(30, function()
 			return folder and folder:GetAttribute("State") == "Waiting"
 		end)
