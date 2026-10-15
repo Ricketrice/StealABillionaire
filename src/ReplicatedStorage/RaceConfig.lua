@@ -29,7 +29,7 @@ RaceConfig.INTERVAL = 180 -- a race every 3 minutes if at least 1 player is on t
 RaceConfig.JOIN_WINDOW = 15 -- the first player on the pad starts this "Join the race!" countdown (D36)
 RaceConfig.COUNTDOWN = 5 -- big numbers + sound in the last seconds of the join window; racers on the pad are frozen
 -- (no walking or jumping) for these seconds and let go at GO (032); off the pad at GO = not racing
-RaceConfig.TIME_LIMIT = 90 -- from GO: 2x the slowest measured Spell Run (55.9 s, 034, Play Solo bot run) capped at the 90 s maximum; unfinished racers get nothing
+RaceConfig.TIME_LIMIT = 135 -- from GO (D45, owner): ~2x the slowest measured 2-client Spell Run (67.1 s, 034); unfinished racers get nothing
 RaceConfig.PODIUM_SECONDS = 20 -- top 3 names stay on the podium board
 RaceConfig.LAPS = 1
 
@@ -78,7 +78,7 @@ function RaceConfig.oddsText(capsule: string): string
 end
 
 assert(RaceConfig.COUNTDOWN <= RaceConfig.JOIN_WINDOW, "big countdown must fit in the join window")
-assert(RaceConfig.TIME_LIMIT <= 90, "race time limit is capped at 90 s")
+assert(RaceConfig.TIME_LIMIT <= 135, "race time limit is capped at 135 s (D45)")
 assert(RaceConfig.PER_MILLE.Gold.Legendary > RaceConfig.PER_MILLE.Silver.Legendary, "Gold must beat Silver")
 
 return RaceConfig

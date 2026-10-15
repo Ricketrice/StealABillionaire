@@ -264,7 +264,7 @@ scenario("flag off", function()
 	expect("RaceOn not published", ReplicatedStorage:GetAttribute(RaceConfig.PUBLISHED) == nil)
 	expect("the course geometry is always there", geometry:FindFirstChild("FallZone") ~= nil and geometry:FindFirstChild("PadSpot") ~= nil)
 	expect("one lap = start to finish", RaceConfig.LAPS == 1)
-	expect("time limit capped at 90 s", RaceConfig.TIME_LIMIT <= 90, RaceConfig.TIME_LIMIT)
+	expect("time limit 135 s (D45)", RaceConfig.TIME_LIMIT == 135, RaceConfig.TIME_LIMIT)
 end)
 
 scenario("flag on: course, sign, odds, route", function()

@@ -343,20 +343,20 @@ scenario("rank never goes down (saved peak, schema stays 3)", function()
 	local data = PlayerData.get(A) :: any
 	CashService.add(A, 300000)
 	local reached = waitUntil(6, function()
-		return A:GetAttribute("Rank") == "CEO"
+		return A:GetAttribute("Rank") == "Captain"
 	end)
-	expect("300,000 cash: CEO", reached, A:GetAttribute("Rank"))
+	expect("300,000 cash: Captain", reached, A:GetAttribute("Rank"))
 	local peak = data.hub.peak
 	expect("hub.peak saved in the record", type(peak) == "number" and peak >= 300000, peak)
 	expect("schema still 3", data.schema == 3, data.schema)
 	CashService.trySpend(A, CashService.get(A))
 	task.wait(3)
-	expect("cash spent: still CEO", A:GetAttribute("Rank") == "CEO", A:GetAttribute("Rank"))
+	expect("cash spent: still Captain", A:GetAttribute("Rank") == "Captain", A:GetAttribute("Rank"))
 	expect("net worth fell but the peak did not", (A:GetAttribute("NetWorth") or 0) < 1000 and (A:GetAttribute("Peak") or 0) >= peak, A:GetAttribute("Peak"))
 	expect(
 		"head tag shows the rank",
 		(A.Character :: Model):FindFirstChild("RankTag") ~= nil
-			and ((A.Character :: Model).RankTag.Label :: TextLabel).Text == "CEO"
+			and ((A.Character :: Model).RankTag.Label :: TextLabel).Text == "Captain"
 			and (A.Character :: Model).RankTag.Adornee == (A.Character :: Model).Head
 	)
 end)
