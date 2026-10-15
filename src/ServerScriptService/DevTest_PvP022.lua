@@ -1289,8 +1289,15 @@ scenario("what the players see", function()
 	expect("STEAL SUCCESSFUL banner on the thief's screen", a.banner == "STEAL SUCCESSFUL", a.banner)
 	expect("the alarm clears on delivery and the lock barrier is gone", b.alarm == nil and c.plotAlarm[plotName] == nil and c.barrier[plotName] == nil)
 	PvPBase._test.setProtection(B, 120)
-	task.wait(0.9)
-	c = probe(C)
+	local serverUntil = plotOf(B):GetAttribute("ProtectedUntil")
+	expect("the server publishes the protection on the plot at once", type(serverUntil) == "number" and serverUntil > PvPBase.now(), serverUntil)
+	-- the sign is drawn by the client: poll it (up to 5 s) instead of a fixed wait
+	local askedAt = os.clock()
+	c = waitUntil(5, function()
+		local seen = probe(C)
+		return if seen.barrier[plotName] == "shield" and type(seen.sign[plotName]) == "string" then seen else nil
+	end) or probe(C)
+	note("INFO", "protected sign", ("client sign after %.2f s"):format(os.clock() - askedAt))
 	expect(
 		"a protected base shows its barrier and countdown",
 		c.barrier[plotName] == "shield" and type(c.sign[plotName]) == "string" and c.sign[plotName]:find("PROTECTED", 1, true) ~= nil,
