@@ -52,11 +52,21 @@ local coin = UIKit.make(
 )
 UIStyle.corner(coin, UIStyle.Radius.Pill)
 UIStyle.outline(coin, C.GoldDark, 2)
-UIKit.text({ Text = "$", Role = "Title", TextSize = 24, Color = C.PrimaryText, AlignX = Enum.TextXAlignment.Center, Size = UDim2.fromScale(1, 1), Stroke = false, Parent = coin })
-local cashLabel = UIKit.text({ Name = "Cash", Text = "$0", Role = "Display", TextSize = 26, Position = UDim2.fromOffset(60, 7), Size = UDim2.new(1, -68, 0, 30), Parent = cash })
+UIKit.text({
+	Text = CashFormat.SYMBOL,
+	Role = "Title",
+	TextSize = 24,
+	Color = C.PrimaryText,
+	AlignX = Enum.TextXAlignment.Center,
+	Size = UDim2.fromScale(1, 1),
+	Stroke = false,
+	Parent = coin,
+})
+local cashLabel =
+	UIKit.text({ Name = "Cash", Text = CashFormat.format(0), Role = "Display", TextSize = 26, Position = UDim2.fromOffset(60, 7), Size = UDim2.new(1, -68, 0, 30), Parent = cash })
 local incomeLabel = UIKit.text({
 	Name = "Income",
-	Text = "+$0/s",
+	Text = "+" .. CashFormat.format(0) .. "/s",
 	Role = "Heading",
 	TextSize = 14,
 	Color = C.Cash,

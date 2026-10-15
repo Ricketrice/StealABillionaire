@@ -10,6 +10,8 @@
 -- !! PROPOSED VALUES, NOT APPROVED: every price and cash reward below (marked PROPOSED) affects the
 -- economy and is waiting for the team's approval. Change them here; nothing else needs editing.
 
+local CashFormat = require(script.Parent:WaitForChild("CashFormat"))
+
 local HubConfig = {}
 
 HubConfig.ARENA_ENABLED = false -- Battle Arena worker battles (plaza, by the Golden Vault)
@@ -113,7 +115,7 @@ HubConfig.Quests = {
 		{ id = "steal3", text = "Steal 3 creatures", event = "steal", goal = 3, reward = 1500 }, -- PROPOSED rewards
 		{ id = "rare1", text = "Steal a Rare or better creature", event = "stealRare", goal = 1, reward = 2500 },
 		{ id = "place2", text = "Put 2 creatures to work on your stations", event = "place", goal = 2, reward = 1000 },
-		{ id = "earn5k", text = "Collect $5,000", event = "earn", goal = 5000, reward = 2000 },
+		{ id = "earn5k", text = "Collect " .. CashFormat.format(5000), event = "earn", goal = 5000, reward = 2000 },
 		{ id = "arena1", text = "Win a battle at the Battle Arena", event = "arenaWin", goal = 1, reward = 3000, needs = "ARENA_ENABLED" },
 		{ id = "defend1", text = "Defend your base: knock a stolen creature loose", event = "defend", goal = 1, reward = 3000, needs = "PVP" },
 	},

@@ -12,6 +12,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local HubConfig = require(ReplicatedStorage:WaitForChild("HubConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local HubBase = require(script.Parent:WaitForChild("HubBase"))
@@ -207,7 +208,9 @@ local function finish(f: any, winner: Entry, loser: Entry, reason: string)
 		HubBase.notify(
 			winner.player,
 			true,
-			if paid then ("%s won! +$%d and a trophy point."):format(winner.name, cash) else ("%s won! (No reward: you beat this player a moment ago.)"):format(winner.name),
+			if paid
+				then ("%s won! +%s%d and a trophy point."):format(winner.name, CashFormat.SYMBOL, cash)
+				else ("%s won! (No reward: you beat this player a moment ago.)"):format(winner.name),
 			TITLE
 		)
 		won:Fire(winner.player, loser.player)

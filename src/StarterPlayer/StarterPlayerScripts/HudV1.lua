@@ -58,7 +58,7 @@ local PILL_W, PILL_H, INCOME_H = 260, 62, 22
 local pill, cashLabel = UITheme.pill({
 	Name = "CashPill",
 	Icon = "cash",
-	Text = "$0",
+	Text = CashFormat.format(0),
 	Width = PILL_W,
 	Height = PILL_H,
 	LayoutOrder = 1,
@@ -82,7 +82,7 @@ UITheme.make("UIListLayout", {
 UITheme.make("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = incomeRow })
 local incomeLabel = UITheme.text({
 	Name = "Income",
-	Text = "+$0/s",
+	Text = "+" .. CashFormat.format(0) .. "/s",
 	Role = "Display",
 	TextSize = 19,
 	Color = T.Cash,

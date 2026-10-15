@@ -7,6 +7,9 @@
 
 local CashFormat = {}
 
+-- The money sign on every amount in the game (034: one place to change it; 035 swaps it for a coin symbol).
+CashFormat.SYMBOL = "$"
+
 local SUFFIXES = { "K", "M", "B", "T", "Qa", "Qi" }
 local ABBREVIATE_FROM = 1e6
 
@@ -19,7 +22,7 @@ end
 function CashFormat.format(amount: number): string
 	amount = math.max(0, math.floor(amount))
 	if amount < ABBREVIATE_FROM then
-		return "$" .. CashFormat.commas(amount)
+		return CashFormat.SYMBOL .. CashFormat.commas(amount)
 	end
 
 	local tier = math.min(math.floor(math.log10(amount) / 3), #SUFFIXES)
@@ -33,7 +36,7 @@ function CashFormat.format(amount: number): string
 	if text:find("%.") then
 		text = text:gsub("0+$", ""):gsub("%.$", "") -- "1.50" -> "1.5", "2.00" -> "2"
 	end
-	return "$" .. text .. SUFFIXES[tier]
+	return CashFormat.SYMBOL .. text .. SUFFIXES[tier]
 end
 
 return CashFormat

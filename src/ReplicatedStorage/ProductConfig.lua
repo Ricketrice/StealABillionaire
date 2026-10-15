@@ -83,7 +83,7 @@ ProductConfig.ITEMS = {
 			trail = "starter", -- SpeedConfig trail given with it (looks only: the same speed as the Bubble Trail)
 			name = "Starter Pack",
 			icon = "gift",
-			text = "One time: 30 minutes of your income (at least $15,000) and the Starter Sparkle trail.",
+			text = "One time: 30 minutes of your income (at least " .. CashFormat.format(15000) .. ") and the Starter Sparkle trail.",
 			oneTime = true,
 		},
 	},

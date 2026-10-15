@@ -14,6 +14,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseConfig = require(ReplicatedStorage:WaitForChild("BaseConfig"))
+local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local HubConfig = require(ReplicatedStorage:WaitForChild("HubConfig"))
 local CashService = require(script.Parent:WaitForChild("CashService"))
 local HubBase = require(script.Parent:WaitForChild("HubBase"))
@@ -329,7 +330,7 @@ function HubShops.buy(player: Player, itemId: any, arg: any): (boolean, string?)
 		end
 	end
 	if not CashService.trySpend(player, price) then
-		return false, ("You need $%d for the %s."):format(price, item.name)
+		return false, ("You need %s%d for the %s."):format(CashFormat.SYMBOL, price, item.name)
 	end
 	apply() -- no yield between paying and owning
 	HubShops.stats.bought += 1

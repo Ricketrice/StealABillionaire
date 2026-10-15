@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local HubConfig = require(ReplicatedStorage:WaitForChild("HubConfig"))
 local HubBase = require(script.Parent:WaitForChild("HubBase"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
@@ -83,7 +84,7 @@ function HubQuests.progress(player: Player, event: string, amount: number)
 			quests.progress[id] = math.min(quest.goal, done + amount)
 			moved = true
 			if quests.progress[id] >= quest.goal then
-				HubBase.notify(player, true, ("Quest done: %s. Claim $%d at the Quest Board!"):format(quest.text, quest.reward), "Quest Board")
+				HubBase.notify(player, true, ("Quest done: %s. Claim %s%d at the Quest Board!"):format(quest.text, CashFormat.SYMBOL, quest.reward), "Quest Board")
 			end
 		end
 	end
@@ -111,7 +112,7 @@ function HubQuests.claim(player: Player, id: any): (boolean, string?)
 	quests.claimed[id] = true -- no yield between marking it and paying
 	HubBase.giveCash(player, quest.reward)
 	HubBase.changed(player)
-	return true, ("Quest reward: +$%d"):format(quest.reward)
+	return true, ("Quest reward: +%s%d"):format(CashFormat.SYMBOL, quest.reward)
 end
 
 -- What the client shows on the Quest Board.
