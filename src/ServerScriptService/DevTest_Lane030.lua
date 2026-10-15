@@ -356,7 +356,7 @@ scenario("rank never goes down (saved peak, schema stays 3)", function()
 	expect(
 		"head tag shows the rank",
 		(A.Character :: Model):FindFirstChild("RankTag") ~= nil
-			and ((A.Character :: Model).RankTag.Label :: TextLabel).Text == "Captain"
+			and ((A.Character :: Model).RankTag.Label :: TextLabel).Text == "CAPTAIN" -- the tag is upper-cased
 			and (A.Character :: Model).RankTag.Adornee == (A.Character :: Model).Head
 	)
 end)
