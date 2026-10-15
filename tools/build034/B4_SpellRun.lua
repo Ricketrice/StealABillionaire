@@ -152,11 +152,13 @@ local function build(): string
 		K.tag(template:FindFirstChild(name) :: Instance, "PvPSafeZone")
 	end
 
-	-- 1. rune bridge east -> CP1 -------------------------------------------------------------------------
+	-- 1. rune bridge east -> CP1, then a landing -------------------------------------------------------------------------
 	bridge(f, walls, BRIDGE_A.from, BRIDGE_A.to, 10)
 	local cp1 = CFrame.lookAt(BRIDGE_A.to + Vector3.new(-3, 0, 0), BRIDGE_A.to + Vector3.new(10, 0, 0))
 	arch(f, "Gate1", cp1, 10, C.rune)
 	gateBox(gates, "CP1", 1, cp1 * CFrame.new(0, 4, 0), Vector3.new(12, 10, 6))
+	-- landing at the bridge's end (the walled bridge has no side exits): platform 1 is a short jump straight north
+	platform(f, "Landing0", Vector3.new(-37, Y0, -760), 12, 12)
 
 	-- 2. floating platforms, climbing north -> landing L1 (CP2) --------------------------------------------
 	for i, p in FIELD1 do

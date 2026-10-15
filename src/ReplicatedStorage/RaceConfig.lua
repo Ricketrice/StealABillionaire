@@ -29,7 +29,7 @@ RaceConfig.INTERVAL = 180 -- a race every 3 minutes if at least 1 player is on t
 RaceConfig.JOIN_WINDOW = 15 -- the first player on the pad starts this "Join the race!" countdown (D36)
 RaceConfig.COUNTDOWN = 5 -- big numbers + sound in the last seconds of the join window; racers on the pad are frozen
 -- (no walking or jumping) for these seconds and let go at GO (032); off the pad at GO = not racing
-RaceConfig.TIME_LIMIT = 75 -- from GO: 2x the slowest measured 3-lap run (36.9 s, D36; kept in 032: bots run perfect lines, kids on phones don't; max 90); unfinished racers get nothing
+RaceConfig.TIME_LIMIT = 90 -- from GO: 2x the slowest measured Spell Run (55.9 s, 034, Play Solo bot run) capped at the 90 s maximum; unfinished racers get nothing
 RaceConfig.PODIUM_SECONDS = 20 -- top 3 names stay on the podium board
 RaceConfig.LAPS = 1
 

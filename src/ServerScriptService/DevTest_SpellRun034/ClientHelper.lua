@@ -53,12 +53,12 @@ local function run(points: { Vector3 }): any
 				lastMove = now
 			end
 			local flat = (p - r.Position) * Vector3.new(1, 0, 1)
-			if flat.Magnitude > 0.5 and h.FloorMaterial ~= Enum.Material.Air then
-				local ahead = r.Position + flat.Unit * 3
-				local hit = workspace:Raycast(ahead + Vector3.new(0, 1, 0), Vector3.new(0, -12, 0), params)
-				local feet = r.Position.Y - h.HipHeight - r.Size.Y / 2
-				if not hit or hit.Position.Y > feet + 1.2 or hit.Position.Y < feet - 1.5 then
-					h.Jump = true
+			if flat.Magnitude > 0.5 and h.FloorMaterial ~= Enum.Material.Air and h:GetState() ~= Enum.HumanoidStateType.Jumping then
+				-- compare the ground 3 studs ahead with the ground under us (works for any rig size)
+				local below = workspace:Raycast(r.Position, Vector3.new(0, -10, 0), params)
+				local ahead = workspace:Raycast(r.Position + flat.Unit * 3, Vector3.new(0, -10, 0), params)
+				if below and (not ahead or ahead.Position.Y > below.Position.Y + 1.2 or ahead.Position.Y < below.Position.Y - 1.5) then
+					h:ChangeState(Enum.HumanoidStateType.Jumping) -- (h.Jump is reset every frame by the player controls)
 					jumps += 1
 				end
 			end

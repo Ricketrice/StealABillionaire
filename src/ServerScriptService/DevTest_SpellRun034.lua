@@ -168,6 +168,7 @@ end
 local ROUTE = {
 	at(-80, 0, -760),
 	at(-48, 0, -760),
+	at(-37, 0, -762),
 	at(-36, 2, -774),
 	at(-26, 4, -790),
 	at(-38, 6, -806),
@@ -386,7 +387,7 @@ scenario("race 2: falls pop back, leave", function()
 	startNow()
 	expect("racing", waitState("Racing", RaceConfig.JOIN_WINDOW + 8), state())
 	-- A runs to the first landing (CP1 + CP2 passed), then falls off the far side
-	local run = ask(A, "run", { points = upTo(8) }, 40)
+	local run = ask(A, "run", { points = upTo(9) }, 40)
 	expect("A reached landing 1", run.answered and run.stuck == 0, run.stuck)
 	expect("A passed CP2", A:GetAttribute("RaceNext") == 3, A:GetAttribute("RaceNext"))
 	put(A, Vector3.new(-34, Y0 - 30, -858))
