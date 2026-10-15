@@ -1,7 +1,7 @@
 # Project Status
 _Keep under ~60 lines. Replace sections at each milestone end; don't append history._
 
-**Current milestone:** 034 — Steal a Boss (D41-D44), branch `milestone-034`: built and tested; 2 single checks pending (pvp022 protected-base sign, lane030 head-tag rerun), see Tests. **Last finished:** 033 — Core loop + monetization.
+**Current milestone:** 034 — Steal a Boss (D41-D44), branch `milestone-034`: built and tested; 2 single checks pending (pvp022 protected-base sign, lane030 T3 run-home time), see Tests. **Last finished:** 033 — Core loop + monetization.
 **Save schema:** 3 (optional fields: 029 `hub.daily/play/seen/offline/index/settings/favs`; 030 `hub.peak`; 031 `hub.race`; 032 `hub.heist/speed`; 033 `hub.pads/intro/receipts/passes/starter/born` + the worker record's `level`). **Map:** `Workspace.World` (`SkyCity` = base area + lane from `tools/build027`; `HideoutCamp`, `KnightsKeep`, `SunkenKingdom`, `EmberAcademy` from `tools/build034`).
 
 ## Built
@@ -18,8 +18,8 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
 - **Passed:** `base033:solo` (1 client) **130/130** (26 SIM). `heist032:solo` (1 client) **108/108** (3 SIM; with Sir Ironclad + treasury; the 032 stomp jump-dodge now passes). `base033:save` (1 client, REAL Studio DataStore) **19/19** (4 SIM). `lane030` sections that ran before the memory watchdog: HUD layout 4/4, teammate portals T4-T7 39/39.
 - **Old save (SIM: Play Solo, a separate copy of the save modules, in-memory store):** the real pre-027 record `backups/player_453701778_pre027.json` (schema 1, 8 workers) loads as schema 3, coins 94,511 kept, all 8 = Rookie Squire $5 / Scroll Page $6 / Apple Archer $9 / Shield Knight $22 / Golden Paladin $100 (same incomes).
 - **Measured (Play Solo, 1 player, real client physics):** Spell Run 55.7 / 55.9 s (27 jumps, 0 falls, finished 1st Gold) (limit now 135 s, D45). Run-home at carry speed 13.6 to the safe line: T1 far catch spot 14.1 s, T2 far spawn 29.8 s, T3 far spawn 51.2 s. Parts: workspace 2,807 (start of 034) → 2,841 (Hideout Camp 265, Knight's Keep 319, Sunken Kingdom 131, Ember Academy 330 incl. Spell Run 95); 1,480 parked parts in `ServerStorage._Parked034` (none in Workspace).
-- **Multi-client (2026-10-15, one at a time, kill_tests before/after):** `spellrun034` (2) **65/65** (5 SIM; limit 135 s, slowest run 59.9 s). `heist032:duo` (2) **17/17**. `base033:duo` (2) **17/17**. `pvp022` (3; StudioPvPStealing + StudioWeaponCombat off for the run, then back on) **329/330** (16 SIM). `lane030` (2) **96/97** (test now expects "Captain").
-- **Pending:** `pvp022` FAIL "what the players see: a protected base shows its barrier and countdown": the third client saw no sign text 0.9 s after `setProtection(B,120)` (cause not looked into; 033 had 330/330). `lane030` FAIL "head tag shows the rank": the tag is upper-cased ("CAPTAIN"); test fixed to expect that (commit 625b34c), not rerun.
+- **Multi-client (2026-10-15, one at a time, kill_tests before/after):** `spellrun034` (2) **65/65** (5 SIM; limit 135 s, slowest run 59.9 s). `heist032:duo` (2) **17/17**. `base033:duo` (2) **17/17**. `pvp022` (3; StudioPvPStealing + StudioWeaponCombat off for the run, then back on) **329/330** (16 SIM). `lane030` (2) **96/97** (rerun: rank + "CAPTAIN" head tag pass).
+- **Pending:** `pvp022` "a protected base shows its barrier and countdown" (329/330, the client showed no sign text 0.9 s after protection). Code read: the 034 reskin did not touch it (only "a worker" -> "a creature" + formatting); server `publish` sets the plot's `ProtectedUntil` at once and `PvPFx` redraws every 0.15 s, so likely timing on a loaded machine (not confirmed). The test now checks the server attribute at once and polls the client up to 5 s (commit 4096dd8); its one rerun ABORTED at start-up (a test client stopped answering, min 833 MB free), 0 checks ran. `lane030` rerun FAIL "T3 under 55 s": 57.0 s (51.2 s solo, passed in the run before), likely machine load, not confirmed.
 - 033 (2026-10-14): base033 solo 130/130, duo 17/17, save 19/19; pvp022 330/330; lane030 63/63. Earlier: see git history.
 
 ## Not built
@@ -38,6 +38,6 @@ Merge, gear tiers, other zone bosses (Aquaris, Ignis: updates), rebirth, base vi
 ## By-hand list for owner
 - Save the place in Studio. Local backup of the state before this session's changes: `backups/pre034b.rbxl`.
 - Creator Dashboard renames (ids stay): 2x Cash → 2x Coins; Cash Stack / Cash Bag / Cash Vault → Coin Stack / Coin Bag / Coin Chest. Game name + description at launch.
-- Decide whether to look into the pvp022 protected-base sign FAIL and rerun lane030 for the head-tag check. Local place copy from the pvp022 run: `backups/pre034c_tests.rbxl`.
+- Rerun `pvp022` (3 clients) for the protected-sign check; decide on the lane030 T3 55 s check (machine load vs real). Local place copy from the pvp022 run: `backups/pre034c_tests.rbxl`.
 - Play-check 034 (StudioRace / StudioHeist on): walk the lane, Spell Run on a phone-size window, the treasury chase.
 - With a second (non-creator) account, buy one pass in the live game or a Team Test and check its perk.
