@@ -45,3 +45,4 @@ Merge, gear tiers, other zone bosses (Aquaris, Ignis: updates), rebirth, base vi
 - On a machine with more free memory: rerun `pvp022` (3 clients, StudioPvPStealing/StudioWeaponCombat off at launch, back on after) and `lane030` (2 clients) to confirm the two changed checks. Local place copy from the pvp022 run: `backups/pre034c_tests.rbxl`.
 - Play-check 034 (StudioRace / StudioHeist on): walk the lane, Spell Run on a phone-size window, the treasury chase.
 - With a second (non-creator) account, buy one pass in the live game or a Team Test and check its perk.
+- Roster art 2026-10-17: owner's new Shield Knight concept `Drill/concept.png` replaces V1-V5; AI image-to-3D experiment prepared, NOT run (no approval; all generators off in Blender MCP, costs unknown). See `docs/AI_3D_WORKFLOW.md`, `docs/SHIELD_KNIGHT_CONCEPT.md`.
