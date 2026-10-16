@@ -5,24 +5,25 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "tools", "blender"))
 import bpy
 from mathutils import Vector as V
-from kit035 import geo, studio, b1, sk2, body
+from kit035 import geo, studio, b1, sk2, sk3, body
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-opt = {"views": "front,tq,back", "res": 640, "old": False, "out": os.path.expanduser("~/Pictures/035_preview/b1_dev")}
+opt = {"views": "front,tq,back", "res": 640, "old": False, "ver": 2, "out": os.path.expanduser("~/Pictures/035_preview/b1_dev")}
 i = 0
 while i < len(argv):
     a = argv[i]
     if a == "--views": opt["views"] = argv[i + 1]; i += 1
     elif a == "--res": opt["res"] = int(argv[i + 1]); i += 1
     elif a == "--old": opt["old"] = True
+    elif a == "--ver": opt["ver"] = int(argv[i + 1]); i += 1
     elif a == "--out": opt["out"] = argv[i + 1]; i += 1
     i += 1
 os.makedirs(opt["out"], exist_ok=True)
 body.set_skel(body.DEFAULT)
 if "--pair" in argv:
     pass
-ch = (b1.shield_knight if opt["old"] else sk2.shield_knight_v2)()
-tag = "old" if opt["old"] else "new"
+ch = (b1.shield_knight if opt["old"] else (sk3.shield_knight_v3 if opt["ver"] == 3 else sk2.shield_knight_v2))()
+tag = "old" if opt["old"] else ("v3" if opt["ver"] == 3 else "new")
 sc = studio.setup(opt["res"])
 ch.build_objects()
 ch.pose(0.0)
@@ -43,6 +44,7 @@ CLOSE_OLD = {
     "legs": ((0, 1.1, 0), -30, 6, 8.5), "boots": ((0, 0.5, 0), -35, 10, 6.0), "shield": ((-2.0, 2.75, -0.8), 28, 8, 8.0),
 }
 CLOSE = CLOSE_OLD if opt["old"] else CLOSE_NEW
+CLOSE_NEW["crest"] = ((0, 6.0, 0.4), -45, 10, 6.5)
 for v in opt["views"].split(","):
     if v in ("front", "tq", "back", "side"):
         az, el = {"front": (0, 8), "tq": (-35, 14), "back": (180, 8), "side": (-90, 6)}[v]
@@ -61,7 +63,7 @@ if "--pair" in argv:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = studio.setup(opt["res"] * 2 // 1)
     objs_all = []
-    for label, maker, skel, dx in (("old", b1.shield_knight, body.DEFAULT, 4.0), ("new", sk2.shield_knight_v2, body.HERO, -4.0)):
+    for label, maker, skel, dx in (("old", sk2.shield_knight_v2 if opt["ver"] == 3 else b1.shield_knight, body.HERO if opt["ver"] == 3 else body.DEFAULT, 4.0), ("new", sk3.shield_knight_v3 if opt["ver"] == 3 else sk2.shield_knight_v2, body.HERO, -4.0)):
         body.set_skel(skel)
         c = maker()
         c.build_objects()

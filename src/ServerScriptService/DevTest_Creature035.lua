@@ -93,7 +93,8 @@ local CreatureAnim = require(ReplicatedStorage:WaitForChild("CreatureAnim")) :: 
 local BUDGET = { Common = 34, Rare = 49, Epic = 80, Legendary = 150, Secret = 250 } -- part-built looks: ALL parts, hidden R15 rig included (as before)
 -- Roster kit models (CreatureSpecs.KIT_B1): VISIBLE parts only (the hidden R15 rig, Transparency 1, is excluded), triangles from the Blender report.
 local KIT_BUDGET = { Common = 30, Rare = 45, Epic = 80, Legendary = 150, Secret = 250 }
-local KIT_TRIS = { Common = 2000, Rare = 3000, Epic = 5000, Legendary = 8000, Secret = 12000 }
+-- Epic raised 5,000 -> 8,000 (owner, 2026-10-16, a ceiling not a target: the layered-plate armour style needs the room).
+local KIT_TRIS = { Common = 2000, Rare = 3000, Epic = 8000, Legendary = 8000, Secret = 12000 }
 local KIT_SIGNATURE = {
 	broke_bob = { "Sword_Wood", "Helmet_Steel" },
 	delivery_dave = { "Scroll_Parchment", "ScrollSheet_Parchment" },

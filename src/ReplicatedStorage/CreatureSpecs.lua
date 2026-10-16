@@ -57,6 +57,7 @@ export type Spec = {
 	halo: Color3?, -- spinning ring on the ground
 	sound: string?,
 	kit: string?, -- 035 roster: a Blender kit model (ServerStorage.Imports035.<kit>, data in CreatureKitData); props stay empty
+	rig: any?, -- joint heights of the hidden rig (see CreatureBuilder RIG_NOOB); default = the classic noob rig
 	fallback: any?, -- the part-built spec the builder uses when the kit import is missing or wrong
 }
 

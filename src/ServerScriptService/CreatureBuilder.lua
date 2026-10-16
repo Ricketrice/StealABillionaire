@@ -415,6 +415,23 @@ local function makeKitParts(name: string, data: any, src: Instance, k: number, m
 	return n
 end
 
+-- Joint heights above the ground of the classic noob rig (hip = LowerTorso bottom, waist = UpperTorso bottom, neck = UpperTorso top ...).
+local RIG_NOOB = {
+	ankle = 0.35,
+	knee = 1.1,
+	hip = 2.0,
+	waist = 2.4,
+	shoulder_y = 3.7,
+	neck = 4.0,
+	elbow = 3.1,
+	wrist = 2.3,
+	hand_end = 2.0,
+	arm_x = 1.5,
+	leg_x = 0.5,
+	head_h = 1.2,
+	foot_h = 0.35,
+}
+
 local function bodyOf(model: Model, name: string): BasePart?
 	local p = model:FindFirstChild(name)
 	return if p and p:IsA("BasePart") then p else nil
@@ -500,31 +517,36 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 			pt.Size = size
 			pt.CFrame = CFrame.new(center) * pt.CFrame.Rotation
 		end
-		local utC = Vector3.new(ltC.X, ltC.Y + 1.0, ltC.Z)
-		local utTop = utC.Y + 0.8
-		local ltBottom = ltC.Y - 0.2
-		kitCF = CFrame.new(Vector3.new(ltC.X, ltC.Y - 0.2 - 2.0, ltC.Z)) * lt.CFrame.Rotation
-		put("LowerTorso", Vector3.new(2, 0.4, 1), ltC)
-		put("UpperTorso", Vector3.new(2, 1.6, 1), utC)
-		put("Head", Vector3.new(1.32, 1.2, 1.2), Vector3.new(utC.X, utTop + 0.6, utC.Z))
+		-- Joint heights above the ground (RIG_NOOB = the classic noob, exactly the numbers used before; a kit / spec `rig` table, e.g. the heroic
+		-- skeleton of the 035 roster, moves the joints). LowerTorso keeps its place, so the root joint stays; the legs grow DOWN.
+		local sk = (spec :: any).rig or (kitInfo and kitInfo.data.rig) or RIG_NOOB
+		local groundY = ltC.Y - (sk.hip + sk.waist) / 2
+		local function Y(h: number): number
+			return groundY + h
+		end
+		local utC = Vector3.new(ltC.X, Y((sk.waist + sk.neck) / 2), ltC.Z)
+		kitCF = CFrame.new(Vector3.new(ltC.X, groundY, ltC.Z)) * lt.CFrame.Rotation
+		put("LowerTorso", Vector3.new(2, sk.waist - sk.hip, 1), Vector3.new(ltC.X, Y((sk.hip + sk.waist) / 2), ltC.Z))
+		put("UpperTorso", Vector3.new(2, sk.neck - sk.waist, 1), utC)
+		put("Head", Vector3.new(1.32 * sk.head_h / 1.2, sk.head_h, sk.head_h), Vector3.new(utC.X, Y(sk.neck + sk.head_h / 2), utC.Z))
 		local joint = {} :: { [string]: Vector3 }
-		joint.Waist = Vector3.new(utC.X, ltC.Y + 0.2, utC.Z)
-		joint.Neck = Vector3.new(utC.X, utTop, utC.Z)
+		joint.Waist = Vector3.new(utC.X, Y(sk.waist), utC.Z)
+		joint.Neck = Vector3.new(utC.X, Y(sk.neck), utC.Z)
 		for _, side in { "Left", "Right" } do
-			local sx = utC.X + sign[side] * 1.5
-			local lx = utC.X + sign[side] * 0.5
-			put(side .. "UpperArm", Vector3.new(1, 0.9, 1), Vector3.new(sx, utTop - 0.45, utC.Z))
-			put(side .. "LowerArm", Vector3.new(1, 0.8, 1), Vector3.new(sx, utTop - 1.3, utC.Z))
-			put(side .. "Hand", Vector3.new(1, 0.3, 1), Vector3.new(sx, utTop - 1.85, utC.Z))
-			joint[side .. "Shoulder"] = Vector3.new(sx, utTop - 0.3, utC.Z)
-			joint[side .. "Elbow"] = Vector3.new(sx, utTop - 0.9, utC.Z)
-			joint[side .. "Wrist"] = Vector3.new(sx, utTop - 1.7, utC.Z)
-			put(side .. "UpperLeg", Vector3.new(1, 0.9, 1), Vector3.new(lx, ltBottom - 0.45, utC.Z))
-			put(side .. "LowerLeg", Vector3.new(1, 0.75, 1), Vector3.new(lx, ltBottom - 1.275, utC.Z))
-			put(side .. "Foot", Vector3.new(1, 0.35, 1.2), Vector3.new(lx, ltBottom - 1.825, utC.Z - 0.1))
-			joint[side .. "Hip"] = Vector3.new(lx, ltBottom, utC.Z)
-			joint[side .. "Knee"] = Vector3.new(lx, ltBottom - 0.9, utC.Z)
-			joint[side .. "Ankle"] = Vector3.new(lx, ltBottom - 1.65, utC.Z)
+			local sx = utC.X + sign[side] * sk.arm_x
+			local lx = utC.X + sign[side] * sk.leg_x
+			put(side .. "UpperArm", Vector3.new(1, sk.neck - sk.elbow, 1), Vector3.new(sx, Y((sk.neck + sk.elbow) / 2), utC.Z))
+			put(side .. "LowerArm", Vector3.new(1, sk.elbow - sk.wrist, 1), Vector3.new(sx, Y((sk.elbow + sk.wrist) / 2), utC.Z))
+			put(side .. "Hand", Vector3.new(1, sk.wrist - sk.hand_end, 1), Vector3.new(sx, Y((sk.wrist + sk.hand_end) / 2), utC.Z))
+			joint[side .. "Shoulder"] = Vector3.new(sx, Y(sk.shoulder_y), utC.Z)
+			joint[side .. "Elbow"] = Vector3.new(sx, Y(sk.elbow), utC.Z)
+			joint[side .. "Wrist"] = Vector3.new(sx, Y(sk.wrist), utC.Z)
+			put(side .. "UpperLeg", Vector3.new(1, sk.hip - sk.knee, 1), Vector3.new(lx, Y((sk.hip + sk.knee) / 2), utC.Z))
+			put(side .. "LowerLeg", Vector3.new(1, sk.knee - sk.ankle, 1), Vector3.new(lx, Y((sk.knee + sk.ankle) / 2), utC.Z))
+			put(side .. "Foot", Vector3.new(1, sk.foot_h, 1.2), Vector3.new(lx, Y(sk.foot_h / 2), utC.Z - 0.1))
+			joint[side .. "Hip"] = Vector3.new(lx, Y(sk.hip), utC.Z)
+			joint[side .. "Knee"] = Vector3.new(lx, Y(sk.knee), utC.Z)
+			joint[side .. "Ankle"] = Vector3.new(lx, Y(sk.ankle), utC.Z)
 		end
 		for _, c in model:GetDescendants() do
 			if c:IsA("AnimationConstraint") and c.Attachment0 and c.Attachment1 then

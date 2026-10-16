@@ -36,7 +36,7 @@ The pipeline must do batch builds, automatic FBX export, contact sheets (front, 
 ## Fixed technical rules (from 035, still apply)
 - Keep Humanoid + hidden R15 root + R15 names, so wander, carry, pad, income and Index need no gameplay code changes.
 - Separate MeshParts per moving piece, pivots at joints, Motor6D. Each mesh under Roblox's 20k-triangle limit.
-- **Triangle targets:** Common ≤2k, Rare ≤3k, Epic ≤5k, Legendary ≤8k, Secret ≤12k. **Part budgets:** C30 / R45 / E80 / L150 / S250, FX included.
+- **Triangle targets:** Common ≤2k, Rare ≤3k, Epic ≤8k (raised 2026-10-16: a ceiling, not a target), Legendary ≤8k, Secret ≤12k. **Part budgets:** C30 / R45 / E80 / L150 / S250, FX included.
 - Colours and materials first. Textures only if a family really needs them; list them, because the owner uploads them.
 - FX tiers: world (≤80 studs), captured (carry and pad, subtle), UI cards (static glow only; particles don't show in ViewportFrames). Low-effects mode turns FX off.
 - Animation in code: one shared client loop, distance-gated, paused off-screen. No uploaded Animation assets.

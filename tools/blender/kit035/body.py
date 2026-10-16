@@ -120,10 +120,10 @@ def _lr(ch, colour, mesh_r, group="Head", mirror=True):
         ch.add(group, colour, mesh_r.copy().mirror_x())
 
 
-def face(ch, hd, expr="smile", blush=False, eye_r=(0.17, 0.235), glint=True, brow="Ink", eye_dx=0.36, mouth_w=0.3, eye_n=10, smooth_mouth=False):
+def face(ch, hd, expr="smile", blush=False, eye_r=(0.17, 0.235), glint=True, brow="Ink", eye_dx=0.36, mouth_w=0.3, eye_n=10, smooth_mouth=False, brow_scale=1.0, eye_k=0.62, brow_dy=0.3):
     """Part-built face on the head front (flat discs and bars, backs omitted): ~200 triangles."""
     s = hd.hs
-    ey = hd.at(0.62)
+    ey = hd.at(eye_k)
     my = hd.at(0.27)
     zf = hd.zf
     er = (eye_r[0] * s, eye_r[1] * s)
@@ -131,10 +131,10 @@ def face(ch, hd, expr="smile", blush=False, eye_r=(0.17, 0.235), glint=True, bro
     _lr(ch, "Ink", ellipse_slab(er[0] * shape[0], er[1] * shape[1], 0.05, eye_n, (eye_dx * s, ey, zf(ey) - 0.02)))
     if glint:
         _lr(ch, "White", ellipse_slab(0.06 * s, 0.08 * s, 0.03, 5, (eye_dx * s + 0.05 * s, ey + 0.08 * s, zf(ey) - 0.05)))
-    brow_y = ey + 0.3 * s
+    brow_y = ey + brow_dy * s
     tilt = {"smile": 6, "grin": 10, "worried": -22, "determined": 24, "stern": 28, "surprised": 14, "smirk": 10, "sleepy": -6, "shout": 30}.get(expr, 0)
     lift = {"surprised": 0.1, "worried": 0.04, "shout": -0.03}.get(expr, 0)
-    bm = box(0.4 * s, 0.075 * s, 0.06, c=(eye_dx * s, brow_y + lift * s, zf(brow_y) - 0.03)).rot(0, 0, tilt, (eye_dx * s, brow_y, 0))
+    bm = box(0.4 * s * brow_scale, 0.075 * s * brow_scale, 0.06, c=(eye_dx * s, brow_y + lift * s, zf(brow_y) - 0.03)).rot(0, 0, tilt, (eye_dx * s, brow_y, 0))
     _lr(ch, brow if brow in ch.palette else "Ink", bm)
     mz = zf(my) - 0.015
     if expr in ("smile", "smirk", "determined", "worried", "sleepy"):
