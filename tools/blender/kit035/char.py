@@ -207,7 +207,7 @@ class Char:
         for (g, c), mesh in sorted(self.parts.items()):
             if not self._shown(g, only_state):
                 continue
-            ob = geo.to_object("%s_%s_%s" % (self.name, g, c), mesh, collection=collection)
+            ob = geo.to_object("%s_%s_%s" % (self.name, g, c), mesh, smooth_angle=getattr(self, "sa_group", {}).get(g, getattr(self, "sa", None)), collection=collection)
             if c not in mats:
                 hx, mat, rough, metal = self.palette[c]
                 m = bpy.data.materials.new("%s_%s" % (self.name, c))
@@ -215,7 +215,7 @@ class Char:
                 b = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
                 b.inputs["Base Color"].default_value = hexc(hx)
                 b.inputs["Roughness"].default_value = rough
-                b.inputs["Metallic"].default_value = 0.6 if mat == "Metal" else metal
+                b.inputs["Metallic"].default_value = 0.4 if mat == "Metal" else metal
                 if mat == "Neon":
                     b.inputs["Emission Color"].default_value = hexc(hx)
                     b.inputs["Emission Strength"].default_value = 0.9

@@ -341,8 +341,9 @@ def to_blender(p):
 A2B = Matrix(((-1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))  # frame A -> Blender (rotation, det +1)
 
 
-def to_object(name, m, smooth_angle=50.0, collection=None):
+def to_object(name, m, smooth_angle=None, collection=None):
     """A Blender object from an M: Blender-frame coordinates, smooth faces with sharp edges above `smooth_angle`."""
+    smooth_angle = smooth_angle if smooth_angle is not None else getattr(m, "sa", 50.0)
     me = bpy.data.meshes.new(name)
     me.from_pydata([to_blender(p) for p in m.v], [], [list(f) for f in m.f])
     me.update()
@@ -354,7 +355,8 @@ def to_object(name, m, smooth_angle=50.0, collection=None):
         f.smooth = True
     for e in bm.edges:
         if len(e.link_faces) == 2:
-            e.smooth = e.link_faces[0].normal.angle(e.link_faces[1].normal) <= lim
+            n0, n1 = e.link_faces[0].normal, e.link_faces[1].normal
+            e.smooth = True if (n0.length < 1e-9 or n1.length < 1e-9) else n0.angle(n1) <= lim
         else:
             e.smooth = True
     bm.to_mesh(me)
@@ -398,33 +400,35 @@ def star(n, r_out, r_in, thick, c=(0, 0, 0), rot=0.0, back=True):
 
 def lathe_arc(profile, seg=8, a0=0.0, a1=180.0, thick=0.08, sx=1.0, sz=1.0, c=(0, 0, 0)):
     """A thin solid shell: the profile [(radius, y), ...] revolved only from angle a0 to a1 (degrees; angle 0 = +X, 90 = +Z, -90 = FRONT -Z),
-    with the inner skin `thick` smaller. Hoods, cowls, open helmets: open at the front, closed along its edges."""
-    n = seg + 1
+    with the inner skin `thick` smaller. Hoods, cowls, open helmets: open at the front, closed along its edges. A full 360 wraps (no cut)."""
+    wrap = abs((a1 - a0) - 360.0) < 1e-6
+    n = seg if wrap else seg + 1
     verts, faces = [], []
-    for k, (r, y) in enumerate(profile):
-        for j in range(n):
-            a = math.radians(a0 + (a1 - a0) * j / seg)
-            verts.append((c[0] + r * sx * math.cos(a), c[1] + y, c[2] + r * sz * math.sin(a)))
     m_ = len(profile)
+    for skin in (0, 1):
+        for k, (r, y) in enumerate(profile):
+            rr = r if skin == 0 else max(r - thick, 0.0)
+            yy = y if skin == 0 else y - (thick * 0.4 if k == m_ - 1 else 0)
+            for j in range(n):
+                a = math.radians(a0 + (a1 - a0) * j / seg)
+                verts.append((c[0] + rr * sx * math.cos(a), c[1] + yy, c[2] + rr * sz * math.sin(a)))
     off = n * m_
-    for k, (r, y) in enumerate(profile):
-        r2 = max(r - thick, 0.0)
-        for j in range(n):
-            a = math.radians(a0 + (a1 - a0) * j / seg)
-            verts.append((c[0] + r2 * sx * math.cos(a), c[1] + y - (thick * 0.4 if k == m_ - 1 else 0), c[2] + r2 * sz * math.sin(a)))
+    cols = seg if wrap else seg
     for k in range(m_ - 1):
-        for j in range(seg):
-            a, b, c_, d = k * n + j, k * n + j + 1, (k + 1) * n + j + 1, (k + 1) * n + j
+        for j in range(cols):
+            j2 = (j + 1) % n
+            a, b, c_, d = k * n + j, k * n + j2, (k + 1) * n + j2, (k + 1) * n + j
             faces.append((a, b, c_, d))
             faces.append((d + off, c_ + off, b + off, a + off))
-    for k in range(m_ - 1):  # the two cut edges
-        for j in (0, seg):
-            a, d = k * n + j, (k + 1) * n + j
-            faces.append((a, d, d + off, a + off) if j == 0 else (a + off, d + off, d, a))
-    for j in range(seg):  # bottom rim and top rim
-        a, b = j, j + 1
-        faces.append((b, a, a + off, b + off))
-        a, b = (m_ - 1) * n + j, (m_ - 1) * n + j + 1
+    if not wrap:
+        for k in range(m_ - 1):  # the two cut edges
+            for j in (0, seg):
+                a, d = k * n + j, (k + 1) * n + j
+                faces.append((a, d, d + off, a + off) if j == 0 else (a + off, d + off, d, a))
+    for j in range(cols):  # bottom rim and top rim
+        j2 = (j + 1) % n
+        faces.append((j2, j, j + off, j2 + off))
+        a, b = (m_ - 1) * n + j, (m_ - 1) * n + j2
         faces.append((a, b, b + off, a + off))
     m = M(verts, faces, True)
     _recalc(m)

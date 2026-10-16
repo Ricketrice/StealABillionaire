@@ -21,17 +21,46 @@ JOINT = {  # joint positions (kit frame)
 PIECES = ["Head", "UpperTorso", "LowerTorso"] + [s + p for s in ("Left", "Right") for p in ("UpperArm", "LowerArm", "Hand", "UpperLeg", "LowerLeg", "Foot")]
 
 
+class Skel:
+    """Joint heights of the hidden R15 skeleton a kit model is built on. DEFAULT = the game's noob rig (B1). HERO = the heroic proportions of the
+    redesign (longer legs and arms, a taller torso, a slimmer head relative to the body): the visible shapes never have to match R15 boxes,
+    only these joints. CreatureBuilder re-proportions the invisible rig from the same numbers (written to CreatureKitData as `rig`)."""
+
+    def __init__(self, ankle, knee, hip, waist, shoulder_y, neck, elbow, wrist, hand_end, arm_x=1.5, leg_x=0.5, head_h=1.2, foot_h=0.35):
+        self.ankle, self.knee, self.hip, self.waist, self.shoulder_y, self.neck, self.elbow, self.wrist, self.hand_end = ankle, knee, hip, waist, shoulder_y, neck, elbow, wrist, hand_end
+        self.arm_x, self.leg_x, self.head_h, self.foot_h = arm_x, leg_x, head_h, foot_h
+
+    def joint(self, name, side=1):
+        return {
+            "Shoulder": (self.arm_x * side, self.shoulder_y, 0), "Elbow": (self.arm_x * side, self.elbow, 0), "Wrist": (self.arm_x * side, self.wrist, 0),
+            "Hip": (self.leg_x * side, self.hip, 0), "Knee": (self.leg_x * side, self.knee, 0), "Ankle": (self.leg_x * side, self.ankle, 0),
+            "Neck": (0, self.neck, 0), "Waist": (0, self.waist, 0),
+        }[name]
+
+    def data(self):
+        return {k: getattr(self, k) for k in ("ankle", "knee", "hip", "waist", "shoulder_y", "neck", "elbow", "wrist", "hand_end", "arm_x", "leg_x", "head_h", "foot_h")}
+
+
+DEFAULT = Skel(0.35, 1.1, 2.0, 2.4, 3.7, 4.0, 3.1, 2.3, 2.0, 1.5, 0.5, 1.2, 0.35)
+HERO = Skel(0.4, 1.55, 2.75, 3.1, 4.4, 4.7, 3.5, 2.6, 2.2, 1.68, 0.5, 1.3, 0.4)
+SKEL = DEFAULT
+
+
+def set_skel(sk):
+    global SKEL
+    SKEL = sk
+
+
 def jp(name, side=1):
-    x, y, z = JOINT[name]
-    return (x * side, y, z)
+    return SKEL.joint(name, side)
 
 
 class Head:
     """Head geometry numbers (so hats, hair and faces fit): bottom y0, height H, widths and depths at bottom/top."""
 
-    def __init__(self, hs=1.0, wide=1.0):
+    def __init__(self, hs=1.0, wide=1.0, y0=3.98):
         self.hs = hs
-        self.y0 = 3.98
+        self.y0 = y0
         self.H = 1.3 * hs
         self.w0, self.d0, self.w1, self.d1 = 1.3 * hs * wide, 1.2 * hs, 1.5 * hs * wide, 1.34 * hs
         self.top = self.y0 + self.H
@@ -91,7 +120,7 @@ def _lr(ch, colour, mesh_r, group="Head", mirror=True):
         ch.add(group, colour, mesh_r.copy().mirror_x())
 
 
-def face(ch, hd, expr="smile", blush=False, eye_r=(0.17, 0.235), glint=True, brow="Ink", eye_dx=0.36, mouth_w=0.3, eye_n=10):
+def face(ch, hd, expr="smile", blush=False, eye_r=(0.17, 0.235), glint=True, brow="Ink", eye_dx=0.36, mouth_w=0.3, eye_n=10, smooth_mouth=False):
     """Part-built face on the head front (flat discs and bars, backs omitted): ~200 triangles."""
     s = hd.hs
     ey = hd.at(0.62)
@@ -111,8 +140,8 @@ def face(ch, hd, expr="smile", blush=False, eye_r=(0.17, 0.235), glint=True, bro
     if expr in ("smile", "smirk", "determined", "worried", "sleepy"):
         sag = {"smile": 0.1, "smirk": 0.07, "determined": 0.03, "worried": -0.05, "sleepy": 0.04}[expr]
         skew = 0.05 if expr == "smirk" else 0
-        pts = [(-mouth_w * s, my + 0.04 * s - skew, mz), (0, my - sag * s, mz), (mouth_w * s, my + 0.04 * s + skew * 2, mz)]
-        ch.add("Head", "Ink", tube(pts, 0.04 * s, seg=4, caps=(False, False)))
+        pts = [(-mouth_w * s, my + 0.04 * s - skew, mz), (-mouth_w * 0.5 * s, my - sag * 0.8 * s, mz), (0, my - sag * s, mz), (mouth_w * 0.5 * s, my - sag * 0.8 * s + skew, mz), (mouth_w * s, my + 0.04 * s + skew * 2, mz)] if smooth_mouth else [(-mouth_w * s, my + 0.04 * s - skew, mz), (0, my - sag * s, mz), (mouth_w * s, my + 0.04 * s + skew * 2, mz)]
+        ch.add("Head", "Ink", tube(pts, 0.035 * s, seg=4, caps=(False, False)))
     elif expr in ("flat", "stern"):
         ch.add("Head", "Ink", box(0.44 * s, 0.07 * s, 0.05, c=(0, my, mz)))
     elif expr in ("grin", "shout"):
@@ -123,7 +152,7 @@ def face(ch, hd, expr="smile", blush=False, eye_r=(0.17, 0.235), glint=True, bro
     elif expr == "surprised":
         ch.add("Head", "Ink", ellipse_slab(0.1 * s, 0.13 * s, 0.05, 8, (0, my - 0.02, mz)))
     if blush and "Blush" in ch.palette:
-        _lr(ch, "Blush", ellipse_slab(0.15 * s, 0.09 * s, 0.03, 6, (0.5 * s, my + 0.14 * s, zf(my) - 0.005)))
+        _lr(ch, "Blush", ellipse_slab(0.11 * s, 0.065 * s, 0.03, 6, (0.5 * s, my + 0.14 * s, zf(my) - 0.005)))
 
 
 # ------------------------------------------------------------------ the 5-stud reference noob (the game rig's classic noob proportions)
