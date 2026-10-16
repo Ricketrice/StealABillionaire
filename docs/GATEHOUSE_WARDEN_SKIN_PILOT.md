@@ -34,3 +34,19 @@ Conditions for the import test (all from the standing rules): verified restorabl
 - **Rig conventions found:** hidden R15 rig = `ServerStorage.NPCModels.MysteryNPC` (Humanoid R15, stored HipHeight 0, `Animate` LocalScript with stock animation ids, HumanoidRootPart 2x2x1) re-proportioned by `CreatureBuilder`; `NPCAnimation` plays walk/idle through the Animator; kit meshes are welded to the hidden parts. The skinned Warden is a Roblox "R1" rigged mesh (MeshPart + Bone children); Studio docs: bones are driven by animations on skinned meshes (`Bone.Transform`) and can be set from code like `Motor6D.Transform`.
 - **Textures uploaded (4 images, 1024, to the owner's account via the MCP uploader):** ColorMap `rbxassetid://110498778424966`, NormalMap `rbxassetid://125035680603411`, MetalnessMap `rbxassetid://114367726927540`, RoughnessMap `rbxassetid://121614510476986`.
 - **Blocked at the import:** Studio's Import 3D dialog (needed for skinned meshes; the Asset Manager cannot import rigged meshes) must be run by the owner; no script API imports an FBX. Nothing was imported, assigned or tested in Studio yet.
+
+## Studio test results (2026-10-17, executed through MCP; no scripts added to the place, no live asset touched)
+Backup `backups/pre035_warden_import_20261017_0334.rbxl` verified first. Import went into Workspace by default; I moved it to `ServerStorage.Imports035.GatehouseWarden_Skin` (kept) and added a SurfaceAppearance with the 4 uploaded maps. All test clones were created in temporary Workspace folders and removed. Play sessions used the game's in-memory Studio store ("StudioMemoryStore"), no DataStore writes; player anchored during tests.
+| Test | Result |
+|---|---|
+| Import: scale, orientation, hierarchy | PASS: MeshPart 4.82 x 6.47 x 2.64 studs, front -Z, +X = character right, axis markers exactly 1 stud; 15 `Bone`s with the R15 hierarchy, root LowerTorso; plus an AnimationController and RootPart |
+| Skin weights (read through EditableMesh) | PASS: 7,588 vertices, 4 influences each, weight sums 1.000, 0 unweighted, 4,967 faces |
+| Textures | PARTIAL: PreloadAsync OK, no error; looks (colour/normal/metal/rough correctness) NOT inspected (no screenshots by rule) |
+| Standard R15 animations on the skinned bones | PASS with a defect: idle, walk and run drive 12-14 bones through the Animator on the AnimationController, no controller needed. Defect: the arm/leg bones were exported pointing down, so their local frames are flipped 180 degrees; forward/back swing is right, but sideways and twist components are mirrored (up to ~30 deg difference at peaks of the stock walk). Fix = export bones with identity (upright) local frames, a rig-export change, or a retarget controller |
+| Carry / 90 deg arm movement (engine) | PASS (mechanics): setting Bone.Transform 90 deg about +X moves the hand 2.0 studs forward at shoulder height |
+| Stretching, computed from the real imported weights (CPU linear skinning, my own poses) | FAIL at large swings: walk 1.6-1.8% of edges >1.5x (max 3.6x), carry 2.8% (max 7.2x), arms forward 90 2.8% (max 8.6x), arms out 90 max 7.0x; worst spot every time = front of the shoulder where pauldron meets chest (about x 1.0, y 0.5, z -1.0); elbow 120 max 2.8x, knee 90 max 3.0x |
+| Clipping, visual stretching, texture look | NOT TESTED (needs screenshots or the owner looking in Studio) |
+| Performance, 1 knight (desktop Studio under Wine, NOT a phone) | frame 16.67 ms vs 16.66 ms baseline (60 fps); texture memory +7 MB for the four maps; mesh memory unchanged at the counter's resolution |
+| Performance, 5 and 20 knights | NOT COMPLETED: usage limit reached; earlier 5-knight runs were invalid (off-screen, or Studio throttled to 15 fps) |
+| Code-driven Bone.Transform loop, carry in game, station placement, reveal preview | NOT TESTED |
+Remaining blockers: shoulder-front stretch at big swings; bone frame orientation (mirrored lateral/twist); 5/20-knight cost; visual check by the owner.
