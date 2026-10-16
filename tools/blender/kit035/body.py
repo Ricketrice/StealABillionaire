@@ -43,6 +43,8 @@ class Skel:
 
 DEFAULT = Skel(0.35, 1.1, 2.0, 2.4, 3.7, 4.0, 3.1, 2.3, 2.0, 1.5, 0.5, 1.2, 0.35)
 HERO = Skel(0.4, 1.55, 2.75, 3.1, 4.4, 4.7, 3.5, 2.6, 2.2, 1.68, 0.5, 1.3, 0.4)
+# CHUNK: the Shield Knight v5 skeleton: HERO heights but a broader shoulder line and a clear gap between the legs (chunky Roblox read)
+CHUNK = Skel(0.4, 1.55, 2.75, 3.1, 4.4, 4.7, 3.5, 2.6, 2.2, 2.05, 0.72, 1.4, 0.45)
 SKEL = DEFAULT
 
 

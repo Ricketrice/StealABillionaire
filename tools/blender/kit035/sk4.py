@@ -18,6 +18,7 @@ AX = K.arm_x
 LX = K.leg_x
 HY0 = K.neck - 0.02
 HH = 1.55
+PS = 1.0  # pauldron size factor (sk5 raises it)
 
 
 def A(k):
@@ -153,7 +154,7 @@ def pauldrons(ch):
     studs = merge([stud((math.sin(math.radians(a)) * 0.8, 0.5 - 0.1 * (abs(a) / 60), -math.cos(math.radians(a)) * 0.9), 0.05, 0.05).rot(0, 0, 0) for a in (-60, -30, 0, 30, 60)])
     meshes.append(("Gold", studs))
     for kind, m in meshes:
-        mirror_add(ch, "UpperArm", kind, m.copy().rot(0, 0, -tilt).move(cx, cy, 0))
+        mirror_add(ch, "UpperArm", kind, m.copy().scale(PS).rot(0, 0, -tilt).move(cx, cy, 0))
 
 
 # ------------------------------------------------------------------ arms
