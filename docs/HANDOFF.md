@@ -23,20 +23,20 @@ Parade + Golden Parade, catching + reveals, carry/steal PvP (bat, lock, safe zon
 Purchases (live IDs): passes 2x Cash 2033726439 (349 R$), Extra Slots 2032784431 (249), VIP 2032880454 (399); products Cash Stack 3718403577 (25), Cash Bag 3718403637 (75), Cash Vault 3718403689 (199), Starter Pack 3718403719 (49). Rename to "Coins" on the dashboard after 034.
 Decisions log: `docs/GAME_DESIGN.md` → Decisions. Order: `docs/ROADMAP.md`.
 
-## Where we are now
-**034 built and closed** (`milestone-034`). Passed: spellrun034 65/65, base033 solo/save/duo, heist032 solo/duo. Pending, honestly unrun (owner's laptop too weak for 3 clients): pvp022 sign-timing check, lane030 T3 run-home limit (test limit raised 55 → 65 s). Owner still must: File → Save, `! git push -u origin milestone-034`, play-check zones, Dashboard renames, send teammates the zone 4–7 message.
+## Where we are now (updated 2026-10-16)
+**034 done.** **035 creature art:** Aquaris V5 (Blender dragon) is in the game (`AQUARIS_BOSS = true`, creature035 332/332). B1 = all 9 Knight's Keep creatures built in Blender on `art-roster` (`78bf50c`), not yet imported (`KIT_B1 = false`). Gatehouse Warden AI-model test on `b6745da` (15-part cut had seams); `docs/prompts/035skin.md` = one-day skinned-mesh pilot (one smooth mesh + bones).
 
-**Owner play-check after 034:** zone creatures were plain avatars and didn't match what you catch; zones looked plain. New order, each after `/clear`: **035 Creature models** (`prompts/035.md`, one model everywhere, Common/Rare blocky like owner's reference, Epic+ beautiful and themed) → **035b Zone art pass** → **035c Zone bosses** (Sir Ironclad, Aquaris, Ignis; harder each) → 036 launch.
+**Owner decision (D-next3):** launch first, $0 budget, art time-boxed. Characters ship as built. No more redesign loops; any new art method gets one pilot with a hard deadline. Character upgrades after launch, one zone per update.
 
-**Weak laptop rule:** solo tests only, no 3-client runs; list unrun checks as pending.
+**Lesson:** we lost weeks redesigning one character (V1–V5, then AI) and treating every NPC as premium. Don't recommend another art experiment without a time limit.
 
-## Then
-036 Launch polish + trailer kit + TikTok marketing plan + Roblox group → soft launch → weekly updates.
+**Next:** builder finishes the Warden day, then **036 soft launch** (`docs/prompts/036.md`): finish B1 import, launch switches, first 60 s, phone check, icon + 3 thumbnails, simple trailer mode, analytics, publish checklist. 035b/035c postponed until after launch.
+
+**Owner art rules (for later updates):** smooth stylised look, not blocky; kid-friendly (no skulls, bones, undead); references (wizard2/3 etc.) are design ideas only, never copy movie characters; faces our own (no community decals). Design canvas: https://claude.ai/artifact/7PceCMx1Jzw47rtp6WG8Kt
 
 ## Open items
-- Owner play-check of 033 (Store tab screenshots) and the 032 stomp jump.
+- Owner: File → Save, push branches, Dashboard renames (Coins), teammate zone 4–7 message, delete `CreatureGallery_TEMP`, Aquaris play-check screenshots.
 - Pass bought by a second account (after launch).
-- Send teammates the income guideline once written.
 
 ## Machine quirks (tell the builder when relevant)
 - Restart Studio before tests (swap fills up). `tools/kill_tests.sh --check` before, `tools/kill_tests.sh` after every test. Close the browser during multi-client tests.
