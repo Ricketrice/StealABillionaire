@@ -56,6 +56,8 @@ export type Spec = {
 	hideBody: boolean?, -- hide the R15 body (props make the whole creature)
 	halo: Color3?, -- spinning ring on the ground
 	sound: string?,
+	kit: string?, -- 035 roster: a Blender kit model (ServerStorage.Imports035.<kit>, data in CreatureKitData); props stay empty
+	fallback: any?, -- the part-built spec the builder uses when the kit import is missing or wrong
 }
 
 -- Outfit colours by body region (anything not listed shows skin).
@@ -2075,5 +2077,50 @@ local function applyPolish()
 	end
 end
 applyPolish()
+
+-- ================================ ROSTER KIT, BATCH B1: KNIGHT'S KEEP (art-roster) ================================
+-- The nine Knight's Keep creatures rebuilt from the shared Standard body + knight kit (Blender: tools/blender/kit035, previews in
+-- ~/Pictures/035_preview/b1). KIT_B1 = false keeps the part-built looks above (the fallback, like AQUARIS_BOSS = false). true swaps in the kit
+-- model of every creature whose FBX is imported into ServerStorage.Imports035; CreatureBuilder falls back to the old spec per creature when its
+-- import is missing or has wrong axes. Ids, names, rarities, odds, income, spawns: untouched; fx / light / sound keep the old values.
+local KIT_B1 = false
+CreatureSpecs.KIT_B1 = KIT_B1
+local KIT_B1_MODELS = {
+	broke_bob = "RookieSquire",
+	delivery_dave = "ScrollPage",
+	training_dummy = "TrainingDummy",
+	street_hustler = "AppleArcher",
+	business_betty = "BannerBearer",
+	security_sam = "ShieldKnight",
+	crypto_carl = "ForgeMaster",
+	ceo_chad = "GoldenPaladin",
+	mystery_millionaire = "SirIronclad",
+}
+if KIT_B1 then
+	local kitModule = script.Parent:FindFirstChild("CreatureKitData")
+	local ok, kitData = pcall(function()
+		return require(kitModule :: ModuleScript) :: any
+	end)
+	if ok then
+		for id, model in KIT_B1_MODELS do
+			local old = CreatureSpecs[id]
+			local kd = kitData[model]
+			if type(old) == "table" and kd then
+				CreatureSpecs[id] = {
+					kit = model,
+					fallback = old,
+					scale = kd.scale,
+					skin = old.skin,
+					props = {},
+					fx = old.fx,
+					light = old.light,
+					sound = old.sound, -- the kit draws its own ground ring (World tier): no old `halo`
+				}
+			end
+		end
+	else
+		warn("[CreatureSpecs] KIT_B1 is on but CreatureKitData is missing: the old looks stay")
+	end
+end
 
 return CreatureSpecs

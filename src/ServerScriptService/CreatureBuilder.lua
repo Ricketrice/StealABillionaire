@@ -11,6 +11,7 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+local HttpService = game:GetService("HttpService")
 
 local CreatureSpecs = require(ReplicatedStorage:WaitForChild("CreatureSpecs"))
 
@@ -287,6 +288,133 @@ local function makeProp(prop: CreatureSpecs.Prop, body: BasePart): BasePart?
 	return part
 end
 
+-- ================================ KIT MODELS (035 roster, tools/blender/kit035) ================================
+-- A kit creature is a Blender FBX in ServerStorage.Imports035.<Model>: one MeshPart per (group x colour) named <Model>_<Group>_<Colour>, plus
+-- <Model>_Anchor (the origin = ground under the feet) and three axis markers 1 stud out on the character's right / up / front. The data
+-- (palette, groups, joints) is ReplicatedStorage.CreatureKitData, generated with the meshes. Each mesh is welded to the hidden R15 part its group
+-- names (`on`), so walking, carrying and placing move it like any prop; the idle + signature moves are chains of joints (CreatureAnim "chain").
+local KIT_MAT = {
+	SmoothPlastic = Enum.Material.SmoothPlastic,
+	Metal = Enum.Material.Metal,
+	Neon = Enum.Material.Neon,
+	Wood = Enum.Material.Wood,
+	Glass = Enum.Material.Glass,
+	Fabric = Enum.Material.Fabric,
+}
+
+local function kitData(): any?
+	local mod = ReplicatedStorage:FindFirstChild("CreatureKitData")
+	if not mod then
+		return nil
+	end
+	local ok, data = pcall(require, mod)
+	return if ok then data else nil
+end
+
+-- The imported model + its scale factor (1 / the measured length of the 1-stud axis marker, so a 100x import still comes out right) or
+-- nil, reason when the import is missing, mirrored, rotated or incomplete.
+local function kitSource(name: string): (Instance?, number?, string?)
+	local imports = ServerStorage:FindFirstChild("Imports035")
+	local src = imports and imports:FindFirstChild(name, true)
+	if not src then
+		return nil, nil, "import " .. name .. " missing"
+	end
+	local anchor = src:FindFirstChild(name .. "_Anchor", true) :: BasePart?
+	local ax, ay, af =
+		src:FindFirstChild(name .. "_AxisX", true) :: BasePart?,
+		src:FindFirstChild(name .. "_AxisY", true) :: BasePart?,
+		src:FindFirstChild(name .. "_AxisFront", true) :: BasePart?
+	if not (anchor and ax and ay and af) then
+		return nil, nil, "import " .. name .. " has no anchor / axis markers"
+	end
+	local dx = anchor.CFrame:PointToObjectSpace(ax.Position)
+	local s = 1 / dx.Magnitude
+	local dy, df = anchor.CFrame:PointToObjectSpace(ay.Position) * s, anchor.CFrame:PointToObjectSpace(af.Position) * s
+	dx = dx * s
+	if not (dx.X > 0.98 and dy.Y > 0.98 and df.Z < -0.98) then
+		return nil, nil, ("import %s has wrong axes: right %s up %s front %s (want +X, +Y, -Z)"):format(name, tostring(dx), tostring(dy), tostring(df))
+	end
+	return src, s, nil
+end
+
+local function makeKitParts(name: string, data: any, src: Instance, k: number, model: Model, kitCF: CFrame, folder: Folder)
+	local anchor = src:FindFirstChild(name .. "_Anchor", true) :: BasePart
+	local chainJson: { [string]: string } = {}
+	for gname, g in data.groups do
+		local tracks = {}
+		local body = model:FindFirstChild(g.on) :: BasePart?
+		for _, jn in g.chain do
+			local j = data.joints[jn]
+			local pvWorld = kitCF:PointToWorldSpace(Vector3.new(j.pivot[1], j.pivot[2], j.pivot[3]))
+			local pv = if body then body.CFrame:PointToObjectSpace(pvWorld) else Vector3.zero
+			local tr: any = { k = j.kind, ax = j.axis, a = j.amp, pv = { pv.X, pv.Y, pv.Z } }
+			if j.sig then
+				tr.sig = j.sig
+			else
+				tr.sp, tr.ph = j.speed, j.phase
+			end
+			table.insert(tracks, tr)
+		end
+		chainJson[gname] = if #tracks > 0 then HttpService:JSONEncode(tracks) else ""
+	end
+	local n = 0
+	for _, m in src:GetDescendants() do
+		if not m:IsA("MeshPart") then
+			continue
+		end
+		local group, colour = m.Name:gsub("%.%d+$", ""):match("^" .. name .. "_([^_]+)_(.+)$") -- (an importer may add a ".001" suffix)
+		local g = group and data.groups[group]
+		if not g or not colour then
+			continue -- anchor / axis markers
+		end
+		local body = model:FindFirstChild(g.on)
+		if not (body and body:IsA("BasePart")) then
+			warn("[CreatureBuilder]", name, "group", group, "needs missing body part", g.on)
+			continue
+		end
+		local pal = data.palette[colour]
+		local part = m:Clone()
+		for _, c in part:GetChildren() do
+			if not (c:IsA("SpecialMesh") or c:IsA("SurfaceAppearance")) then
+				c:Destroy()
+			end
+		end
+		part.Name = group .. "_" .. colour
+		part.Size = m.Size * k
+		local rel = anchor.CFrame:PointToObjectSpace(m.Position) * k
+		part.CFrame = kitCF * CFrame.new(rel)
+		part.Color = Color3.fromHex(pal.hex)
+		part.Material = KIT_MAT[pal.mat] or Enum.Material.SmoothPlastic
+		part.TextureID = ""
+		part.Transparency = 0
+		part.CanCollide, part.CanTouch, part.CanQuery = false, false, false
+		part.Massless = true
+		part.Anchored = false
+		part.CastShadow = part.Size.Magnitude > 1.6
+		part.RenderFidelity = Enum.RenderFidelity.Automatic -- the engine drops triangles with distance (phone load)
+		local offset = body.CFrame:ToObjectSpace(part.CFrame)
+		local weld = Instance.new("Weld")
+		weld.Part0, weld.Part1, weld.C0 = body :: BasePart, part, offset
+		weld.Parent = part
+		part:SetAttribute("KitSize", part.Size)
+		if g.tier then
+			part:SetAttribute("FxTier", g.tier) -- World / Captured effect part: shown by CreatureAnim.setFx only
+		end
+		local lastJoint = g.chain[#g.chain]
+		if lastJoint and data.joints[lastJoint].kind == "pop" then
+			part.Size = part.Size * 0.001 -- a burst / flash / spark: hidden until its signature move pops it (so far-away creatures never show it)
+		end
+		if chainJson[group] ~= "" then
+			part:SetAttribute("AnimKind", "chain")
+			part:SetAttribute("AnimChain", chainJson[group])
+			part:SetAttribute("AnimBase", offset)
+		end
+		part.Parent = folder
+		n += 1
+	end
+	return n
+end
+
 local function bodyOf(model: Model, name: string): BasePart?
 	local p = model:FindFirstChild(name)
 	return if p and p:IsA("BasePart") then p else nil
@@ -294,6 +422,18 @@ end
 
 -- Builds one creature model from its spec.
 function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
+	-- A kit spec (CreatureSpecs.KIT_B1) needs its imported meshes; without them (or with a bad import) the previous part-built look is built.
+	local kitInfo: { data: any, src: Instance, k: number }? = nil
+	if spec.kit then
+		local data = kitData()
+		local src, k, why = kitSource(spec.kit)
+		if data and data[spec.kit] and src and k then
+			kitInfo = { data = data[spec.kit], src = src, k = k }
+		else
+			warn("[CreatureBuilder]", id, "kit model not used (" .. tostring(if data then why else "CreatureKitData missing") .. "): building the fallback look")
+			spec = spec.fallback or spec
+		end
+	end
 	local source = ServerStorage:WaitForChild("NPCModels"):WaitForChild("MysteryNPC") :: Model
 	local model = source:Clone()
 	model.Name = id
@@ -312,6 +452,7 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 	-- Noob body (owner LOOK RULE): the R15 meshes become plain blocks of the same size and name (same joints, same
 	-- part count), yellow head, solid colours from the outfit, never a skin tone. Non-humanoids keep their R15 body.
 	local noob = not spec.own and not spec.hideBody
+	local kitCF: CFrame? = nil -- kit frame: origin = ground under the feet, axes = the rig's (set once the rig is re-proportioned)
 	if noob then
 		local joints = {}
 		for _, d in model:GetDescendants() do
@@ -362,6 +503,7 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		local utC = Vector3.new(ltC.X, ltC.Y + 1.0, ltC.Z)
 		local utTop = utC.Y + 0.8
 		local ltBottom = ltC.Y - 0.2
+		kitCF = CFrame.new(Vector3.new(ltC.X, ltC.Y - 0.2 - 2.0, ltC.Z)) * lt.CFrame.Rotation
 		put("LowerTorso", Vector3.new(2, 0.4, 1), ltC)
 		put("UpperTorso", Vector3.new(2, 1.6, 1), utC)
 		put("Head", Vector3.new(1.32, 1.2, 1.2), Vector3.new(utC.X, utTop + 0.6, utC.Z))
@@ -441,7 +583,7 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		end
 	end
 
-	if spec.hideBody then -- the creature is built entirely from props (seahorse, serpent); the rig only walks it
+	if spec.hideBody or kitInfo then -- the creature is built entirely from props / kit meshes (seahorse, serpent, knights); the rig only walks it
 		for _, part in model:GetChildren() do
 			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
 				part.Transparency = 1
@@ -455,7 +597,7 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 	local folder = Instance.new("Folder")
 	folder.Name = PROPS_FOLDER
 	local all: { CreatureSpecs.Prop } = table.clone(spec.props)
-	if noob then -- a clear face made of parts (renders in the card viewports too): big black eyes + a smile, or stern brows + flat mouth
+	if noob and not kitInfo then -- a clear face made of parts (renders in the card viewports too): big black eyes + a smile, or stern brows + flat mouth
 		for _, f in (if spec.face == "stern" then STERN else FACE) do
 			table.insert(all, f)
 		end
@@ -474,6 +616,12 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		else
 			warn("[CreatureBuilder]", id, "prop needs missing body part", prop.on)
 		end
+	end
+	if kitInfo and kitCF then
+		local n = makeKitParts(spec.kit :: string, kitInfo.data, kitInfo.src, kitInfo.k, model, kitCF, folder)
+		model:SetAttribute("KitModel", spec.kit)
+		model:SetAttribute("KitParts", n)
+		model.LevelOfDetail = Enum.ModelLevelOfDetail.Automatic -- far away: the engine swaps in a low-detail stand-in
 	end
 	folder.Parent = model
 

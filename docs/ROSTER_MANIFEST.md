@@ -1,6 +1,6 @@
 # Roster manifest (035roster audit, read-only; nothing in the game changed)
 _Source: `WorkerCatalogue` (51 collectibles), `CustomWorkers` (display names), the built `ReplicatedStorage.CreatureModels` (27 models, part counts measured 2026-10-16), `CreatureSpecs`. Quality is judged from how each model is built (no screenshots by rule): `meets` = at the new bar, `minor` = non-humanoid with an already distinct silhouette, needs a mesh/detail polish, `redesign` = classic-noob block body with props, replaced by the new family body. The owner's play-check can overrule any row._
-Tier: 1 Standard (Common, Rare) · 2 Premium (Epic, Legendary) · 3 Signature boss (Secret). Batches: B1 Knight's Keep (8) · B2 Sunken Kingdom (8) · B3 Ember Academy (8) · B4 Sir Ironclad + Ignis (2). Teammate rows are listed only, never touched.
+Tier: 1 Standard (Common, Rare) · 2 Premium (Epic, Legendary) · 3 Signature boss (Secret). Batches (owner, 2026-10-16): B1 Knight's Keep (9, incl. Sir Ironclad) · B2 Sunken Kingdom (8; Aquaris done) · B3 Ember Academy (9, incl. Ignis + the wizard kit). No B4. Teammate rows are listed only, never touched.
 
 | ID | Name | Rarity | Zone | Owner | Family | Tier | Parts now | Asset status | Quality | Planned batch |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -11,7 +11,7 @@ Tier: 1 Standard (Common, Rare) · 2 Premium (Epic, Legendary) · 3 Signature bo
 | security_sam | Shield Knight | Epic | Knight's Keep | ours | 2 Knights/armoured | 2 Premium | 67 | active: part-built classic-noob body + Kit props | redesign | B1 |
 | crypto_carl | Forge Master | Epic | Knight's Keep | ours | 2 Knights/armoured | 2 Premium | 66 | active: part-built classic-noob body + Kit props | redesign | B1 |
 | ceo_chad | Golden Paladin | Legendary | Knight's Keep | ours | 2 Knights/armoured | 2 Premium | 70 | active: part-built classic-noob body + Kit props | redesign | B1 |
-| mystery_millionaire | Sir Ironclad | Secret | Knight's Keep | ours | 2 Knights/armoured | 3 Signature | 80 | active: noob-body parts; Sir Ironclad Blender mesh exists (Imports034, heist boss) = reusable | redesign | B4 (signature, after soft launch) |
+| mystery_millionaire | Sir Ironclad | Secret | Knight's Keep | ours | 2 Knights/armoured | 3 Signature | 80 | active: noob-body parts; Sir Ironclad Blender mesh exists (Imports034, heist boss) = reusable | redesign | B1 (signature) |
 | training_dummy | Training Dummy | Common | Knight's Keep | ours | 1 Standard folk/workers | 1 Standard | 33 | active: part-built classic-noob body + Kit props | redesign | B1 |
 | bubble_fish | Bubble Fish | Common | Sunken Kingdom | ours | 6 Other creatures | 1 Standard | 31 | active: part-built creature (CreatureSpecs + Kit) | minor | B2 |
 | hermit_porter | Hermit Porter | Common | Sunken Kingdom | ours | 1 Standard folk/workers | 1 Standard | 30 | active: part-built classic-noob body + Kit props | redesign | B2 |
@@ -53,7 +53,7 @@ Tier: 1 Standard (Common, Rare) · 2 Premium (Epic, Legendary) · 3 Signature bo
 | bodyguard_boris | Rune Golem | Epic | Ember Academy | ours | 2 Knights/armoured | 2 Premium | 34 | active: part-built creature (CreatureSpecs + Kit) | minor | B3 |
 | hedge_fund_hank | Phoenix | Epic | Ember Academy | ours | 5 Dragons/winged | 2 Premium | 35 | active: part-built creature (CreatureSpecs + Kit) | minor | B3 |
 | oil_baron_oswald | Flame Archmage | Legendary | Ember Academy | ours | 3 Wizards/mages | 2 Premium | 58 | active: part-built classic-noob body + Kit props | redesign | B3 |
-| the_trillionaire | Ignis the Pyromancer | Secret | Ember Academy | ours | 3 Wizards/mages | 3 Signature | 66 | active: noob-body parts + staff/rune props | redesign | B4 (signature, after soft launch) |
+| the_trillionaire | Ignis the Pyromancer | Secret | Ember Academy | ours | 3 Wizards/mages | 3 Signature | 66 | active: noob-body parts + staff/rune props | redesign | B3 (signature) |
 | bookling | Bookling | Common | Ember Academy | ours | 6 Other creatures | 1 Standard | 32 | active: part-built classic-noob body + Kit props | redesign | B3 |
 
 Counts: 51 collectibles = 27 ours + 24 teammate (Beach Boardwalk 8, Toy Town 8, Neon Downtown 8; Food Court has none in the catalogue). Ours: meets 1, minor 7, redesign 19.

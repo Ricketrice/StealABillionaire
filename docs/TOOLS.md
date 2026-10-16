@@ -17,3 +17,7 @@ Model in Blender (chunky shapes, thick dark outline via inverted-hull or Freesty
 - One master per asset, cloned. Name masters clearly (`M_Stall`, `M_Tree_A`).
 - Uploads/imports are by hand: batch them into ONE checkpoint list per milestone with exact steps.
 - Sounds: Roblox audio library (licensed) or CC0 only.
+
+## Character kit pipeline (035roster)
+`tools/blender/kit035/` builds whole batches headless: `flatpak run org.blender.Blender -b -P $PWD/tools/blender/build_035_b1.py -- --full` (budgets, FBX, data module, tiles, idle + signature frames), then `python3 -I tools/blender/assemble_b1_035.py` (contact sheet, GIF/MP4, phone-load numbers). Authored in Studio axes (+X = the character's right, front = -Z). Export fixes (verified with `fbx_raw_035.py`): the old 100x was `Lcl Scaling 100` on every Model, now `global_scale = 0.01` (Lcl Scaling 1); there is no mirror (Studio = (-bx, bz, by) is a rotation) - L/R is just named correctly. Every FBX carries `<Model>_Anchor` + `_AxisX/_AxisY/_AxisFront` markers so `CreatureBuilder` can verify scale and axes after Import 3D.
+

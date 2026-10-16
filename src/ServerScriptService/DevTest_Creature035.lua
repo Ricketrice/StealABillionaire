@@ -90,7 +90,21 @@ local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"
 local CreatureSpecs = require(ReplicatedStorage:WaitForChild("CreatureSpecs")) :: any
 local CreatureAnim = require(ReplicatedStorage:WaitForChild("CreatureAnim")) :: any
 
-local BUDGET = { Common = 34, Rare = 49, Epic = 80, Legendary = 150, Secret = 250 }
+local BUDGET = { Common = 34, Rare = 49, Epic = 80, Legendary = 150, Secret = 250 } -- part-built looks: ALL parts, hidden R15 rig included (as before)
+-- Roster kit models (CreatureSpecs.KIT_B1): VISIBLE parts only (the hidden R15 rig, Transparency 1, is excluded), triangles from the Blender report.
+local KIT_BUDGET = { Common = 30, Rare = 45, Epic = 80, Legendary = 150, Secret = 250 }
+local KIT_TRIS = { Common = 2000, Rare = 3000, Epic = 5000, Legendary = 8000, Secret = 12000 }
+local KIT_SIGNATURE = {
+	broke_bob = { "Sword_Wood", "Helmet_Steel" },
+	delivery_dave = { "Scroll_Parchment", "ScrollSheet_Parchment" },
+	training_dummy = { "UpperTorso_Red", "CrossBar_Wood" },
+	street_hustler = { "Bow_Wood", "Apple_Apple" },
+	business_betty = { "Pole_Pole", "FlagA_Flag" },
+	security_sam = { "Shield_ShieldBlue", "Sword_Steel" },
+	crypto_carl = { "Hammer_IronDark", "Hammer_Ember" },
+	ceo_chad = { "Sword_Blade", "Burst_Halo" },
+	mystery_millionaire = { "Shield_Blue", "Sword_Blade" },
+}
 local ODDS = { Common = 70, Rare = 20, Epic = 8, Legendary = 1.8, Secret = 0.2 }
 local SIGNATURE = {
 	broke_bob = { "SwordBlade", "Helmet" },
@@ -126,6 +140,16 @@ local function parts(model: Instance): number
 	local n = 0
 	for _, d in model:GetDescendants() do
 		if d:IsA("BasePart") then
+			n += 1
+		end
+	end
+	return n
+end
+-- Visible parts: everything that renders (the hidden R15 rig of kit models has Transparency 1).
+local function visibleParts(model: Instance): number
+	local n = 0
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") and d.Transparency < 1 then
 			n += 1
 		end
 	end
@@ -190,15 +214,35 @@ local function models_()
 		expect(id .. " has a worker entry", worker ~= nil)
 		expect(id .. " has a model", model ~= nil)
 		if worker and model then
-			local n = parts(model)
-			expect(("%s parts %d within %s budget %d"):format(id, n, worker.rarity, BUDGET[worker.rarity]), n <= BUDGET[worker.rarity])
+			local kitModel = model:GetAttribute("KitModel") -- set by CreatureBuilder only when the kit meshes were really used
+			if spec.kit then
+				info(id .. " kit", if kitModel then "using " .. tostring(kitModel) else "FALLBACK (import missing / wrong axes): part-built look")
+			end
+			local n = if kitModel then visibleParts(model) else parts(model)
+			local cap = if kitModel then KIT_BUDGET[worker.rarity] else BUDGET[worker.rarity]
+			expect(("%s %sparts %d within %s budget %d"):format(id, if kitModel then "visible " else "", n, worker.rarity, cap), n <= cap)
+			if kitModel then
+				local kd = require(ReplicatedStorage:WaitForChild("CreatureKitData")) :: any
+				local tris = kd[kitModel].tris
+				expect(("%s triangles %d within %s budget %d (Blender report)"):format(id, tris, worker.rarity, KIT_TRIS[worker.rarity]), tris <= KIT_TRIS[worker.rarity])
+				local meshes, bad = 0, 0
+				for _, d in model:GetDescendants() do
+					if d:IsA("MeshPart") and d:GetAttribute("KitSize") then
+						meshes += 1
+						if d.Size.Magnitude < 0.01 or d.Size.Magnitude > 60 then
+							bad += 1
+						end
+					end
+				end
+				expect(id .. " kit meshes have studs-sized parts (import scale right)", meshes > 0 and bad == 0, ("%d meshes, %d odd"):format(meshes, bad))
+			end
 			local h = model:FindFirstChildOfClass("Humanoid")
 			expect(
 				id .. " keeps Humanoid + Animate + R15 names",
 				h ~= nil and model:FindFirstChild("Animate") ~= nil and model:FindFirstChild("UpperTorso") ~= nil and model:FindFirstChild("RightHand") ~= nil
 			)
 			expect(id .. " tagged Creature", CollectionService:HasTag(model, "Creature"))
-			for _, sig in SIGNATURE[id] or {} do
+			for _, sig in (if kitModel then KIT_SIGNATURE[id] else SIGNATURE[id]) or {} do
 				expect(id .. " has signature item " .. sig, model:FindFirstChild(sig, true) ~= nil)
 			end
 			if worker.rarity ~= "Common" and worker.rarity ~= "Rare" then
@@ -352,7 +396,7 @@ local function partsBudget()
 			local c = models[id]:Clone()
 			c.Parent = folder
 			c:PivotTo(CFrame.new(2000 + (i % 40) * 12, 300, (i // 40) * 12))
-			local n = parts(c)
+			local n = if c:GetAttribute("KitModel") then visibleParts(c) else parts(c)
 			total += n
 			local r = WorkerCatalogue.get(id).rarity
 			if r == "Common" or r == "Rare" then
