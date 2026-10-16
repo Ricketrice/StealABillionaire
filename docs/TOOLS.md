@@ -23,4 +23,4 @@ Model in Blender (chunky shapes, thick dark outline via inverted-hull or Freesty
 
 ### Hard-surface method v2 (Shield Knight benchmark)
 `kit035/hs.py`: `Prof` = stacked superellipse cross-sections of a body part; `band(...)` cuts an armour plate out of it by angle and height (V chevron edges, keels, flared lips); `patch(...)` = outer skin + rim walls down to an inner boundary (real edge thickness, no hidden inner skin, about half the triangles of a closed slab); `cap_lame` = dome bands (pauldrons, helm); `simplify` dissolves coplanar splits. `body.Skel` / `HERO` = joint heights of the invisible skeleton. Render the benchmark: `flatpak run org.blender.Blender -b -P $PWD/tools/blender/build_035_sk2.py -- --views front,tq,back,helm,chest --out DIR` (`--old` = B1, `--pair` = side by side), boards: `python3 -I tools/blender/assemble_sk2_035.py`.
-
+- `tools/blender/ai/gw_*.py`: AI-model (TRELLIS GLB) pipeline: `gw_optimise` (8k bake), `gw_parts` (15 rig parts + FBX + maps), `gw_pose_render` / `gw_part_debug` (seam checks), `gw_fbx_check`. Run `flatpak run org.blender.Blender -b -P $PWD/tools/blender/ai/<script> -- args`.

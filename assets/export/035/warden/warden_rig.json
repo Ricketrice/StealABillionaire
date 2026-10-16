@@ -1,0 +1,38 @@
+{
+ "scale": 6.4,
+ "rig": {
+  "ankle": 0.48,
+  "knee": 1.216,
+  "hip": 1.824,
+  "waist": 2.464,
+  "shoulder_y": 4.096,
+  "neck": 4.2752,
+  "elbow": 2.88,
+  "wrist": 1.984,
+  "hand_end": 1.536,
+  "arm_x": 1.6,
+  "leg_x": 0.768,
+  "head_h": 1.28,
+  "foot_h": 0.48
+ },
+ "parts": {
+  "Head": 1024,
+  "UpperTorso": 1491,
+  "LowerTorso": 894,
+  "RightUpperArm": 637,
+  "LeftUpperArm": 640,
+  "RightLowerArm": 393,
+  "LeftLowerArm": 392,
+  "RightHand": 135,
+  "LeftHand": 136,
+  "RightUpperLeg": 338,
+  "LeftUpperLeg": 353,
+  "RightLowerLeg": 191,
+  "LeftLowerLeg": 199,
+  "RightFoot": 227,
+  "LeftFoot": 226
+ },
+ "total_tris": 7276,
+ "overlap": 0.02,
+ "res": 1024
+}
