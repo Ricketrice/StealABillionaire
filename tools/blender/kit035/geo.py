@@ -61,6 +61,34 @@ class M:
     def tris(self):
         return sum(len(f) - 2 for f in self.f)
 
+    def orient_out(self, inside):
+        """Make the (area-weighted majority of the) faces point AWAY from an inside reference: inside(point) -> (x, y, z) a point on the inner side
+        (a body axis point, a dome centre). Open plates are oriented by hand-derived winding otherwise; this makes it impossible to get wrong."""
+        bm = bmesh.new()
+        for p in self.v:
+            bm.verts.new(p)
+        bm.verts.ensure_lookup_table()
+        for f in self.f:
+            try:
+                bm.faces.new([bm.verts[i] for i in f])
+            except ValueError:
+                pass
+        bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))  # consistent winding over the whole plate (outer skin AND rim walls)
+        self.f = [tuple(v.index for v in f.verts) for f in bm.faces]
+        bm.free()
+        score = 0.0
+        for f in self.f:
+            pts = [V(self.v[i]) for i in f]
+            n = V((0, 0, 0))
+            for k in range(len(pts)):
+                a, b = pts[k], pts[(k + 1) % len(pts)]
+                n += V(((a.y - b.y) * (a.z + b.z), (a.z - b.z) * (a.x + b.x), (a.x - b.x) * (a.y + b.y)))
+            c = sum(pts, V((0, 0, 0))) / len(pts)
+            score += n.dot(c - V(inside(tuple(c))))
+        if score < 0:
+            self.f = [tuple(reversed(f)) for f in self.f]
+        return self
+
     def bounds(self):
         xs, ys, zs = zip(*self.v)
         return (min(xs), min(ys), min(zs)), (max(xs), max(ys), max(zs))

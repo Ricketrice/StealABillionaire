@@ -83,7 +83,7 @@ def smooth_edges(m, off, seg=1, angle=40.0):
     return out
 
 
-def patch(fn, nu, nv, thick=0.08, bev=0.0, bev_seg=1, bev_angle=40.0, flip=False, hollow=True, chamfer=0.0):
+def patch(fn, nu, nv, thick=0.08, bev=0.0, bev_seg=1, bev_angle=40.0, flip=False, hollow=True, chamfer=0.0, inside=None):
     """A plate from fn(u, v) -> point (u, v in 0..1; u runs with increasing angle, v runs up): the OUTER skin plus rim walls down to the inner
     boundary (`thick`, inward when the surface is a body wrap), so edges show real thickness but no hidden inner skin is spent on
     (hollow=True, about half the triangles of a closed slab). flip=True when du x dv points outward (domes). chamfer pulls the outer
@@ -126,7 +126,8 @@ def patch(fn, nu, nv, thick=0.08, bev=0.0, bev_seg=1, bev_angle=40.0, flip=False
         k2 = (k + 1) % nb
         q = (bound[k], bound[k2], inner_start + k2, inner_start + k)
         faces.append(tuple(reversed(q)) if rev else q)
-    return M(verts, faces, False)
+    m = M(verts, faces, False)
+    return m.orient_out(inside) if inside else m
 
 
 def band(prof, a0, a1, y_lo, y_hi, off, thick=0.08, nu=8, nv=2, bev=0.0, bev_angle=40.0, hollow=True, chamfer=0.0):
@@ -141,7 +142,7 @@ def band(prof, a0, a1, y_lo, y_hi, off, thick=0.08, nu=8, nv=2, bev=0.0, bev_ang
         y = lerp(f_lo(a), f_hi(a), v)
         return prof.pt(y, a, f_off(a, v))
 
-    return patch(fn, nu, nv, thick, bev, 1, bev_angle, hollow=hollow, chamfer=chamfer)
+    return patch(fn, nu, nv, thick, bev, 1, bev_angle, hollow=hollow, chamfer=chamfer, inside=lambda p: (prof.cx, p[1], prof.cz))
 
 
 def ring_loft(prof, y0, y1, n_rings, n_seg, off=0.0, a0=0.0, a1=360.0, caps=False):
@@ -159,7 +160,7 @@ def ring_loft(prof, y0, y1, n_rings, n_seg, off=0.0, a0=0.0, a1=360.0, caps=Fals
     if caps:
         faces.append(tuple(range(n)))
         faces.append(tuple(reversed(range((n_rings - 1) * n, n_rings * n))))
-    return M(verts, faces, False)
+    return M(verts, faces, False).orient_out(lambda p: (prof.cx, p[1], prof.cz))
 
 
 def limb(cx, cz, rows, seg=8, p=2.4, caps=(False, False), off=0.0, a0=0.0, a1=360.0):
@@ -182,7 +183,7 @@ def shell(rows, a0, a1, thick, seg=8, cx=0.0, cz=0.0, p=2.4, off=0.0, bev=0.0, b
         return pr.pt(y, lerp(a0, a1, u), off)
 
     # rows are few: place the v grid exactly on them
-    return patch(fn, seg, nv, thick, bev, 1, bev_angle)
+    return patch(fn, seg, nv, thick, bev, 1, bev_angle, inside=lambda p: (cx, p[1], cz))
 
 
 def stud(c, r=0.07, h=0.07, seg=4, axis_z=-1):
@@ -252,4 +253,4 @@ def cap_lame(R, ry, rz, t0, t1, az0, az1, thick, nu, nv, flare=0.0, bev=0.02):
         k = 1.0 + flare * smooth(0.6, 1.0, v)
         return (R * k * math.sin(th) * math.cos(az), ry * math.cos(th), rz * k * math.sin(th) * math.sin(az))
 
-    return patch(fn, nu, nv, thick, bev, 1, 40.0, flip=True)
+    return patch(fn, nu, nv, thick, bev, 1, 40.0, flip=True, inside=lambda p: (0.0, 0.0, 0.0))
