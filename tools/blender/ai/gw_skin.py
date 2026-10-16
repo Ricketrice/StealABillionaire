@@ -52,15 +52,31 @@ def step(z, j, band): return Sm((z - j) / (2 * band * BS) + 0.5)
 def armness_of(X, Z):
     xt = 0.215 - 0.06 * step(Z, 0.375, 0.015)
     return Sm((np.abs(X) - xt) / 0.05 + 0.5) * step(Z, 0.205, 0.02)
-# the hands rest on the hip plates: the AI mesh fuses them, and a skinned bridge there stretches into long webs. Remove only those bridge faces (below the belt).
+# 035skin v2: ARM-vs-BODY ownership by diffusion over the mesh surface (not by x alone). Seeds = surely-arm / surely-body vertices; everything else
+# (hip flares, the fused shoulder, anything the hand touches) takes the average of its surface neighbours, so a hip plate that overlaps the hand in x
+# still follows the hip. Faces whose ends disagree (hand <-> hip contact, arm <-> chest between hip and chest) are then removed: a real slit, no webs.
 _c = np.array([tuple(v.co) for v in lo.data.vertices]); _z0 = _c[:, 2].min()
-_a = armness_of(-_c[:, 0], _c[:, 2] - _z0)
-bm = bmesh.new(); bm.from_mesh(lo.data); bm.verts.ensure_lookup_table(); br = []
-for f in bm.faces:
-    av = [_a[v.index] for v in f.verts]; zc = sum(_c[v.index][2] - _z0 for v in f.verts) / 3
-    if 0.2 < zc < 0.62 and max(av) > 0.4 and min(av) < 0.6: br.append(f)
-print("BRIDGE faces removed", len(br))
-bmesh.ops.delete(bm, geom=br, context="FACES_ONLY"); bm.to_mesh(lo.data); bm.free()
+_X, _Z = -_c[:, 0], _c[:, 2] - _z0
+_a0 = armness_of(_X, _Z)
+_n = len(_c); _e = np.array([tuple(e.vertices) for e in lo.data.edges]); _e = np.concatenate([_e, _e[:, ::-1]])
+_deg = np.bincount(_e[:, 0], minlength=_n).astype(np.float64); _deg[_deg == 0] = 1
+_arm_seed = (_a0 > float(os.environ.get("GW_SEED_ARM", "0.96"))) & ((_Z > 0.385) | (np.abs(_X) > 0.262))
+_body_seed = _a0 < float(os.environ.get("GW_SEED_BODY", "0.04"))
+_seed = _arm_seed | _body_seed
+_p = np.where(_arm_seed, 1.0, 0.0).astype(np.float64)
+_p[~_seed] = 0.5
+for _ in range(1500):
+    _q = np.bincount(_e[:, 0], weights=_p[_e[:, 1]], minlength=_n) / _deg; _p = np.where(_seed, _p, _q)
+_p = np.where(_Z < 0.42, (_p > 0.5).astype(np.float64), _p)  # hand/hip contact: a hard decision (a slit), only the shoulder stays a soft transition
+_armp = _p.astype(np.float32)
+bm = bmesh.new(); bm.from_mesh(lo.data); bm.verts.ensure_lookup_table()
+_lay = bm.verts.layers.float.new("armp")
+for v in bm.verts: v[_lay] = float(_armp[v.index])
+_br = [f for f in bm.faces if 0.2 < sum(_Z[v.index] for v in f.verts) / 3 < 0.62 and max(_armp[v.index] for v in f.verts) - min(_armp[v.index] for v in f.verts) > float(os.environ.get("GW_BRIDGE", "0.55"))]
+print("BRIDGE faces removed", len(_br), "diffused verts", int((~_seed).sum()), "of", _n)
+bmesh.ops.delete(bm, geom=_br, context="FACES_ONLY")
+bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+bm.to_mesh(lo.data); bm.free()
 # ---- 2. UV + bake
 activate(lo); bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
 bpy.ops.uv.smart_project(angle_limit=math.radians(float(os.environ.get("GW_ANGLE", "80"))), island_margin=0.003)
@@ -157,7 +173,7 @@ bpy.ops.object.mode_set(mode="OBJECT")
 # ---- 5. weights
 JZ = {k: v / S for k, v in J.items()}  # model units (z')
 X, Z = Xk, Zp
-armness = armness_of(X, Z)
+armness = np.array([d.value for d in lo.data.attributes['armp'].data], dtype=np.float64)
 t_hip, t_waist, t_neck = step(Z, JZ["hip"], 0.035), step(Z, JZ["waist"], 0.03), step(Z, JZ["neck"], 0.03)
 t_knee, t_ank = step(Z, JZ["knee"], 0.04), step(Z, JZ["ankle"], 0.03)
 t_elb, t_wr = step(Z, JZ["elbow"], 0.045), step(Z, JZ["wrist"], 0.03)
@@ -176,6 +192,8 @@ for side, sw in (("Right", side_r), ("Left", 1 - side_r)):
 for side, sw in (("Right", arm_r), ("Left", 1 - arm_r)):
     add(side + "UpperArm", armness * sw * t_elb); add(side + "LowerArm", armness * sw * (1 - t_elb) * t_wr); add(side + "Hand", armness * sw * (1 - t_wr))
 names = list(W); Wm = np.stack([W[n] for n in names], 1)
+# clean: a vertex that is already >= 85% one bone is made 100% that bone (rigid plates, clean forearms); only genuinely mixed vertices blend
+mx = Wm.max(1); hard = mx > float(os.environ.get('GW_SNAP', '0.85')); Wm[hard] = (Wm[hard] == mx[hard][:, None]).astype(np.float64)
 # keep the 4 strongest influences
 idx = np.argsort(-Wm, 1)[:, 4:]
 np.put_along_axis(Wm, idx, 0, 1); Wm /= Wm.sum(1, keepdims=True)
