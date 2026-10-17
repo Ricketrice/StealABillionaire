@@ -1,0 +1,49 @@
+REST feet z {'LeftFoot': -0.001, 'RightFoot': -0.001} overlaps at rest {'RightLowerArm|UpperTorso': 32, 'LeftUpperArm|UpperTorso': 72, 'RightUpperArm|UpperTorso': 64, 'LedgerScepter|UpperTorso': 397}
+CLIP Idle frames 1..73 (37 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:2/0/0 Neck:3/0/6 LeftShoulder:3/2/0 LeftElbow:8/0/0 RightShoulder:3/0/0 RightElbow:4/0/0 RightWrist:7/0/0 LeftHip:2/0/0 LeftKnee:4/0/0 LeftAnkle:2/0/0 RightHip:2/0/0 RightKnee:4/0/0 RightAnkle:2/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.019
+  feet min z: L -0.019..0.000 R -0.019..0.000 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('LeftUpperArm|UpperTorso', 92, 72, 31)]
+CLIP Walk frames 1..25 (13 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:3/0/5 LeftShoulder:23/3/2 LeftElbow:17/0/0 RightShoulder:20/0/0 RightElbow:6/0/0 RightWrist:11/0/0 LeftHip:32/0/0 LeftKnee:40/0/0 RightHip:32/0/0 RightKnee:40/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.023
+  feet min z: L -0.039..0.047 R -0.039..0.047 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('LeftUpperArm|UpperTorso', 135, 72, 11), ('RightUpperArm|UpperTorso', 157, 64, 10)]
+CLIP Steal_Grab frames 1..34 (17 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:17/6/19 Neck:5/1/11 LeftShoulder:94/7/4 LeftElbow:66/0/0 LeftWrist:28/0/0 RightShoulder:8/0/0 LeftHip:14/0/0 LeftKnee:19/0/0 RightKnee:14/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.041
+  feet min z: L -0.050..-0.000 R -0.076..-0.000 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('LeftLowerArm|UpperTorso', 34, 0, 5), ('LeftUpperArm|UpperTorso', 221, 72, 16), ('RightUpperArm|UpperTorso', 99, 64, 4), ('LedgerScepter|UpperTorso', 418, 397, 7)]
+CLIP Normal_Repossess frames 1..39 (20 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:23/2/7 Neck:14/0/0 LeftShoulder:25/22/13 LeftElbow:21/0/0 RightShoulder:137/0/0 RightElbow:14/0/0 RightWrist:126/0/0 LeftHip:26/0/0 LeftKnee:46/0/0 LeftAnkle:20/0/0 RightHip:26/0/0 RightKnee:46/0/0 RightAnkle:20/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.100
+  feet min z: L -0.041..0.028 R -0.041..0.028 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('RightHand|UpperTorso', 22, 0, 1), ('RightLowerArm|UpperTorso', 293, 32, 4), ('RightLowerArm|LowerTorso', 22, 0, 1), ('LeftUpperArm|UpperTorso', 196, 72, 19), ('RightUpperArm|UpperTorso', 435, 64, 18)]
+CLIP Event_MarketCrash frames 1..58 (29 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:10/0/0 Neck:23/0/0 LeftShoulder:131/27/24 RightShoulder:157/0/0 RightElbow:14/0/0 RightWrist:143/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.000
+  feet min z: L -0.001..-0.001 R -0.001..-0.001 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('RightHand|UpperTorso', 115, 0, 19), ('LeftLowerArm|UpperTorso', 196, 0, 22), ('RightLowerArm|UpperTorso', 290, 32, 23), ('LeftUpperArm|UpperTorso', 412, 72, 28), ('RightUpperArm|UpperTorso', 440, 64, 28)]
+CLIP Event_VaultLock frames 1..58 (29 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:17/0/0 LeftShoulder:86/9/7 LeftElbow:57/0/0 RightShoulder:77/0/0 RightWrist:63/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.000
+  feet min z: L -0.001..-0.001 R -0.001..-0.001 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('LeftLowerArm|UpperTorso', 17, 0, 12), ('LeftUpperArm|UpperTorso', 245, 72, 28), ('RightUpperArm|UpperTorso', 195, 64, 28)]
+CLIP Event_HostileTakeover frames 1..49 (25 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:8/3/20 Neck:0/0/14 LeftShoulder:92/7/3 LeftElbow:65/0/0 RightShoulder:31/0/0 RightWrist:28/0/0 LeftHip:17/0/0 LeftKnee:17/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.041
+  feet min z: L -0.025..0.003 R -0.042..0.000 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('LeftLowerArm|UpperTorso', 21, 0, 13), ('RightLowerArm|LowerTorso', 14, 0, 1), ('LeftUpperArm|UpperTorso', 215, 72, 23), ('RightUpperArm|UpperTorso', 187, 64, 22)]
+CLIP Event_BankruptNova frames 1..68 (34 samples)
+  peak joint rotation from rest (deg, XYZ euler) / translation (m):
+   Waist:25/0/0 Neck:20/0/0 LeftShoulder:74/128/69 LeftElbow:67/0/0 RightShoulder:45/132/39 RightElbow:64/0/0 LeftHip:33/0/0 LeftKnee:50/0/0 LeftAnkle:17/0/0 RightHip:33/0/0 RightKnee:50/0/0 RightAnkle:17/0/0
+  root(HRP) world range x 0.000..0.000 y 0.000..0.000 z 0.994..0.994 ; Root joint z-shift peak 0.149
+  feet min z: L -0.070..0.096 R -0.070..0.096 (rest L -0.001 R -0.001; negative = sinks through ground, >0.05 = off ground)
+  mesh intersections above rest baseline (pair, max tri-pairs, rest, frames affected): [('RightHand|UpperTorso', 47, 0, 3), ('RightHand|LowerTorso', 102, 0, 2), ('LeftLowerArm|UpperTorso', 209, 0, 25), ('RightLowerArm|UpperTorso', 233, 32, 27), ('LeftLowerArm|LowerTorso', 100, 0, 3), ('RightLowerArm|LowerTorso', 107, 0, 3), ('LeftUpperArm|UpperTorso', 380, 72, 33), ('RightUpperArm|UpperTorso', 381, 64, 33), ('LedgerScepter|UpperTorso', 802, 397, 5), ('LedgerScepter|Head', 50, 0, 1)]
