@@ -18,8 +18,9 @@ local function cf(t: { number }): CFrame
 	return CFrame.new(t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10], t[11], t[12])
 end
 
+-- Import 3D may append ".001" to the mesh names (seen on the first import): accept both spellings.
 local function find(container: Instance, name: string): BasePart?
-	local f = container:FindFirstChild(name, true)
+	local f = container:FindFirstChild(name, true) or container:FindFirstChild(name .. ".001", true)
 	return if f and f:IsA("BasePart") then f else nil
 end
 

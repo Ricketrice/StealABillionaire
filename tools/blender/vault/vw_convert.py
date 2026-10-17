@@ -314,7 +314,7 @@ if "--no-lua" not in argv:
             continue
         W = L.to_roblox(G.rest_world(G.byname[nm], cache), S)
         v = z[nm + "__v"]
-        wv = (v @ np.diag([-1, 1, -1.0]) @ np.eye(3))                      # node-local glTF -> Roblox axes
+        wv = (v @ np.diag([-1, 1, -1.0])) * S                              # node-local glTF -> Roblox axes, studs
         wv = (W[:3, :3] @ wv.T).T + W[:3, 3] - hrp[:3, 3]
         lo, hi = np.minimum(lo, wv.min(0)), np.maximum(hi, wv.max(0))
     exp["rest_extents"] = dict(min=[round(float(x), 3) for x in lo], max=[round(float(x), 3) for x in hi])
