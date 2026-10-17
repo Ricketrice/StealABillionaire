@@ -1,0 +1,21 @@
+PASS  32 joint/FX empties in the GLB (found 32)
+PASS  R15 joint hierarchy (15 joints, parents) matches the R15 spec []
+PASS  all 15 R15 body parts present and bound to the right Motor6D []
+PASS  accessories / trims: 15 extra parts (Head_Neon, LedgerScepter, LedgerScepter_Neon, LeftHand_Neon, LeftLowerArm_Neon, LeftLowerLeg_Neon, LowerTorso_Neon, RightLowerArm_Neon, RightLowerLeg_Neon, ScepterGem_Neon, UpperTorso_Neon, VaultHalo, VaultHalo_Neon, WizardTopHat, WizardTopHat_Neon)
+PASS  every mesh origin sits on its joint (max |C1.position| = 0.00000 stud)
+PASS  rest scale is 1 on every body / accessory node [] (FX nodes start hidden at scale 0.001 by design)
+PASS  non-identity rest rotations (deg): {'Accessory_WizardTopHat': 6.68, 'FX_CoinOrbit': 8.59} (hat tilt, coin-orbit plane; both baked into C0/C1)
+PASS  left/right symmetric shoulders and hips (error 0.00000)
+PASS  no animation track targets a node without a Motor6D []
+PASS  Idle                   3.00s  LOOP | first-vs-last pose 0.49 deg | enters from Idle 0.5 deg, returns to Idle 0.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.023 stud | HRP never animated
+PASS  Walk                   1.00s  LOOP | first-vs-last pose 0.49 deg | enters from Idle 31.5 deg, returns to Idle 31.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.123 stud | HRP never animated
+PASS  Steal_Grab             1.40s  one-shot | first-vs-last pose 0.49 deg | enters from Idle 0.5 deg, returns to Idle 0.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.105 stud | HRP never animated
+PASS  Normal_Repossess       1.60s  one-shot | first-vs-last pose 0.49 deg | enters from Idle 0.5 deg, returns to Idle 0.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.178 stud | HRP never animated
+PASS  Event_MarketCrash      2.40s  one-shot | first-vs-last pose 0.20 deg | enters from Idle 0.3 deg, returns to Idle 0.3 deg (cross-fade 0.15 s covers it) | Root bob peak 0.000 stud | HRP never animated
+PASS  Event_VaultLock        2.40s  one-shot | first-vs-last pose 0.49 deg | enters from Idle 14.3 deg, returns to Idle 14.3 deg (cross-fade 0.15 s covers it) | Root bob peak 0.000 stud | HRP never animated
+PASS  Event_HostileTakeover  2.00s  one-shot | first-vs-last pose 0.49 deg | enters from Idle 14.3 deg, returns to Idle 14.3 deg (cross-fade 0.15 s covers it) | Root bob peak 0.204 stud | HRP never animated
+PASS  Event_BankruptNova     2.80s  one-shot | first-vs-last pose 0.49 deg | enters from Idle 22.9 deg, returns to Idle 22.9 deg (cross-fade 0.15 s covers it) | Root bob peak 0.276 stud | HRP never animated
+PASS  FX_VaultHalo spin at the first and last key of every clip is a multiple of its 45 deg symmetry (worst remainder 0.00 deg): a clip can end/start at any key without a visible jump
+PASS  FX_ScepterGem spin at the first and last key of every clip is a multiple of its 90 deg symmetry (worst remainder 0.00 deg): a clip can end/start at any key without a visible jump
+
+RESULT: PASS (0 failed)

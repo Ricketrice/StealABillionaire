@@ -1,0 +1,755 @@
+{
+ "studs_per_unit": 2.5,
+ "parts": {
+  "Head": {
+   "tris_before": 1124,
+   "tris": 618,
+   "verts": 315,
+   "ratio": 0.55,
+   "flipped": false,
+   "vol": 0.0682809129357338,
+   "bbox_studio": [
+    [
+     -0.49,
+     4.179,
+     -0.499
+    ],
+    [
+     0.49,
+     5.089,
+     0.49
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    4.165,
+    0.0
+   ]
+  },
+  "Head_Neon": {
+   "tris_before": 24,
+   "tris": 24,
+   "verts": 16,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 5.9007114032283425e-05,
+   "bbox_studio": [
+    [
+     -0.294,
+     4.639,
+     -0.476
+    ],
+    [
+     0.294,
+     4.769,
+     -0.448
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    4.165,
+    0.0
+   ]
+  },
+  "LedgerScepter": {
+   "tris_before": 1432,
+   "tris": 716,
+   "verts": 382,
+   "ratio": 0.5,
+   "flipped": false,
+   "vol": 0.005038805305957794,
+   "bbox_studio": [
+    [
+     0.896,
+     0.109,
+     -0.112
+    ],
+    [
+     1.694,
+     5.194,
+     0.112
+    ]
+   ],
+   "origin_studio": [
+    1.295,
+    2.45,
+    0.0
+   ]
+  },
+  "LedgerScepter_Neon": {
+   "tris_before": 960,
+   "tris": 480,
+   "verts": 240,
+   "ratio": 0.5,
+   "flipped": false,
+   "vol": 9.599863551557064e-05,
+   "bbox_studio": [
+    [
+     1.012,
+     4.512,
+     -0.017
+    ],
+    [
+     1.578,
+     5.078,
+     0.017
+    ]
+   ],
+   "origin_studio": [
+    1.295,
+    2.45,
+    0.0
+   ]
+  },
+  "LeftFoot": {
+   "tris_before": 484,
+   "tris": 290,
+   "verts": 151,
+   "ratio": 0.6,
+   "flipped": false,
+   "vol": 0.02308535762131214,
+   "bbox_studio": [
+    [
+     -0.833,
+     0.0,
+     -0.7
+    ],
+    [
+     -0.007,
+     0.427,
+     0.417
+    ]
+   ],
+   "origin_studio": [
+    -0.42,
+    0.315,
+    0.0
+   ]
+  },
+  "LeftHand": {
+   "tris_before": 248,
+   "tris": 248,
+   "verts": 128,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.012356494553387165,
+   "bbox_studio": [
+    [
+     -1.635,
+     2.233,
+     -0.333
+    ],
+    [
+     -0.956,
+     2.667,
+     0.333
+    ]
+   ],
+   "origin_studio": [
+    -1.295,
+    2.681,
+    0.0
+   ]
+  },
+  "LeftHand_Neon": {
+   "tris_before": 12,
+   "tris": 12,
+   "verts": 8,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 1.3171123100619297e-05,
+   "bbox_studio": [
+    [
+     -1.54,
+     2.359,
+     -0.371
+    ],
+    [
+     -1.47,
+     2.429,
+     -0.329
+    ]
+   ],
+   "origin_studio": [
+    -1.295,
+    2.681,
+    0.0
+   ]
+  },
+  "LeftLowerArm": {
+   "tris_before": 472,
+   "tris": 282,
+   "verts": 145,
+   "ratio": 0.6,
+   "flipped": false,
+   "vol": 0.03220346197485924,
+   "bbox_studio": [
+    [
+     -1.701,
+     2.66,
+     -0.406
+    ],
+    [
+     -0.889,
+     3.381,
+     0.406
+    ]
+   ],
+   "origin_studio": [
+    -1.295,
+    3.381,
+    0.0
+   ]
+  },
+  "LeftLowerArm_Neon": {
+   "tris_before": 12,
+   "tris": 12,
+   "verts": 8,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.001554311253130436,
+   "bbox_studio": [
+    [
+     -1.712,
+     2.824,
+     -0.417
+    ],
+    [
+     -0.879,
+     2.859,
+     0.417
+    ]
+   ],
+   "origin_studio": [
+    -1.295,
+    3.381,
+    0.0
+   ]
+  },
+  "LeftLowerLeg": {
+   "tris_before": 236,
+   "tris": 236,
+   "verts": 120,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.032899439334869385,
+   "bbox_studio": [
+    [
+     -0.798,
+     0.315,
+     -0.378
+    ],
+    [
+     -0.042,
+     1.225,
+     0.378
+    ]
+   ],
+   "origin_studio": [
+    -0.42,
+    1.225,
+    0.0
+   ]
+  },
+  "LeftLowerLeg_Neon": {
+   "tris_before": 12,
+   "tris": 12,
+   "verts": 8,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.00014137080870568752,
+   "bbox_studio": [
+    [
+     -0.816,
+     0.382,
+     -0.049
+    ],
+    [
+     -0.788,
+     1.187,
+     0.049
+    ]
+   ],
+   "origin_studio": [
+    -0.42,
+    1.225,
+    0.0
+   ]
+  },
+  "LeftUpperArm": {
+   "tris_before": 236,
+   "tris": 236,
+   "verts": 120,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.02831326425075531,
+   "bbox_studio": [
+    [
+     -1.673,
+     3.381,
+     -0.378
+    ],
+    [
+     -0.917,
+     4.165,
+     0.378
+    ]
+   ],
+   "origin_studio": [
+    -1.295,
+    3.885,
+    0.0
+   ]
+  },
+  "LeftUpperLeg": {
+   "tris_before": 236,
+   "tris": 236,
+   "verts": 120,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.037311602383852005,
+   "bbox_studio": [
+    [
+     -0.805,
+     1.218,
+     -0.385
+    ],
+    [
+     -0.035,
+     2.212,
+     0.385
+    ]
+   ],
+   "origin_studio": [
+    -0.42,
+    2.205,
+    0.0
+   ]
+  },
+  "LowerTorso": {
+   "tris_before": 1924,
+   "tris": 962,
+   "verts": 503,
+   "ratio": 0.5,
+   "flipped": false,
+   "vol": 0.10829044133424759,
+   "bbox_studio": [
+    [
+     -0.991,
+     0.808,
+     -0.525
+    ],
+    [
+     0.991,
+     2.772,
+     0.613
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    2.485,
+    0.0
+   ]
+  },
+  "LowerTorso_Neon": {
+   "tris_before": 60,
+   "tris": 60,
+   "verts": 40,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.001700717955827713,
+   "bbox_studio": [
+    [
+     -0.766,
+     0.8,
+     -0.525
+    ],
+    [
+     0.766,
+     2.592,
+     0.626
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    2.485,
+    0.0
+   ]
+  },
+  "RightFoot": {
+   "tris_before": 484,
+   "tris": 290,
+   "verts": 151,
+   "ratio": 0.6,
+   "flipped": false,
+   "vol": 0.02308535762131214,
+   "bbox_studio": [
+    [
+     0.007,
+     0.0,
+     -0.7
+    ],
+    [
+     0.833,
+     0.427,
+     0.417
+    ]
+   ],
+   "origin_studio": [
+    0.42,
+    0.315,
+    0.0
+   ]
+  },
+  "RightHand": {
+   "tris_before": 236,
+   "tris": 236,
+   "verts": 120,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.011743240058422089,
+   "bbox_studio": [
+    [
+     0.963,
+     2.233,
+     -0.333
+    ],
+    [
+     1.628,
+     2.667,
+     0.333
+    ]
+   ],
+   "origin_studio": [
+    1.295,
+    2.681,
+    0.0
+   ]
+  },
+  "RightLowerArm": {
+   "tris_before": 472,
+   "tris": 282,
+   "verts": 145,
+   "ratio": 0.6,
+   "flipped": false,
+   "vol": 0.03220346197485924,
+   "bbox_studio": [
+    [
+     0.889,
+     2.66,
+     -0.406
+    ],
+    [
+     1.701,
+     3.381,
+     0.406
+    ]
+   ],
+   "origin_studio": [
+    1.295,
+    3.381,
+    0.0
+   ]
+  },
+  "RightLowerArm_Neon": {
+   "tris_before": 12,
+   "tris": 12,
+   "verts": 8,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.001554311253130436,
+   "bbox_studio": [
+    [
+     0.879,
+     2.824,
+     -0.417
+    ],
+    [
+     1.712,
+     2.859,
+     0.417
+    ]
+   ],
+   "origin_studio": [
+    1.295,
+    3.381,
+    0.0
+   ]
+  },
+  "RightLowerLeg": {
+   "tris_before": 236,
+   "tris": 236,
+   "verts": 120,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.032899439334869385,
+   "bbox_studio": [
+    [
+     0.042,
+     0.315,
+     -0.378
+    ],
+    [
+     0.798,
+     1.225,
+     0.378
+    ]
+   ],
+   "origin_studio": [
+    0.42,
+    1.225,
+    0.0
+   ]
+  },
+  "RightLowerLeg_Neon": {
+   "tris_before": 12,
+   "tris": 12,
+   "verts": 8,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.00014137082325760275,
+   "bbox_studio": [
+    [
+     0.788,
+     0.382,
+     -0.049
+    ],
+    [
+     0.816,
+     1.187,
+     0.049
+    ]
+   ],
+   "origin_studio": [
+    0.42,
+    1.225,
+    0.0
+   ]
+  },
+  "RightUpperArm": {
+   "tris_before": 236,
+   "tris": 236,
+   "verts": 120,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.02831326425075531,
+   "bbox_studio": [
+    [
+     0.917,
+     3.381,
+     -0.378
+    ],
+    [
+     1.673,
+     4.165,
+     0.378
+    ]
+   ],
+   "origin_studio": [
+    1.295,
+    3.885,
+    0.0
+   ]
+  },
+  "RightUpperLeg": {
+   "tris_before": 236,
+   "tris": 236,
+   "verts": 120,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.037311602383852005,
+   "bbox_studio": [
+    [
+     0.035,
+     1.218,
+     -0.385
+    ],
+    [
+     0.805,
+     2.212,
+     0.385
+    ]
+   ],
+   "origin_studio": [
+    0.42,
+    2.205,
+    0.0
+   ]
+  },
+  "ScepterGem_Neon": {
+   "tris_before": 8,
+   "tris": 8,
+   "verts": 6,
+   "ratio": 1.0,
+   "flipped": false,
+   "vol": 0.0007902721990831196,
+   "bbox_studio": [
+    [
+     1.085,
+     4.585,
+     -0.21
+    ],
+    [
+     1.505,
+     5.005,
+     0.21
+    ]
+   ],
+   "origin_studio": [
+    1.295,
+    4.795,
+    0.0
+   ]
+  },
+  "UpperTorso": {
+   "tris_before": 3524,
+   "tris": 1690,
+   "verts": 911,
+   "ratio": 0.48,
+   "flipped": false,
+   "vol": 0.20673398673534393,
+   "bbox_studio": [
+    [
+     -1.823,
+     2.766,
+     -0.525
+    ],
+    [
+     1.823,
+     4.877,
+     0.656
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    2.765,
+    0.0
+   ]
+  },
+  "UpperTorso_Neon": {
+   "tris_before": 348,
+   "tris": 208,
+   "verts": 138,
+   "ratio": 0.6,
+   "flipped": false,
+   "vol": 0.0019230698235332966,
+   "bbox_studio": [
+    [
+     -1.676,
+     3.307,
+     -0.518
+    ],
+    [
+     1.676,
+     5.026,
+     0.671
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    2.765,
+    0.0
+   ]
+  },
+  "VaultHalo": {
+   "tris_before": 1600,
+   "tris": 800,
+   "verts": 434,
+   "ratio": 0.5,
+   "flipped": false,
+   "vol": 0.018411090597510338,
+   "bbox_studio": [
+    [
+     -1.47,
+     3.01,
+     0.718
+    ],
+    [
+     1.47,
+     5.95,
+     0.892
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    4.48,
+    0.805
+   ]
+  },
+  "VaultHalo_Neon": {
+   "tris_before": 1376,
+   "tris": 688,
+   "verts": 346,
+   "ratio": 0.5,
+   "flipped": false,
+   "vol": 0.0018781832186505198,
+   "bbox_studio": [
+    [
+     -0.98,
+     3.5,
+     0.714
+    ],
+    [
+     0.98,
+     5.46,
+     0.896
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    4.48,
+    0.805
+   ]
+  },
+  "WizardTopHat": {
+   "tris_before": 1208,
+   "tris": 724,
+   "verts": 371,
+   "ratio": 0.6,
+   "flipped": false,
+   "vol": 0.11564916372299194,
+   "bbox_studio": [
+    [
+     -0.801,
+     4.995,
+     -0.804
+    ],
+    [
+     0.808,
+     7.113,
+     1.225
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    5.089,
+    0.0
+   ]
+  },
+  "WizardTopHat_Neon": {
+   "tris_before": 520,
+   "tris": 312,
+   "verts": 162,
+   "ratio": 0.6,
+   "flipped": false,
+   "vol": 0.002063556807115674,
+   "bbox_studio": [
+    [
+     -0.496,
+     5.249,
+     -0.658
+    ],
+    [
+     0.562,
+     6.713,
+     1.127
+    ]
+   ],
+   "origin_studio": [
+    -0.0,
+    5.089,
+    0.0
+   ]
+  }
+ }
+}
