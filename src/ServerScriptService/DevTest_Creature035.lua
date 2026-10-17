@@ -251,6 +251,11 @@ local function teleport(cf: CFrame)
 	if helperReady then
 		ask("tp", cf)
 	end
+	-- the server's distance checks (steal, place) read the server's copy: wait until the move has replicated
+	waitUntil(3, function()
+		local r = A.Character and A.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		return r and (r.Position - cf.Position).Magnitude < 4
+	end)
 	task.wait(0.2)
 end
 
@@ -381,9 +386,15 @@ local function sameFor(zoneName: string)
 	local id = npc:GetAttribute("LookId")
 	local sigBefore = signature(npc)
 	local npcRoot = npc.HumanoidRootPart :: BasePart
+	local npcHum = npc:FindFirstChildOfClass("Humanoid")
+	if npcHum then -- a wanderer keeps walking during the teleport round trip: stop it first (test only)
+		npcHum.WalkSpeed = 0
+		npcHum:MoveTo(npcRoot.Position)
+	end
 	teleport(npcRoot.CFrame * CFrame.new(0, 0, -3))
 	local ok, msg = NPCClaim.tryReserve(A, npc, zone)
-	expect("steal reserved", ok, msg)
+	local myRoot = A.Character and A.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	expect("steal reserved", ok, ("%s (%.1f studs)"):format(tostring(msg), if myRoot then (myRoot.Position - npcRoot.Position).Magnitude else -1))
 	local carried = waitUntil(15, function()
 		return npc:GetAttribute("ClaimPhase") == "Carrying" and npc:GetAttribute("WorkerUid") ~= nil
 	end)
