@@ -118,11 +118,12 @@ local StealConfig = require(ReplicatedStorage:WaitForChild("StealConfig")) :: an
 local ProductConfig = require(ReplicatedStorage:WaitForChild("ProductConfig")) :: any
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue")) :: any
 
-local SWITCHES = { "StudioLiving", "StudioLevels", "StudioPads", "StudioFairSteal", "StudioPurchases", "StudioOwnPasses", "StudioPvPStealing" }
+local SWITCHES = { "StudioLiving", "StudioLevels", "StudioPads", "StudioFairSteal", "StudioPurchases", "StudioOwnPasses", "StudioPvPStealing", "StudioSpeed" }
 local was = {}
 for _, name in SWITCHES do
 	was[name] = ServerStorage:GetAttribute(name)
 end
+ServerStorage:SetAttribute("StudioSpeed", true) -- 036: the Starter Pack's trail is published (SpeedOwned) only with Speed on; Speed is live (D46)
 local function switches(on: boolean)
 	for _, name in { "StudioLiving", "StudioLevels", "StudioPads", "StudioFairSteal", "StudioPurchases" } do
 		ServerStorage:SetAttribute(name, on)
