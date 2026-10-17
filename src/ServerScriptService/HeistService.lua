@@ -260,7 +260,7 @@ local function dressSigns(folder: Folder)
 	local baySign = bay and bay:FindFirstChild("BaySign")
 	if baySign and baySign:IsA("BasePart") then
 		local worker = if bossEntry then WorkerCatalogue.get(bossEntry.creature) else nil
-		label(surface(baySign), "Title", if worker then string.upper(worker.name) else "SIR IRONCLAD", 0.05, 0.9, GOLD_TEXT, Enum.Font.FredokaOne)
+		label(surface(baySign), "Title", if worker then string.upper(worker.name) else "ROYAL TREASURY", 0.05, 0.9, GOLD_TEXT, Enum.Font.FredokaOne)
 	end
 end
 
