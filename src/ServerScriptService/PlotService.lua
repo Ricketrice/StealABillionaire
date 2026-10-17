@@ -11,7 +11,7 @@ local Players = game:GetService("Players")
 
 local PlotService = {}
 
--- Milestone 027 (D6): everyone spawns at the hub's SpawnLocation, facing down the parade lane, and a
+-- Milestone 027 (D6): everyone spawns at the hub's SpawnLocation (036: beside the parade lane, facing it), and a
 -- client marker (StarterPlayerScripts.SkyCityLife) points them to their base. Set true to go back
 -- to spawning inside the player's own plot.
 local SPAWN_AT_PLOT = false

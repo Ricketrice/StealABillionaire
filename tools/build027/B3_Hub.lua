@@ -22,12 +22,13 @@ return function(): string
 	local venues = workspace.Venues
 	local top = L.pavingTop
 
-	-- Spawn: facing down the lane (+X), on a gold medallion.
+	-- Spawn: on a gold medallion beside the parade lane (036: moved 18 studs off it), facing the lane and the lots ahead.
+	local spawnAt = L.spawn + Vector3.new(0, 0, -18)
 	local spawn = workspace.SpawnLocation :: SpawnLocation
-	spawn.CFrame = CFrame.lookAt(Vector3.new(L.spawn.X, top + 0.2, L.spawn.Z), Vector3.new(L.spawn.X + 10, top + 0.2, L.spawn.Z))
+	spawn.CFrame = CFrame.lookAt(Vector3.new(spawnAt.X, top + 0.2, spawnAt.Z), Vector3.new(-140, top + 0.2, L.spawn.Z))
 	spawn.Size = Vector3.new(8, 0.4, 8)
 	spawn.Transparency = 1
-	spawn.CanCollide = false -- players land on the lane; the pad itself must not be a step
+	spawn.CanCollide = false -- players land on the spawn square; the pad itself must not be a step
 	for _, d in spawn:GetChildren() do
 		if d:IsA("Decal") then
 			d:Destroy()
@@ -40,7 +41,7 @@ return function(): string
 			parent = med,
 			shape = "Cylinder",
 			size = Vector3.new(0.2, r * 2, r * 2),
-			cf = CFrame.new(L.spawn.X, t - 0.1, L.spawn.Z) * CFrame.Angles(0, 0, math.rad(90)),
+			cf = CFrame.new(spawnAt.X, t - 0.1, spawnAt.Z) * CFrame.Angles(0, 0, math.rad(90)),
 			color = color,
 			mat = mat,
 			deco = true,

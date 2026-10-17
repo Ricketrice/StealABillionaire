@@ -22,6 +22,7 @@
 -- Also (Milestone 028): server-wide message for Legendary/Secret catches (parade and zones), and the
 -- collection book (`hub.book` = { [workerId] = true } in the save's existing hub field; schema stays 3).
 
+local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -45,6 +46,9 @@ local FLAGS = { "PARADE_ENABLED", "JUICE_ENABLED", "GOAL_HUD_ENABLED", "BOOK_ENA
 local PROMPT_NAME = "StealPrompt" -- NPCClaim removes a prompt with this name when it reserves
 local WALKER_NAME = "MysteryWorker"
 local WRAP_FOLDER = "WorkerLook" -- WorkerAppearance's fallback look removes a folder with this name
+-- Walkers are moved by CFrame on each client, and their Humanoid turns the limbs' CanCollide back on, so they
+-- shoved standing players down the lane (036). This group collides with nothing; the Humanoid cannot undo it.
+local WALKER_COLLISION_GROUP = "ParadeWalkers"
 
 local function serverNow(): number
 	return workspace:GetServerTimeNow()
@@ -235,6 +239,18 @@ local function buildTemplate(): Model?
 	end
 	if low < math.huge then
 		rootLift = root.Position.Y - low
+	end
+
+	if not PhysicsService:IsCollisionGroupRegistered(WALKER_COLLISION_GROUP) then
+		PhysicsService:RegisterCollisionGroup(WALKER_COLLISION_GROUP)
+	end
+	for _, group in PhysicsService:GetRegisteredCollisionGroups() do
+		PhysicsService:CollisionGroupSetCollidable(WALKER_COLLISION_GROUP, group.name, false)
+	end
+	for _, part in rig:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.CollisionGroup = WALKER_COLLISION_GROUP
+		end
 	end
 	return rig
 end
