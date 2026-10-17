@@ -566,12 +566,19 @@ scenario("collection book and goals", function()
 	expect("the book opens on the Main Street page", s.bookOpen == true and s.bookPage == "MainStreet", s.bookPage)
 	local pageSize = #WorkerCatalogue.ZONES.MainStreet -- (9 since 034)
 	expect("caught in colour, missing as silhouettes", s.cards == ("%d colour, %d silhouettes"):format(owned, pageSize - owned), s.cards)
-	-- put one worker on a pad: the goal moves on
+	-- put one creature on a pad (Equip from storage puts it on a station): the goal moves on
 	local uid = next(uids(A))
 	ask(A, "inv", { action = "Equip", uid = uid })
 	task.wait(1)
+	local equipped
+	for _, w in (PlayerData.get(A) :: any).workers do
+		if w.uid == uid then
+			equipped = w
+		end
+	end
+	expect("Equip puts the creature on a station", equipped ~= nil and equipped.loc == "station" and equipped.station ~= nil, equipped and equipped.loc)
 	s = probe(A)
-	expect("after a worker is on a pad the goal is a later one", s.goal ~= "Put a worker on a pad" and s.goal ~= "Catch your first worker", s.goal)
+	expect("after a creature is on a pad the goal is a later one", s.goal ~= ParadeConfig.GOALS[2].text and s.goal ~= ParadeConfig.GOALS[1].text, s.goal) -- (034 wording: "creature"; the old hard-coded "worker" texts always passed)
 end)
 
 scenario("saves", function()
