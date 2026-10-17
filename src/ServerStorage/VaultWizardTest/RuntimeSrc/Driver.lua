@@ -10,6 +10,7 @@ Driver.__index = Driver
 
 local FADE = 0.15 -- cross-fade between clips, seconds
 
+-- i = index of the key's time value; the quaternion follows it (and the position after that when stride = 8)
 local function cfAt(track: { number }, i: number, stride: number): CFrame
 	if stride == 8 then
 		return CFrame.new(track[i + 5], track[i + 6], track[i + 7], track[i + 1], track[i + 2], track[i + 3], track[i + 4])
@@ -23,11 +24,11 @@ local function sampleTrack(track: { number }, t: number): CFrame
 	local n = (#track - 1) // stride
 	local first = 2
 	if n == 1 or t <= track[first] then
-		return cfAt(track, first - 1, stride)
+		return cfAt(track, first, stride)
 	end
 	local lastIdx = first + (n - 1) * stride
 	if t >= track[lastIdx] then
-		return cfAt(track, lastIdx - 1, stride)
+		return cfAt(track, lastIdx, stride)
 	end
 	local lo, hi = 0, n - 1
 	while hi - lo > 1 do
@@ -40,7 +41,7 @@ local function sampleTrack(track: { number }, t: number): CFrame
 	end
 	local a, b = first + lo * stride, first + hi * stride
 	local u = (t - track[a]) / (track[b] - track[a])
-	return cfAt(track, a - 1, stride):Lerp(cfAt(track, b - 1, stride), u)
+	return cfAt(track, a, stride):Lerp(cfAt(track, b, stride), u)
 end
 
 local function sampleScale(track: { number }?, t: number): number

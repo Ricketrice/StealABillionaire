@@ -85,6 +85,7 @@ function Builder.build(imported: Instance, opts: { assets: { [string]: string }?
 			continue
 		end
 		local part = src:Clone()
+		part.Name = name -- drop Import 3D's ".001" suffix
 		for _, c in part:GetChildren() do
 			c:Destroy()
 		end

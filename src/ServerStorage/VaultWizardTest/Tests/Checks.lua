@@ -38,17 +38,21 @@ function Checks.structure(model: Model)
 	local hrp = model.PrimaryPart :: BasePart
 	local data = require(model.Runtime.VaultData)
 	local r = { counts = counts(model), errors = {} :: { string } }
+	-- connectivity from the root through the Motor6D / Weld graph (Part0/Part1; GetJoints only works inside the Workspace)
+	local edges: { [BasePart]: { BasePart } } = {}
+	for _, d in model:GetDescendants() do
+		if d:IsA("JointInstance") and d.Part0 and d.Part1 then
+			edges[d.Part0] = edges[d.Part0] or {}
+			table.insert(edges[d.Part0], d.Part1)
+		end
+	end
 	local reach, queue = { [hrp] = true }, { hrp }
 	while #queue > 0 do
 		local p = table.remove(queue) :: BasePart
-		for _, j in p:GetJoints() do
-			if j:IsA("JointInstance") then
-				for _, q in { j.Part0, j.Part1 } do
-					if q and not reach[q] then
-						reach[q] = true
-						table.insert(queue, q)
-					end
-				end
+		for _, q in edges[p] or {} do
+			if not reach[q] then
+				reach[q] = true
+				table.insert(queue, q)
 			end
 		end
 	end
@@ -120,6 +124,9 @@ function Checks.poseOnServer(model: Model, clip: string, idx: number)
 		local part = model:FindFirstChild(partName)
 		if part and part:IsA("BasePart") then
 			local err = (hrp.CFrame:PointToObjectSpace(part:GetPivot().Position) - Vector3.new(p[1], p[2], p[3])).Magnitude
+			if err ~= err then
+				err = math.huge -- NaN must fail, never read as zero error
+			end
 			if err > worst then
 				worst, worstPart = err, partName
 			end

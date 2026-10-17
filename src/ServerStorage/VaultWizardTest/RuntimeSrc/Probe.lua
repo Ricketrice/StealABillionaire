@@ -20,6 +20,9 @@ function Probe.measure(model: Model): (number, string, number)
 			local rel = hrp.CFrame:PointToObjectSpace(part:GetPivot().Position)
 			local err = (rel - Vector3.new(p[1], p[2], p[3])).Magnitude
 			n += 1
+			if err ~= err then
+				err = math.huge -- NaN must fail, never read as zero error
+			end
 			if err > worst then
 				worst, worstPart = err, partName
 			end

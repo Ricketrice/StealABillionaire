@@ -1,6 +1,6 @@
 # Vault wizard: Claude Design GLB -> Blender -> Roblox (status 2026-10-17)
 
-**Status: offline half DONE and verified offline; Studio half BLOCKED at the backup gate (no Studio write made).** Nothing here is enabled in production; nothing lives in the Workspace/StarterPlayer; all scripts go to `ServerStorage.VaultWizardTest` (inert).
+**Status 2026-10-17 (evening): offline half DONE; Studio half DONE for solo Play (server + client DataModels), TWO-CLIENT test written but NOT RUN (memory guard).** Backup before the Studio writes: `backups/pre_vault_wizard_20261017_1504.rbxl`. Scripts: `ServerStorage.VaultWizardTest` (inert) + `ServerScriptService.DevTest_Vault035` (inert unless Studio test args). One visible preview copy: `Workspace._VaultWizardPreview` (sky platform at 300,900,0; DELETE before publishing; it runs its client driver in Play).
 
 ## Offline results (all measured, not simulated; none of it ran in Roblox)
 - Geometry: 27 body meshes 14,996 -> **8,898 tris** (welded, collapse-decimated with UV seams delimited, smooth-by-angle shading, palette UVs snapped to swatch centres, flat 256x32 palette so no bleed). Halo 3,0k -> 1,488. 11 FX meshes (19.8k tris) dropped and rebuilt as native effects. Compare images: `~/Pictures/035_preview/vault2/r/compare_*.png`.
@@ -17,3 +17,12 @@ Convention contract for future characters: R15 joint-node names, one mesh per jo
 2. **Home > Import 3D** (or Asset Manager > Bulk Import is NOT enough): pick `assets/export/vault/VaultWizard.fbx`; Scene: scale 1, "Import as Model" / one model, no rig generation, no "Upload to Roblox" if the dialog offers it; accept. Drag the resulting Model into `ServerStorage` (any folder). I move it to `ServerStorage.VaultWizardTest.Imported`.
 3. Do not save again until I report.
 Then (me): upload 6 images (palette colour/metalness/roughness + ring/sigil/coin from `assets/export/vault/`), push the `src/ServerStorage/VaultWizardTest` scripts (`tools/push_to_studio.py`), `Builder.build`, then the Play tests (`Tests/Checks`, `Probe`, `Harness`; solo + 2 clients).
+
+## Studio results (solo Play = separate Server and Client DataModels; measured in the engine)
+- Import: 30 MeshParts + 4 markers; axes exact; size 7.11 x 3.65 studs incl. hat; Import 3D appended `.001` to part names (Builder strips it); engine face counts: body 8,898, total 10,394.
+- Assembly: 30 parts, 19 Motor6D, 11 Weld trims, 18 SurfaceAppearance, 12 Neon, 13 attachments; engine joint graph reaches 30/30 parts; rest pivots vs glTF FK 0.00006 studs.
+- Poses: all 8 clips x 4 times, server-applied AND client-driven: max pivot error 0.0072 studs (Nova), most < 0.003. Halo scale x1.9 verified (5.586 studs).
+- Live clips (client): effects appear at their authored times (beam +0.55 s, Repossess ring +0.64, Market Crash rain +0.68, Vault Lock trail +0.55, Nova ring +1.26); every temporary is gone 3-4 s after each clip; persistent aura = 3 emitters + 6 helper parts. Walk: root moved 24 studs, hip swing +-31 deg, back to Idle.
+- Replication: a SERVER-set Motor6D.Transform does NOT reach the client (client shows the rest pose); hence the attribute + client-driver design. Standard Animator: works in this one-machine Studio (track matches the table, client sees it) but the registered id is local to the machine, so a real server needs an uploaded Animation asset: not verifiable offline.
+- Performance (client frame time under Wine on the owner's laptop, NOT a phone): 1 wizard 21.1 ms, 5 wizards 21.5 ms, 20 wizards 28.1 ms (p95 50 ms), all on the Walk loop; ~600 MeshParts at 20.
+- NOT tested: two real clients (guard stopped the launch: swap free 3.3 GB < 5 GB), a phone, how it LOOKS (no screenshots by rule: owner review), Animator across machines.
