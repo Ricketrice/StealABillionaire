@@ -37,6 +37,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local BossHeist = require(ReplicatedStorage:WaitForChild("BossHeist"))
 local HeistConfig = require(ReplicatedStorage:WaitForChild("HeistConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local NPCCarry = require(script.Parent:WaitForChild("NPCCarry"))
@@ -131,6 +132,102 @@ local function surface(part: BasePart): SurfaceGui
 	return gui
 end
 
+-- Boss chaser (036, BossHeist): the zone boss replaces the Sir Ironclad robot model. The clients move it (RobotPos / RobotYaw, like the robot); the server only says which clip plays
+-- (attributes VW_Base / VW_Clip / VW_ClipT0 on the model, read by the rig's own client driver). Hit rules are untouched.
+local bossEntry: BossHeist.Boss? = nil
+local bossModel: Model? = nil
+local bossBase = ""
+local bossMoveAt = -math.huge
+local bossLastMode = "Dock"
+
+local function lowestVisibleY(model: Model): number
+	local low = math.huge
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") and d.Transparency < 1 then
+			local half = d.Size / 2
+			for _, sx in { -1, 1 } do
+				for _, sy in { -1, 1 } do
+					for _, sz in { -1, 1 } do
+						low = math.min(low, d.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz)).Y)
+					end
+				end
+			end
+		end
+	end
+	return low
+end
+
+local function installBoss(folder: Folder)
+	bossEntry, bossModel, bossBase, bossLastMode = nil, nil, "", "Dock"
+	local zone = if RunService:IsStudio() and ServerStorage:GetAttribute(BossHeist.STUDIO_ATTRIBUTE)
+		then ServerStorage:GetAttribute(BossHeist.STUDIO_ATTRIBUTE)
+		else HeistConfig.ZONE
+	local entry = BossHeist.forZone(zone)
+	if not entry then
+		return
+	end
+	local model: Model? = nil
+	local lift = 0
+	if entry.rig then
+		local char = ServerStorage:FindFirstChild("BossRigs") and ServerStorage.BossRigs:FindFirstChild(entry.rig)
+		local template = char and char:FindFirstChild("Template")
+		if template and template:IsA("Model") and template.PrimaryPart then
+			model = template:Clone()
+			lift = (require((model :: Model).Runtime.Data :: ModuleScript) :: any).hrpHeight
+		end
+	else -- the creature's own model (Aquaris): no Humanoid or scripts, the root stays put and the clients move it
+		local creatures = ReplicatedStorage:FindFirstChild("CreatureModels")
+		local source = creatures and creatures:FindFirstChild(entry.creature)
+		if source and source:IsA("Model") then
+			local clone = source:Clone()
+			for _, d in clone:GetDescendants() do
+				if d:IsA("Humanoid") or d:IsA("Script") or d:IsA("LocalScript") then
+					d:Destroy()
+				end
+			end
+			clone:SetAttribute("CreatureBuiltScale", clone:GetAttribute("CreatureScale")) -- (CreatureScaler would otherwise shrink it to scale 1)
+			local cloneRoot = clone:FindFirstChild("HumanoidRootPart") :: BasePart
+			cloneRoot.PivotOffset = CFrame.identity -- (the creature's pivot sits below the root: PivotTo must place the root itself)
+			clone.PrimaryPart = cloneRoot
+			lift = cloneRoot.Position.Y - lowestVisibleY(clone)
+			model = clone
+		end
+	end
+	if not model then
+		warn("[HeistService] boss chaser for", zone, "is not available: the old robot stays")
+		return
+	end
+	local root = (model :: Model).PrimaryPart :: BasePart
+	root.Anchored = true
+	local old = folder:FindFirstChild("Robot")
+	if old then
+		old:Destroy()
+	end
+	model.Name = "Robot"
+	model:SetAttribute("BossHeist", zone)
+	model:SetAttribute("RootLift", lift)
+	model:PivotTo(CFrame.new(dockCF.Position + Vector3.new(0, lift, 0)))
+	model.Parent = folder
+	bossEntry, bossModel = entry, model
+end
+
+-- Plays one of the boss's attack clips so that its impact lands at `impactAt` (server time). The attributes are written shortly before the clip starts: the clients read
+-- the start time and the rig's driver fades the pose in.
+local function playBoss(kind: string, impactAt: number)
+	local entry = bossEntry and bossEntry.attacks[kind]
+	local model = bossModel
+	if not (entry and model) then
+		return
+	end
+	local startAt = impactAt - entry.impact
+	task.delay(math.max(0, startAt - serverNow() - 0.1), function()
+		if model.Parent then
+			model:SetAttribute("VW_Clip", entry.clip)
+			model:SetAttribute("VW_ClipT0", math.max(startAt, serverNow()))
+		end
+	end)
+end
+
 -- Signs: title, a status line the clients fill in ("Opens in 3:20" / "OPEN! 0:42"), the odds.
 local function dressSigns(folder: Folder)
 	local vault = folder:FindFirstChild("Vault")
@@ -151,7 +248,8 @@ local function dressSigns(folder: Folder)
 	local bay = folder:FindFirstChild("Bay")
 	local baySign = bay and bay:FindFirstChild("BaySign")
 	if baySign and baySign:IsA("BasePart") then
-		label(surface(baySign), "Title", "SIR IRONCLAD", 0.05, 0.9, GOLD_TEXT, Enum.Font.FredokaOne)
+		local worker = if bossEntry then WorkerCatalogue.get(bossEntry.creature) else nil
+		label(surface(baySign), "Title", if worker then string.upper(worker.name) else "SIR IRONCLAD", 0.05, 0.9, GOLD_TEXT, Enum.Font.FredokaOne)
 	end
 end
 
@@ -183,6 +281,7 @@ local function build(): boolean
 			child:Clone().Parent = folder
 		end
 	end
+	installBoss(folder)
 	dressSigns(folder)
 	local spot = folder:FindFirstChild("GrabSpot") :: BasePart
 	local p = Instance.new("ProximityPrompt")
@@ -494,7 +593,7 @@ type Attack = {
 	hitPlayers: { [Player]: boolean },
 	log: any,
 }
-local robot = { pos = Vector3.zero, yaw = 0, mode = "Dock", target = nil :: Player?, attack = nil :: Attack?, cooldown = 0 }
+local robot = { pos = Vector3.zero, yaw = 0, mode = "Dock", target = nil :: Player?, attack = nil :: Attack?, cooldown = 0, moving = false }
 local attackCount = 0
 local rng = Random.new()
 
@@ -591,6 +690,7 @@ local function walk(goal: Vector3, dt: number, stop: number): boolean
 	end
 	face(goal)
 	local step = math.min(HeistConfig.ROBOT_SPEED * dt, dist - stop)
+	robot.moving = true
 	local nextPos = clampToArea(robot.pos + d.Unit * step)
 	local y = groundAt(nextPos, robot.pos.Y)
 	robot.pos = Vector3.new(nextPos.X, y or robot.pos.Y, nextPos.Z)
@@ -607,6 +707,22 @@ local function publishRobot(now: number)
 	folder:SetAttribute("RobotMode", robot.mode)
 	folder:SetAttribute("RobotAt", now)
 	folder:SetAttribute("RobotTarget", if robot.target then robot.target.UserId else nil)
+	local model = bossModel
+	if model then
+		if robot.moving then
+			bossMoveAt = now
+		end
+		local want = if now - bossMoveAt < 0.3 then "Walk" else "Idle"
+		if want ~= bossBase then
+			bossBase = want
+			model:SetAttribute("VW_Base", want)
+			model:SetAttribute("VW_BaseT0", now)
+		end
+		if bossLastMode == "Dock" and robot.mode ~= "Dock" then
+			playBoss("Basic", now + (bossEntry :: BossHeist.Boss).attacks.Basic.impact) -- the wake-up flourish
+		end
+		bossLastMode = robot.mode
+	end
 end
 
 local function startAttack(kind: string, target: Player, targetRoot: BasePart, now: number)
@@ -660,6 +776,7 @@ local function startAttack(kind: string, target: Player, targetRoot: BasePart, n
 	HeistService.stats.attacks += 1
 	robot.attack = a
 	robot.mode = "Attack"
+	playBoss(kind, a.hitAt)
 	clientEvent:FireAllClients("Attack", info)
 end
 
@@ -765,6 +882,7 @@ local function chooseAttack(distance: number): string?
 end
 
 local function stepRobot(dt: number, now: number)
+	robot.moving = false
 	local a = robot.attack
 	if a then
 		stepAttack(a, now)

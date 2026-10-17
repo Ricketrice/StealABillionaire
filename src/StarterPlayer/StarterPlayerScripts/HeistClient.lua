@@ -18,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 
+local BossHeist = require(ReplicatedStorage:WaitForChild("BossHeist"))
 local HeistConfig = require(ReplicatedStorage:WaitForChild("HeistConfig"))
 local FxKit = require(ReplicatedStorage:WaitForChild("FxKit"))
 local UITheme = require(ReplicatedStorage:WaitForChild("UITheme"))
@@ -182,6 +183,11 @@ local robotParts: { RobotPart } = {}
 local pivots: { [string]: Vector3 } = {}
 local robotList: { BasePart } = {}
 local shown = { pos = nil :: Vector3?, yaw = 0, phase = 0, lift = 0, raise = 0, slamAt = 0, last = nil :: Vector3? }
+local bossModel: Model? = nil -- (its root arrives with the rest of the model when the player gets near: stepRobot picks it up)
+local bossRoot: BasePart? = nil -- 036 boss chaser (BossHeist): the boss model replaces the robot parts; the rig animates itself from the server's clip attributes
+local bossLift = 0
+local bossEntry: BossHeist.Boss? = nil
+local bossLens: Instance? = nil
 local lightAim: Vector3? = nil -- world point the searchlight looks at
 local siren1: BasePart? = nil
 
@@ -208,6 +214,15 @@ local function bindRobot(model: Instance)
 	end)
 	table.clear(robotParts)
 	table.clear(robotList)
+	bossRoot, bossEntry, bossLens, bossModel = nil, nil, nil, nil
+	local bossZone = model:GetAttribute("BossHeist")
+	if bossZone then
+		bossEntry = BossHeist.forZone(bossZone)
+		bossLift = model:GetAttribute("RootLift") or 0
+		bossModel = model :: Model
+		shown.pos = nil
+		return
+	end
 	for _, p in model:GetChildren() do
 		if p:IsA("BasePart") then
 			local group = p:GetAttribute("Group") or "Body"
@@ -248,11 +263,42 @@ local function bindVault(vault: Instance)
 	doorAngle, wheelAngle = 0, 0
 end
 
+local robotConns: { RBXScriptConnection } = {}
+
+local function dropRobot()
+	bossRoot, bossEntry, bossLens, bossModel = nil, nil, nil, nil
+	table.clear(robotParts)
+	table.clear(robotList)
+	siren1 = nil
+	shown.pos = nil
+end
+
+-- The robot / boss model streams in by distance (StreamingEnabled), usually long after this script bound the folder: bind it whenever it arrives, drop it when it leaves.
 local function bind(folder: Folder)
 	live = folder
-	local robot = folder:WaitForChild("Robot", 10)
+	for _, c in robotConns do
+		c:Disconnect()
+	end
+	table.clear(robotConns)
+	table.insert(
+		robotConns,
+		folder.ChildAdded:Connect(function(child)
+			if child.Name == "Robot" then
+				task.spawn(bindRobot, child)
+			end
+		end)
+	)
+	table.insert(
+		robotConns,
+		folder.ChildRemoved:Connect(function(child)
+			if child.Name == "Robot" then
+				dropRobot()
+			end
+		end)
+	)
+	local robot = folder:FindFirstChild("Robot")
 	if robot then
-		bindRobot(robot)
+		task.spawn(bindRobot, robot)
 	end
 	local vault = folder:WaitForChild("Vault", 10)
 	if vault then
@@ -262,6 +308,11 @@ end
 
 local function unbind()
 	live = nil
+	for _, c in robotConns do
+		c:Disconnect()
+	end
+	table.clear(robotConns)
+	bossRoot, bossEntry, bossLens, bossModel = nil, nil, nil, nil
 	table.clear(robotParts)
 	table.clear(robotList)
 	table.clear(swings)
@@ -430,6 +481,10 @@ local function stepWarnings(t: number)
 						lens = rp.part.Position
 					end
 				end
+				if bossRoot then -- the boss chaser: the beam starts at its head (BossHeist lens part)
+					local lensPart = bossLens
+					lens = if lensPart and lensPart:IsA("BasePart") then lensPart.Position else bossRoot.Position + Vector3.new(0, 4, 0)
+				end
 				if lens then
 					local len = (centre - lens).Magnitude
 					beam.Size = Vector3.new(if locked then 1.6 else 2.4, if locked then 1.6 else 2.4, len)
@@ -530,7 +585,21 @@ local cframes: { CFrame } = {}
 
 local function stepRobot(dt: number, t: number)
 	local folder = live
-	if not (folder and #robotParts > 0) then
+	if bossModel then -- pick up (or lose) the boss's root as the model streams in and out
+		if bossRoot and not bossRoot:IsDescendantOf(workspace) then
+			bossRoot, bossLens = nil, nil
+			shown.pos = nil
+		end
+		if not bossRoot then
+			local bossPart = bossModel:FindFirstChild("HumanoidRootPart")
+			if bossPart and bossPart:IsA("BasePart") then
+				bossRoot = bossPart
+				bossLens = if bossEntry then bossModel:FindFirstChild(bossEntry.lens, true) else nil
+				bossModel:SetAttribute("ClientBound", true) -- (local to this client: lets a Studio check see the chaser is bound)
+			end
+		end
+	end
+	if not (folder and (#robotParts > 0 or bossRoot)) then
 		return
 	end
 	local target = folder:GetAttribute("RobotPos")
@@ -546,6 +615,11 @@ local function stepRobot(dt: number, t: number)
 	pos = pos:Lerp(target, math.clamp(dt * 9, 0, 1))
 	local dyaw = (yaw - shown.yaw + math.pi) % (2 * math.pi) - math.pi
 	shown.yaw += dyaw * math.clamp(dt * 8, 0, 1)
+	if bossRoot then -- the boss: only its root is placed here (smoothed like the robot); every joint follows the root
+		shown.last, shown.pos = pos, pos
+		bossRoot.CFrame = CFrame.new(pos + Vector3.new(0, bossLift, 0)) * CFrame.Angles(0, shown.yaw, 0)
+		return
+	end
 	local moved = if shown.last then ((pos - shown.last) * Vector3.new(1, 0, 1)).Magnitude / math.max(dt, 1e-3) else 0
 	shown.last, shown.pos = pos, pos
 	local pace = math.clamp(moved / HeistConfig.ROBOT_SPEED, 0, 1)
@@ -741,7 +815,16 @@ event.OnClientEvent:Connect(function(kind: string, info: any)
 			laserUntil = info.hitAt + 0.5
 		end
 		if info.targetId == player.UserId then
-			say(if info.kind == "Stomp" then "SHIELD SLAM! JUMP!" elseif info.kind == "Laser" then "SWORD SWEEP! Step aside!" else "ARROWS! Get out of the circle!", RED, 1.4)
+			local own = if bossEntry then (bossEntry.attacks :: any)[info.kind] else nil
+			say(
+				if own and own.callout
+					then own.callout
+					elseif info.kind == "Stomp" then "SHIELD SLAM! JUMP!"
+					elseif info.kind == "Laser" then "SWORD SWEEP! Step aside!"
+					else "ARROWS! Get out of the circle!",
+				RED,
+				1.4
+			)
 		end
 	elseif kind == "Lock" then
 		local w = warnings[info.id]
