@@ -1,0 +1,17 @@
+PASS  joint / FX empties in the GLB: 40 (Vault 32, Malgrave 40)
+PASS  R15 joint hierarchy (15 joints, parents) matches the R15 spec []
+PASS  all 15 R15 body parts present and bound to the right Motor6D []
+PASS  accessories / trims: 14 extra parts (CapeLower, Greatsword, Greatsword_Neon, Head_Neon, LeftLowerArm_Neon, LeftUpperArm_Neon, LeftUpperLeg_Neon, LowerTorso_Neon, RightLowerArm_Neon, RightUpperArm_Neon, RightUpperLeg_Neon, TatteredCape, TatteredCape_Neon, UpperTorso_Neon)
+PASS  every mesh origin sits on its joint (max |C1.position| = 0.00000 stud)
+PASS  rest scale is 1 on every body / accessory node [] (FX nodes start hidden at scale 0.001 by design)
+PASS  non-identity rest rotations (deg): {} (hat tilt, coin-orbit plane; both baked into C0/C1)
+PASS  left/right symmetric shoulders and hips (error 0.00000)
+PASS  no animation track targets a node without a Motor6D []
+PASS  Idle                   3.00s  LOOP | first-vs-last pose 0.49 deg | enters from Idle 0.5 deg, returns to Idle 0.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.023 stud | HRP never animated
+PASS  Walk                   1.20s  LOOP | first-vs-last pose 0.49 deg | enters from Idle 28.6 deg, returns to Idle 28.6 deg (cross-fade 0.15 s covers it) | Root bob peak 0.172 stud | HRP never animated
+PASS  Basic_SwordSwing       1.30s  one-shot | first-vs-last pose 0.49 deg | enters from Idle 0.5 deg, returns to Idle 0.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.350 stud | HRP never animated
+PASS  Special_Riftcleave     2.60s  one-shot | first-vs-last pose 0.49 deg | enters from Idle 0.5 deg, returns to Idle 0.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.700 stud | HRP never animated
+PASS  Special_OathbreakerThrow 2.40s  one-shot | first-vs-last pose 0.35 deg | enters from Idle 0.5 deg, returns to Idle 0.3 deg (cross-fade 0.15 s covers it) | Root bob peak 0.279 stud | HRP never animated
+PASS  Special_Ironcall       3.00s  one-shot | first-vs-last pose 0.35 deg | enters from Idle 0.3 deg, returns to Idle 0.5 deg (cross-fade 0.15 s covers it) | Root bob peak 0.561 stud | HRP never animated
+
+RESULT: PASS (0 failed)

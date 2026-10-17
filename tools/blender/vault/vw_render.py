@@ -85,7 +85,7 @@ def shot(path, az, el=6, scale=4.0, target=(0, 0, 1.45), res=(480, 660)):
 
 
 # materials: palette image (nearest) and neon emission
-pal_img = bpy.data.images.load(os.path.join(C.EXPORT, "VaultPalette_Color.png"))
+pal_img = bpy.data.images.load(os.path.join(C.EXPORT, C.CFG["color_png"]))
 pal_img.colorspace_settings.name = "sRGB"
 m_pal = bpy.data.materials.new("pal")
 m_pal.use_nodes = True
@@ -93,15 +93,16 @@ nt = m_pal.node_tree
 bs = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
 tx = nt.nodes.new("ShaderNodeTexImage")
 tx.image = pal_img
-tx.interpolation = "Closest"
+tx.interpolation = "Closest" if C.CFG["texture"] == "palette" else "Linear"
 nt.links.new(tx.outputs["Color"], bs.inputs["Base Color"])
 bs.inputs["Roughness"].default_value = 0.5
 m_neon = bpy.data.materials.new("neon")
 m_neon.use_nodes = True
 bsn = next(n for n in m_neon.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-bsn.inputs["Base Color"].default_value = (0.37, 0.15, 1, 1)
-bsn.inputs["Emission Color"].default_value = (0.37, 0.15, 1, 1)
-bsn.inputs["Emission Strength"].default_value = 1.48
+NEONL = {"vault": (0.37, 0.15, 1, 1), "malgrave": (1, 0.024, 0.024, 1)}[C.CHAR]
+bsn.inputs["Base Color"].default_value = NEONL
+bsn.inputs["Emission Color"].default_value = NEONL
+bsn.inputs["Emission Strength"].default_value = 1.48 if C.CHAR == "vault" else 2.28
 
 
 def make_mesh_obj(name, v, f, uv, neon, W=None):

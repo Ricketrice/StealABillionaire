@@ -8,6 +8,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import vw_common as C
 G = C.Glb()
 tex = G.j["textures"]; mats = {m["name"]: m for m in G.j["materials"]}
+def s_(x): return 12.92 * x if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055
+if C.CFG["texture"] == "atlas":
+    # painted atlas (1024 px): colour as is, glTF metallicRoughness split into the two Roblox maps (roughness = G, metalness = B)
+    armor = next(m for n, m in mats.items() if n.endswith("_Armor"))["pbrMetallicRoughness"]
+    col = Image.open(io.BytesIO(G.image_bytes(tex[armor["baseColorTexture"]["index"]]["source"]))).convert("RGBA")
+    mr = np.array(Image.open(io.BytesIO(G.image_bytes(tex[armor["metallicRoughnessTexture"]["index"]]["source"]))).convert("RGBA"))
+    os.makedirs(C.EXPORT, exist_ok=True)
+    print("atlas", col.size, "alpha min", np.array(col)[..., 3].min())
+    col.convert("RGB").save(os.path.join(C.EXPORT, C.CFG["color_png"]))
+    Image.fromarray(mr[..., 1], "L").save(os.path.join(C.EXPORT, C.CFG["rough_png"])); Image.fromarray(mr[..., 2], "L").save(os.path.join(C.EXPORT, C.CFG["metal_png"]))
+    nc = mats["Neon"]["pbrMetallicRoughness"]["baseColorFactor"][:3]
+    json.dump(dict(neon_linear=nc, neon_srgb=[round(s_(x), 4) for x in nc], neon_emissive_strength=mats["Neon"]["extensions"]["KHR_materials_emissive_strength"]["emissiveStrength"]), open(os.path.join(C.EXPORT, "palette.json"), "w"), indent=1)
+    print("neon sRGB", [round(s_(x), 3) for x in nc]); sys.exit(0)
 pm = mats["Vaultbane_Palette"]["pbrMetallicRoughness"]
 img_color = Image.open(io.BytesIO(G.image_bytes(tex[pm["baseColorTexture"]["index"]]["source"]))).convert("RGBA")
 img_mr = Image.open(io.BytesIO(G.image_bytes(tex[pm["metallicRoughnessTexture"]["index"]]["source"]))).convert("RGBA")
@@ -26,10 +39,10 @@ def build(vals):
     for k, v in enumerate(vals): out[:, k * B:(k + 1) * B] = v
     return Image.fromarray(out, "RGBA")
 os.makedirs(C.EXPORT, exist_ok=True)
-build([tuple(c[:3]) + (255,) for c in cols]).convert("RGB").save(os.path.join(C.EXPORT, "VaultPalette_Color.png"))
+build([tuple(c[:3]) + (255,) for c in cols]).convert("RGB").save(os.path.join(C.EXPORT, C.CFG["color_png"]))
 # glTF: roughness = G, metalness = B (x factors; both factors are 1 here)
 rough = [(int(m[1]),) * 3 + (255,) for m in mrs]; metal = [(int(m[2]),) * 3 + (255,) for m in mrs]
-build(rough).convert("L").save(os.path.join(C.EXPORT, "VaultPalette_Roughness.png")); build(metal).convert("L").save(os.path.join(C.EXPORT, "VaultPalette_Metalness.png"))
+build(rough).convert("L").save(os.path.join(C.EXPORT, C.CFG["rough_png"])); build(metal).convert("L").save(os.path.join(C.EXPORT, C.CFG["metal_png"]))
 neon = mats["Neon"]; nc = neon["pbrMetallicRoughness"]["baseColorFactor"][:3]
 def s(x): return 12.92 * x if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055
 json.dump(dict(swatch_srgb=[c[:3].tolist() for c in cols], roughness=[m[1] / 255 for m in mrs], metalness=[m[2] / 255 for m in mrs], neon_linear=nc, neon_srgb=[round(s(x), 4) for x in nc],

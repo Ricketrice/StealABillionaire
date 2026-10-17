@@ -15,9 +15,9 @@ import vw_common as C  # noqa: E402
 import vw_convert_lib as L  # noqa: E402
 
 argv = sys.argv[1:]
-S = float(argv[argv.index("--scale") + 1]) if "--scale" in argv else 2.5
+S = float(argv[argv.index("--scale") + 1]) if "--scale" in argv else C.CFG["S"]
 ANIM = argv[argv.index("--anim") + 1] if "--anim" in argv else None
-LOOPS = {"Idle", "Walk"}
+LOOPS = set(C.CFG["loops"])
 TOL_ROT_DEG, TOL_POS = 0.2, 0.004
 G = C.Glb()
 z = np.load(os.path.join(C.WORK, "vault_meshes.npz"))
@@ -35,12 +35,28 @@ if ANIM:
 
 def tracks_for(clip):
     tr = G.tracks(clip)
+    orig = G.tracks(clip)
+    dur = G.duration(clip)
+    loop = clip in LOOPS
     for nm, d in over.get(clip, {}).items():
         i = G.byname[nm]
         tr.setdefault(i, {})
-        tr[i]["rotation"] = (np.array(d["t"]), np.array(d["q"]))
-        if d.get("p") is not None:
-            tr[i]["translation"] = (np.array(d["t"]), np.array(d["p"]))
+        T = np.array(d["t"])
+        Q = np.array(d["q"])
+        P = np.array(d["p"]) if d.get("p") is not None else None
+        if not loop:
+            # one-shot: ease every repaired joint back to the authored pose over the first / last 0.25 s so entering and leaving the clip never pops
+            for k, t in enumerate(T):
+                w = min(1.0, t / 0.25, (dur - t) / 0.25)
+                w = max(0.0, w)
+                w = w * w * (3 - 2 * w)
+                trn, qo, _ = C.sample_node(G, orig, i, t)
+                Q[k] = C.slerp(qo, Q[k], w)
+                if P is not None:
+                    P[k] = trn + (P[k] - trn) * w
+        tr[i]["rotation"] = (T, Q)
+        if P is not None:
+            tr[i]["translation"] = (T, P)
     return tr
 
 
@@ -160,7 +176,7 @@ print("VERIFY Motor6D chain vs glTF FK (all 8 clips, every 1/24 s, after key red
 print("keys: %d raw -> %d after reduction (tolerance %.2f deg / %.3f stud)" % (nkeys_raw, nkeys, TOL_ROT_DEG, TOL_POS))
 
 # ---- FX nodes (timing + placement for the Roblox-native effects)
-FX = [n for n in G.byname if n and n.startswith("FX_")]
+FX = [n for n in G.byname if n and n.startswith(("FX_", "Attach_"))]
 cache = {}
 Whrp = L.to_roblox(G.rest_world(G.byname["HumanoidRootPart"], cache), S)
 group_nodes = rig["base_of"]
@@ -186,17 +202,37 @@ for nm in FX:
                 d["pos"] = [[round(float(t), 4)] + [round(float(x), 4) for x in (S * np.array([-v[0], v[1], -v[2]]))] for t, v in zip(T, V)]
             else:
                 d["rot"] = [[round(float(t), 4), round(2 * math.degrees(math.acos(min(1.0, abs(float(v[3]))))), 2)] for t, v in zip(T, V)]
+        if nm in C.CFG["fx_full"] and tr:
+            # full TRS keys (Roblox space, studs, relative to the parent node's rest): [t, px,py,pz, qx,qy,qz,qw, scale] on the union of key times
+            ts_ = sorted({round(float(t), 4) for path_, (T_, V_) in tr.items() for t in T_})
+            rows = []
+            for t in ts_:
+                trn, qn, sn = C.sample_node(G, G.tracks(clip), i, t)
+                M_ = L.to_roblox(C.trs(trn, qn, (1, 1, 1)), S)
+                q_ = C.m2q(M_[:3, :3])
+                rows.append([t] + [round(float(x), 4) for x in M_[:3, 3]] + [round(float(x), 5) for x in q_] + [round(float(np.mean(sn)), 4)])
+            d["trs"] = rows
         ent["clips"][clip] = d
+    if nm in C.CFG["fx_full"]:
+        kid = next((c for c in G.N[i].get("children", []) if G.name(c).startswith("FX_")), None)
+        if kid is not None:
+            t_ = np.array(G.rest(kid)[0])
+            ent["child"] = [round(float(x), 4) for x in (S * np.array([-t_[0], t_[1], -t_[2]]))]
     out["fx"][nm] = ent
 # bounding boxes of the dropped effect meshes (Roblox axes, studs) for sizing the native effects
 fxm = {}
-for nm in ["CoinRainMarks_Neon", "GroundSigil_Neon", "NovaRing_Neon", "Shockwave_Neon", "TakeoverBeam_Neon", "CoinOrbit", "CoinRain", "AuraFlames_A_Neon"]:
+for nm in C.CFG["fx_bbox"]:
     lo, hi = L.mesh_bbox(G, nm)
     a, b = S * np.array([-hi[0], lo[1], -hi[2]]), S * np.array([-lo[0], hi[1], -lo[2]])
     fxm[nm] = dict(min=[round(float(x), 3) for x in a], max=[round(float(x), 3) for x in b])
 out["fx_mesh_bbox"] = fxm
 out["hrp_height"] = round(float(Whrp[1, 3]), 4)
 
+# owner / kid-safe names in everything that is written out
+_rc, _rf = C.CFG["clip_rename"], C.CFG["fx_rename"]
+out["clips"] = {_rc.get(k, k): v for k, v in out["clips"].items()}
+out["fx"] = {_rf.get(k, k): dict(v, clips={_rc.get(c, c): t for c, t in v["clips"].items()}) for k, v in out["fx"].items()}
+out["fx_mesh_bbox"] = {_rf.get(k, k): v for k, v in out["fx_mesh_bbox"].items()}
 tag = argv[argv.index("--tag") + 1] if "--tag" in argv else "vault_roblox"
 jp = os.path.join(C.EXPORT, tag + ".json")
 json.dump(out, open(jp, "w"), separators=(",", ":"))
@@ -206,7 +242,7 @@ print("rest: HRP height %.3f studs; C1 translation magnitudes (should be ~0):" %
 
 
 # ================================================================ Luau modules + expected values for the in-engine tests
-NEON_COLOR = [0.70, 0.58, 1.0]          # sRGB; the authored emissive is (0.643, 0.42, 1.0) x1.48, which reads as pale lavender after tone mapping: lifted a little for Roblox Neon
+NEON_COLOR = C.CFG["neon_srgb"] or json.load(open(os.path.join(C.EXPORT, "palette.json")))["neon_srgb"]   # sRGB; Vault: authored (0.643, 0.42, 1.0) x1.48 reads pale after tone mapping, lifted a little
 LUA_KW = {"end", "and", "or", "not", "nil", "true", "false", "if", "then", "else", "do", "for", "in", "local", "function", "return", "while", "repeat", "until", "break", "elseif"}
 
 
@@ -234,14 +270,18 @@ def lv(v, ind=0):
     return '"%s"' % str(v).replace('"', '\\"')
 
 
-SRC = os.path.join(C.REPO, "src", "ServerStorage", "VaultWizardTest", "RuntimeSrc")
-HDR = "-- Studio location: ServerStorage.VaultWizardTest.RuntimeSrc.%s (ModuleScript)\n-- GENERATED by tools/blender/vault/vw_convert.py from Vault.glb + the corrected clips. Do not edit by hand.\n"
+SRC = os.path.join(C.REPO, "src", "ServerStorage", *C.CFG["lua"].split("/"))
+LOC = "ServerStorage." + C.CFG["lua"].replace("/", ".")
+HDR = "-- Studio location: " + LOC + ".%s (ModuleScript)\n-- GENERATED by tools/blender/vault/vw_convert.py from Vault.glb + the corrected clips. Do not edit by hand.\n"
 
 
 def cf12(M):
     return L.cf_list(M)
 
 
+RC, RF = C.CFG["clip_rename"], C.CFG["fx_rename"]
+def rc(n): return RC.get(n, n)
+def rf(n): return RF.get(n, n)
 if "--no-lua" not in argv:
     os.makedirs(os.path.join(SRC, "Clips"), exist_ok=True)
     hrp = rig["frameP"]["HumanoidRootPart"]
@@ -254,15 +294,19 @@ if "--no-lua" not in argv:
                 t["scale"] = tr["scale"]
             if "pos" in tr:
                 t["pos"] = tr["pos"]
+            if "trs" in tr:
+                t["trs"] = tr["trs"]
             if t:
-                d[clip] = t
-        fxl[nm] = dict(parent=e["parent"], localFrame=e["local"], inHrp=e["in_hrp"], clips=d)
-    vd = dict(studs=S, hrpHeight=out["hrp_height"], hrpFrame=cf12(hrp), order=out["order"], neonColor=NEON_COLOR,
+                d[rc(clip)] = t
+        fxl[rf(nm)] = dict(parent=e["parent"], localFrame=e["local"], inHrp=e["in_hrp"], clips=d)
+        if "child" in e:
+            fxl[rf(nm)]["child"] = e["child"]
+    vd = dict(name=C.CFG["name"], prefix=C.CFG["prefix"], studs=S, hrpHeight=out["hrp_height"], hrpFrame=cf12(hrp), order=out["order"], neonColor=NEON_COLOR,
               joints={k: dict(p0=v["part0"], p1=v["part1"], c0=v["C0"], c1=v["C1"]) for k, v in out["joints"].items()},
               welds=[dict(p0=w["part0"], p1=w["part1"], c0=w["C0"], c1=w["C1"]) for w in out["welds"]],
               parts={k: dict(neon=v["neon"], tris=v["tris"]) for k, v in out["parts"].items()},
-              fx=fxl, spin=[jn for jn in out["order"] if jn.startswith("FX_")], meshBox=out["fx_mesh_bbox"], clips=C.CLIP_ORDER, loops={c: True for c in sorted(LOOPS)})
-    open(os.path.join(SRC, "VaultData.lua"), "w").write(HDR % "VaultData" + "return " + lv(vd) + "\n")
+              restRot={n: [round(float(x), 6) for x in rig["rest_rot"][n].reshape(-1)] for n in C.CFG["rest_rot_parts"]}, fx=fxl, spin=[jn for jn in out["order"] if jn.startswith("FX_")], meshBox={rf(k): v for k, v in out["fx_mesh_bbox"].items()}, clips=[rc(c) for c in C.CLIP_ORDER], loops={c: True for c in sorted(LOOPS)})
+    open(os.path.join(SRC, "Data.lua"), "w").write(HDR % "Data" + "return " + lv(vd) + "\n")
     for clip, cl in out["clips"].items():
         joints = {}
         for jn, tr in cl["joints"].items():
@@ -278,9 +322,9 @@ if "--no-lua" not in argv:
                 if w["part0"] == part:
                     pass
         c = dict(length=cl["length"], loop=cl["loop"], joints=joints, scales=scales)
-        open(os.path.join(SRC, "Clips", clip + ".lua"), "w").write(HDR % ("Clips." + clip) + "return " + lv(c) + "\n")
+        open(os.path.join(SRC, "Clips", rc(clip) + ".lua"), "w").write(HDR % ("Clips." + rc(clip)) + "return " + lv(c) + "\n")
     sizes = {f: os.path.getsize(os.path.join(SRC, "Clips", f)) for f in os.listdir(os.path.join(SRC, "Clips"))}
-    print("Lua modules written: VaultData %d bytes, clips %s" % (os.path.getsize(os.path.join(SRC, "VaultData.lua")), sizes))
+    print("Lua modules written: Data %d bytes, clips %s" % (os.path.getsize(os.path.join(SRC, "Data.lua")), sizes))
 
     # expected values for the in-engine tests (glTF forward kinematics = independent of the Motor6D chain): part frame origins relative to the root, at 6 times per clip
     exp = dict(studs=S, hrp=[float(x) for x in hrp[:3, 3]], samples={}, rest_extents=None)
@@ -310,7 +354,7 @@ if "--no-lua" not in argv:
     hi = np.full(3, -1e9)
     cache = {}
     for nm in mesh_names:
-        if nm in ("VaultHalo", "VaultHalo_Neon"):
+        if nm in C.CFG["extents_skip"]:
             continue
         W = L.to_roblox(G.rest_world(G.byname[nm], cache), S)
         v = z[nm + "__v"]
@@ -319,8 +363,6 @@ if "--no-lua" not in argv:
         lo, hi = np.minimum(lo, wv.min(0)), np.maximum(hi, wv.max(0))
     exp["rest_extents"] = dict(min=[round(float(x), 3) for x in lo], max=[round(float(x), 3) for x in hi])
     json.dump(exp, open(os.path.join(C.EXPORT, "vault_expected.json"), "w"), indent=1)
-    os.makedirs(os.path.join(C.REPO, "src", "ServerStorage", "VaultWizardTest", "Tests"), exist_ok=True)
-    ex_lua = dict(rest=exp["rest"], restExtents=exp["rest_extents"], samples={c: [dict(t=r["t"], pos=r["pos"]) for r in rows] for c, rows in exp["samples"].items()})
-    open(os.path.join(C.REPO, "src", "ServerStorage", "VaultWizardTest", "Tests", "Expected.lua"), "w").write(
-        "-- Studio location: ServerStorage.VaultWizardTest.Tests.Expected (ModuleScript)\n-- GENERATED by tools/blender/vault/vw_convert.py: glTF forward-kinematics positions (studs, relative to the root) used as the independent truth in the Studio tests.\nreturn " + lv(ex_lua) + "\n")
+    ex_lua = dict(rest=exp["rest"], restExtents=exp["rest_extents"], skipExtents={n: True for n in C.CFG["extents_skip"]}, samples={rc(c): [dict(t=r["t"], pos=r["pos"]) for r in rows] for c, rows in exp["samples"].items()})
+    open(os.path.join(SRC, "Expected.lua"), "w").write("-- Studio location: " + LOC + ".Expected (ModuleScript)\n-- GENERATED by tools/blender/vault/vw_convert.py: glTF forward-kinematics positions (studs, relative to the root) used as the independent truth in the Studio tests.\nreturn " + lv(ex_lua) + "\n")
     print("rest extents relative to the root (studs, halo excluded):", exp["rest_extents"])

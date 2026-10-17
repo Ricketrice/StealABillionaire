@@ -28,9 +28,8 @@ z = np.load(os.path.join(C.WORK, "vault_meshes.npz"))
 V = {str(n): z[str(n) + "__v"] for n in z["names"]}
 F = {str(n): z[str(n) + "__f"] for n in z["names"]}
 NODE = {n: G.byname[n] for n in V}
-OBST = ["UpperTorso", "UpperTorso_Neon", "LowerTorso", "LowerTorso_Neon", "Head", "Head_Neon", "WizardTopHat", "WizardTopHat_Neon",
-        "LeftUpperLeg", "RightUpperLeg", "LeftLowerLeg", "LeftLowerLeg_Neon", "RightLowerLeg", "RightLowerLeg_Neon"]
-ARM = {"Left": ["LeftUpperArm", "LeftLowerArm", "LeftHand"], "Right": ["RightUpperArm", "RightLowerArm", "RightHand", "LedgerScepter"]}
+OBST = [p for p in C.CFG["obstacles"] if p in V]
+ARM = {"Left": ["LeftUpperArm", "LeftLowerArm", "LeftHand"], "Right": ["RightUpperArm", "RightLowerArm", "RightHand"] + list(C.CFG["right_extra"])}
 ARM = {k: [p for p in v if p in V] for k, v in ARM.items()}
 
 
@@ -43,10 +42,10 @@ def samples(part):
 
 SAMP = {p: samples(p) for s_ in ARM.values() for p in s_ if not p.endswith("_Neon")}
 FEET = ["LeftFoot", "RightFoot"]
-SCEPTER = ["LedgerScepter", "LedgerScepter_Neon"]
+SCEPTER = [p for p in C.CFG["weapon"] if p in V]
 SHOULDER = {"Left": "LeftShoulder", "Right": "RightShoulder"}
 WAIST_PARENT = "Waist"
-LOOPS = {"Idle", "Walk"}
+LOOPS = set(C.CFG["loops"])
 
 
 class Pose:
@@ -160,7 +159,7 @@ def smooth(th, loop, dil=2, sigma=1.3):
 
 ELBOW = {"Left": "LeftElbow", "Right": "RightElbow"}
 WRIST = {"Left": "LeftWrist", "Right": "RightWrist"}
-TOLP = {"UpperArm": 0.02, "LowerArm": 0.012, "Hand": 0.012, "LedgerScepter": 0.02}
+TOLP = {"UpperArm": 0.02, "LowerArm": 0.012, "Hand": 0.012, **{w: 0.02 for w in C.CFG["right_extra"]}}
 DOFW = np.array([1.0, 1.5, 1.2, 1.0])      # deviation cost per degree: abduction, flexion, elbow, wrist
 STEPS = (6.0, 3.0, 1.5)
 LIM = np.array([MAXDEG, MAXDEG, 45.0, 45.0])

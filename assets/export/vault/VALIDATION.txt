@@ -1,4 +1,4 @@
-PASS  32 joint/FX empties in the GLB (found 32)
+PASS  joint / FX empties in the GLB: 32 (Vault 32, Malgrave 40)
 PASS  R15 joint hierarchy (15 joints, parents) matches the R15 spec []
 PASS  all 15 R15 body parts present and bound to the right Motor6D []
 PASS  accessories / trims: 15 extra parts (Head_Neon, LedgerScepter, LedgerScepter_Neon, LeftHand_Neon, LeftLowerArm_Neon, LeftLowerLeg_Neon, LowerTorso_Neon, RightLowerArm_Neon, RightLowerLeg_Neon, ScepterGem_Neon, UpperTorso_Neon, VaultHalo, VaultHalo_Neon, WizardTopHat, WizardTopHat_Neon)

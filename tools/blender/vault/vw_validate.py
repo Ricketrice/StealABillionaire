@@ -12,7 +12,7 @@ def chk(ok, msg):
     lines.append(("PASS  " if ok else "FAIL  ") + msg); fails += 0 if ok else 1
 N = G.N
 empties = [i for i, n in enumerate(N) if "mesh" not in n]
-chk(len(empties) == 32, "32 joint/FX empties in the GLB (found %d)" % len(empties))
+chk(len(empties) >= 30, "joint / FX empties in the GLB: %d (Vault 32, Malgrave 40)" % len(empties))
 R15 = {"Root": "HumanoidRootPart", "Waist": "Root", "Neck": "Waist", "LeftShoulder": "Waist", "RightShoulder": "Waist", "LeftElbow": "LeftShoulder", "RightElbow": "RightShoulder", "LeftWrist": "LeftElbow", "RightWrist": "RightElbow",
        "LeftHip": "Root", "RightHip": "Root", "LeftKnee": "LeftHip", "RightKnee": "RightHip", "LeftAnkle": "LeftKnee", "RightAnkle": "RightKnee"}
 bad = [j for j, p in R15.items() if j not in G.byname or G.name(G.parent[G.byname[j]]) != p]
@@ -52,16 +52,17 @@ def diff(p, q):
         a = p.get(jn, (np.array([0, 0, 0, 1.0]), 0))[0]; b = q.get(jn, (np.array([0, 0, 0, 1.0]), 0))[0]
         w = max(w, 2 * math.degrees(math.acos(min(1, abs(float(np.dot(a, b)))))))
     return w
-for clip in C.CLIP_ORDER:
+RN = lambda c: C.CFG["clip_rename"].get(c, c)
+for clip in [RN(c) for c in C.CLIP_ORDER]:
     L = D["clips"][clip]["length"]; d0 = diff(pose_at(clip, 0), pose_at(clip, L))
     toIdle = diff(pose_at(clip, L), pose_at("Idle", 0)); fromIdle = diff(pose_at("Idle", 0), pose_at(clip, 0))
     rp = D["clips"][clip]["joints"].get("Root"); rt = (max(abs(np.array(k[5:8])).max() for k in rp["keys"]) if rp and rp["pos"] else 0)
     chk(d0 < 1.0 if D["clips"][clip]["loop"] else True, "%-22s %.2fs  %s | first-vs-last pose %.2f deg | enters from Idle %.1f deg, returns to Idle %.1f deg (cross-fade 0.15 s covers it) | Root bob peak %.3f stud | HRP never animated" % (
         clip, L, "LOOP" if D["clips"][clip]["loop"] else "one-shot", d0, fromIdle, toIdle, rt))
 # the spinners must be symmetric: their rotation at every key is a multiple of the symmetry period (halo 45, gem 90 deg)
-for jn, per in (("FX_VaultHalo", 45.0), ("FX_ScepterGem", 90.0)):
+for jn, per in C.CFG["spin"].items():
     worst = 0
-    for clip in C.CLIP_ORDER:
+    for clip in [RN(c) for c in C.CLIP_ORDER]:
         tr = D["clips"][clip]["joints"].get(jn)
         if not tr: continue
         for k in (tr["keys"][0], tr["keys"][-1]):

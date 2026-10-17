@@ -1,7 +1,7 @@
 # Probe: per-mesh stats after weld, UV swatch layout, palette image content. Read-only (imports the GLB into an empty scene).
 import bpy, bmesh, os, numpy as np
 bpy.ops.wm.read_factory_settings(use_empty=True)
-bpy.ops.import_scene.gltf(filepath=os.path.expanduser("~/Pictures/035_preview/concept/Vault.glb"))
+import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import vw_common as C; bpy.ops.import_scene.gltf(filepath=C.GLB)
 def isfx(o):
     while o:
         if o.name.startswith("FX_"): return True
@@ -20,7 +20,7 @@ for o in bpy.data.objects:
 print("name tris verts->welded nonmanifold-edges parent fx mats")
 for r in sorted(rows, key=lambda r: -r[1]):
     print("%-22s %5d %6d->%5d nm=%4d %-22s fx=%s %s" % (r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[8]))
-pal = [r for r in rows if "Vaultbane_Palette" in r[8]]
+pal = [r for r in rows if r[8] and "Neon" not in r[8] and not r[6]]
 allu = np.concatenate([r[7] for r in pal])
 print("palette meshes", len(pal), "uv u range", allu[:, 0].min(), allu[:, 0].max(), "v range", allu[:, 1].min(), allu[:, 1].max())
 u = np.unique(np.round(allu, 5), axis=0); print("unique palette uvs", len(u)); print(u[:40].tolist())

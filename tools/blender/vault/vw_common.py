@@ -4,15 +4,19 @@ import json
 import math
 import os
 import struct
+import sys
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from chars import CFG, CHAR  # noqa: E402  (per-character configuration, env VW_CHAR)
+
 HOME = os.path.expanduser("~")
-GLB = os.environ.get("VAULT_GLB", os.path.join(HOME, "Pictures/035_preview/concept/Vault.glb"))
-WORK = os.environ.get("VAULT_WORK", os.path.join(HOME, "Pictures/035_preview/vault2"))
+GLB = os.environ.get("VAULT_GLB", CFG["glb"])
+WORK = os.environ.get("VAULT_WORK", CFG["work"])
 REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
-EXPORT = os.path.join(REPO, "assets", "export", "vault")
-CLIP_ORDER = ["Idle", "Walk", "Steal_Grab", "Normal_Repossess", "Event_MarketCrash", "Event_VaultLock", "Event_HostileTakeover", "Event_BankruptNova"]
+EXPORT = os.path.join(REPO, "assets", "export", CFG["export"])
+CLIP_ORDER = list(CFG["clips"])
 FPS = 24.0
 JOINTS = ["Root", "Waist", "Neck", "LeftShoulder", "LeftElbow", "LeftWrist", "RightShoulder", "RightElbow", "RightWrist", "LeftHip", "LeftKnee", "LeftAnkle", "RightHip", "RightKnee", "RightAnkle"]
 

@@ -1,0 +1,345 @@
+{
+ "tol": 0.012,
+ "foot_tol": 0.01,
+ "max_deg": 40.0,
+ "ground": -0.002799989819526727,
+ "rest_depth_cm": {
+  "Left": {
+   "LeftUpperArm": 4.74,
+   "LeftLowerArm": 0.79,
+   "LeftHand": 0.0
+  },
+  "Right": {
+   "RightUpperArm": 2.82,
+   "RightLowerArm": 1.68,
+   "RightHand": 0.0,
+   "Greatsword": 0.0
+  }
+ },
+ "clips": {
+  "Idle": {
+   "before": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 0.64,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 0.45,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.0,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -1.9,
+    "scepter_cm": -78.96,
+    "frames_over_tol": 0
+   },
+   "after": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 0.64,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 0.45,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.0,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -1.01,
+    "scepter_cm": -78.46,
+    "frames_over_tol": 0
+   },
+   "max_offsets_deg": {
+    "Left": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "Right": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "max_lift_cm": 0.89,
+   "frames": 73
+  },
+  "Walk": {
+   "before": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 0.43,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 0.85,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.0,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -6.15,
+    "scepter_cm": -87.79,
+    "frames_over_tol": 0
+   },
+   "after": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 0.43,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 0.85,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.0,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -1.05,
+    "scepter_cm": -83.86,
+    "frames_over_tol": 0
+   },
+   "max_offsets_deg": {
+    "Left": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "Right": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "max_lift_cm": 5.09,
+   "frames": 30
+  },
+  "Basic_SwordSwing": {
+   "before": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 4.68,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 9.17,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.0,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -16.26,
+    "scepter_cm": -78.08,
+    "frames_over_tol": 25
+   },
+   "after": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 3.61,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 6.27,
+      "RightLowerArm": 0.57,
+      "RightHand": 0.0,
+      "Greatsword": 1.79
+     }
+    },
+    "foot_cm": -1.09,
+    "scepter_cm": -81.76,
+    "frames_over_tol": 17
+   },
+   "max_offsets_deg": {
+    "Left": [
+     0.0,
+     26.0,
+     0.0,
+     0.0
+    ],
+    "Right": [
+     27.0,
+     40.0,
+     0.0,
+     0.0
+    ]
+   },
+   "max_lift_cm": 15.26,
+   "frames": 33
+  },
+  "Special_Riftcleave": {
+   "before": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 2.02,
+      "LeftLowerArm": 3.72,
+      "LeftHand": 2.06
+     },
+     "Right": {
+      "RightUpperArm": 4.46,
+      "RightLowerArm": 1.85,
+      "RightHand": 3.12,
+      "Greatsword": 3.86
+     }
+    },
+    "foot_cm": -6.58,
+    "scepter_cm": -83.18,
+    "frames_over_tol": 79
+   },
+   "after": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 1.96,
+      "LeftLowerArm": 1.2,
+      "LeftHand": 1.08
+     },
+     "Right": {
+      "RightUpperArm": 2.99,
+      "RightLowerArm": 1.02,
+      "RightHand": 1.16,
+      "Greatsword": 0.01
+     }
+    },
+    "foot_cm": -1.09,
+    "scepter_cm": -85.75,
+    "frames_over_tol": 4
+   },
+   "max_offsets_deg": {
+    "Left": [
+     12.3,
+     6.0,
+     0.0,
+     0.0
+    ],
+    "Right": [
+     13.5,
+     39.1,
+     0.0,
+     0.0
+    ]
+   },
+   "max_lift_cm": 5.57,
+   "frames": 64
+  },
+  "Special_SwordThrow": {
+   "before": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 5.35,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 12.72,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.0,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -12.86,
+    "scepter_cm": -78.08,
+    "frames_over_tol": 50
+   },
+   "after": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 3.31,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 8.62,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.0,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -1.04,
+    "scepter_cm": -77.71,
+    "frames_over_tol": 60
+   },
+   "max_offsets_deg": {
+    "Left": [
+     0.0,
+     40.0,
+     0.0,
+     0.0
+    ],
+    "Right": [
+     39.0,
+     37.1,
+     0.0,
+     0.0
+    ]
+   },
+   "max_lift_cm": 11.85,
+   "frames": 59
+  },
+  "Special_Gravecall": {
+   "before": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 6.86,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 4.29,
+      "RightLowerArm": 0.0,
+      "RightHand": 0.68,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -26.46,
+    "scepter_cm": -174.9,
+    "frames_over_tol": 124
+   },
+   "after": {
+    "arm": {
+     "Left": {
+      "LeftUpperArm": 4.28,
+      "LeftLowerArm": 0.0,
+      "LeftHand": 0.0
+     },
+     "Right": {
+      "RightUpperArm": 2.84,
+      "RightLowerArm": 0.18,
+      "RightHand": 0.94,
+      "Greatsword": 0.0
+     }
+    },
+    "foot_cm": -1.57,
+    "scepter_cm": -162.93,
+    "frames_over_tol": 58
+   },
+   "max_offsets_deg": {
+    "Left": [
+     39.1,
+     22.6,
+     0.0,
+     0.0
+    ],
+    "Right": [
+     14.7,
+     38.0,
+     0.0,
+     0.0
+    ]
+   },
+   "max_lift_cm": 25.4,
+   "frames": 73
+  }
+ }
+}
