@@ -39,6 +39,10 @@ local StudioTestService = game:GetService("StudioTestService")
 local okArgs, args = pcall(function()
 	return StudioTestService:GetTestArgs()
 end)
+local playArg = game:GetService("ServerStorage"):GetAttribute("StudioPlayTest") -- in-editor Play Solo (ONE process): for a machine too low on memory for a test session
+if type(playArg) == "string" and playArg ~= "" then
+	okArgs, args = true, playArg
+end
 local mode = if okArgs and args == "base033:solo" then "solo" elseif okArgs and args == "base033:duo" then "duo" elseif okArgs and args == "base033:save" then "save" else nil
 if not mode then
 	return
@@ -60,6 +64,10 @@ end
 local function finish(state: string)
 	local summary = ("%s mode=%s passed=%d failed=%d (simulated checks=%d)"):format(state, mode, passed, failed, simulated)
 	print("@@T033|SUMMARY " .. summary)
+	if type(playArg) == "string" and playArg ~= "" then
+		game:GetService("ServerStorage"):SetAttribute("StudioPlayTestResult", summary .. "\n" .. table.concat(lines, "\n"))
+		return
+	end
 	StudioTestService:EndTest(summary .. "\n" .. table.concat(lines, "\n"))
 end
 local function expect(name: string, condition: any, detail: any?, sim: boolean?)
