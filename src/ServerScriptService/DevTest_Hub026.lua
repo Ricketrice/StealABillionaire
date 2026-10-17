@@ -226,7 +226,21 @@ scenario("flags off", function()
 	expect("shops refuse", HubShops.buy(A, "skin:Neon") == false and HubShops.use(A, "skin:Neon") == false)
 	HubQuests.progress(A, "steal", 1)
 	expect("quests refuse", HubQuests.claim(A, "steal3") == false)
-	expect("no hub data is created in the save", next(hubOf(A)) == nil and next(hubOf(B)) == nil, HttpService:JSONEncode(hubOf(A)))
+	-- (036: later systems - rewards, ranks, base levels - write their own hub fields; this checks 026's own fields only)
+	local function hub026Fields(p: Player): { string }
+		local found = {}
+		for _, key in { "tutorial", "quests", "owned", "skin", "trail", "decor", "upgrades" } do
+			if hubOf(p)[key] ~= nil then
+				table.insert(found, key)
+			end
+		end
+		return found
+	end
+	expect(
+		"no hub data of 026 (tutorial, quests, shop, upgrades) is created in the save",
+		#hub026Fields(A) == 0 and #hub026Fields(B) == 0,
+		table.concat(hub026Fields(A), ",") .. " | " .. HttpService:JSONEncode(hubOf(A))
+	)
 	expect("scoreboard untouched", scoreText():find("coming soon") ~= nil, scoreText())
 	expect("no lot decor, no trail colour", workspace.World.BillionaireCity:FindFirstChild("LotDecor") == nil and A:GetAttribute("BatTrail") == nil)
 	expect("the client shows nothing", probe(A).open == nil and probe(A).speaker == nil)
@@ -289,7 +303,9 @@ end)
 scenario("quests", function()
 	local quests = HubQuests.today(A)
 	expect("three quests for today", quests ~= nil and #quests.ids == 3 and quests.day == HubQuests.day(), quests and #quests.ids)
-	expect("the PvP quest is not offered while PvP is off", table.find(quests.ids, "defend1") == nil)
+	local PvPBase = mod("PvPBase")
+	local pvpOn = PvPBase.stealing() and PvPBase.combat()
+	expect("the PvP quest is offered only while PvP stealing + bats are on", pvpOn or table.find(quests.ids, "defend1") == nil, pvpOn)
 	quests.ids, quests.progress, quests.claimed = { "steal3", "earn5k", "arena1" }, {}, {} -- a known set for the checks below
 	local cash = CashService.get(A)
 	HubQuests.progress(A, "steal", 1)
