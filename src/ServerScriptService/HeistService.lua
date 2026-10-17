@@ -158,6 +158,10 @@ local function lowestVisibleY(model: Model): number
 	return low
 end
 
+-- The chaser is a big boss: BOSS_SCALE x the collectible's size (the Secret collectible itself stays at normal creature size). Attribute BossScale tells the rig's client driver
+-- and effects (BossRigs.Shared.Driver / FxKit) to scale clip translations and effects with the model. Presentation only: ranges, radii and hits stay in HeistConfig.
+local BOSS_SCALE = 2.5
+
 local function installBoss(folder: Folder)
 	bossEntry, bossModel, bossBase, bossLastMode = nil, nil, "", "Dock"
 	local zone = if RunService:IsStudio() and ServerStorage:GetAttribute(BossHeist.STUDIO_ATTRIBUTE)
@@ -173,8 +177,11 @@ local function installBoss(folder: Folder)
 		local char = ServerStorage:FindFirstChild("BossRigs") and ServerStorage.BossRigs:FindFirstChild(entry.rig)
 		local template = char and char:FindFirstChild("Template")
 		if template and template:IsA("Model") and template.PrimaryPart then
-			model = template:Clone()
-			lift = (require((model :: Model).Runtime.Data :: ModuleScript) :: any).hrpHeight
+			local rig = template:Clone()
+			rig:SetAttribute("BossScale", BOSS_SCALE)
+			rig:ScaleTo(BOSS_SCALE)
+			lift = (require(rig.Runtime.Data :: ModuleScript) :: any).hrpHeight * BOSS_SCALE
+			model = rig
 		end
 	else -- the creature's own model (Aquaris): no Humanoid or scripts, the root stays put and the clients move it
 		local creatures = ReplicatedStorage:FindFirstChild("CreatureModels")
@@ -186,6 +193,8 @@ local function installBoss(folder: Folder)
 					d:Destroy()
 				end
 			end
+			clone:ScaleTo(clone:GetScale() * BOSS_SCALE)
+			clone:SetAttribute("CreatureScale", (clone:GetAttribute("CreatureScale") or 1) * BOSS_SCALE) -- (AquarisChaser / CreatureAnim read the scale from here)
 			clone:SetAttribute("CreatureBuiltScale", clone:GetAttribute("CreatureScale")) -- (CreatureScaler would otherwise shrink it to scale 1)
 			CollectionService:RemoveTag(clone, "Creature") -- (the client's AquarisChaser animates it, not CreatureClient: both would write the same welds)
 			local cloneRoot = clone:FindFirstChild("HumanoidRootPart") :: BasePart

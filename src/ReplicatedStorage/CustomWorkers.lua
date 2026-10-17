@@ -25,7 +25,7 @@ CustomWorkers.WORKERS = {
 	security_sam = { name = "Shield Knight", rig = "avatar" },
 	crypto_carl = { name = "Forge Master", rig = "avatar" },
 	ceo_chad = { name = "Golden Paladin", rig = "avatar" },
-	mystery_millionaire = { name = "Sir Ironclad", rig = "avatar" },
+	mystery_millionaire = { name = "Sir Malgrave", rig = "avatar" },
 	-- Ember Academy (zone id BillionaireHills)
 	butler_barnaby = { name = "Candle Imp", rig = "avatar" },
 	caddie_gus = { name = "Ember Newt", rig = "avatar" },
@@ -34,7 +34,7 @@ CustomWorkers.WORKERS = {
 	bodyguard_boris = { name = "Rune Golem", rig = "avatar" },
 	hedge_fund_hank = { name = "Phoenix", rig = "avatar" },
 	oil_baron_oswald = { name = "Flame Archmage", rig = "avatar" },
-	the_trillionaire = { name = "Ignis the Pyromancer", rig = "avatar" },
+	the_trillionaire = { name = "Vault Wizard", rig = "avatar" },
 }
 
 -- The custom entry for a worker, or nil when it uses its original look.

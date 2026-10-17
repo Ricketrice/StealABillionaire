@@ -22,7 +22,7 @@ function Vfx.new(model: Model, data: any, assets: { [string]: string }?, opts: {
 	local k, ground = self.k, self.ground
 	self.orbitSpeed = 1
 	self.orbitAngle = 0
-	ground.Size = Vector3.new(4.6, 0.2, 4.6)
+	ground.Size = Vector3.new(4.6, 0.2, 4.6) * self.s
 
 	self.auraSparks = newEmitter(ground, {
 		name = "AuraSparks",
@@ -78,15 +78,15 @@ function Vfx.new(model: Model, data: any, assets: { [string]: string }?, opts: {
 		local c = Instance.new("Part")
 		c.Name = PREFIX .. "Coin" .. i
 		c.Shape = Enum.PartType.Cylinder
-		c.Size = Vector3.new(0.14, 0.75, 0.75)
+		c.Size = Vector3.new(0.14, 0.75, 0.75) * self.s
 		c.Material = Enum.Material.Metal
 		c.Color = GOLD
 		c.Anchored, c.CanCollide, c.CanQuery, c.CanTouch, c.CastShadow = true, false, false, false, false
 		c.Parent = self.folder
 		table.insert(self.coins, c)
 	end
-	self.orbitRadius = data.meshBox.CoinOrbit.max[1]
-	self.orbitCenter = data.fx.FX_CoinOrbit.inHrp -- {x,y,z} relative to the root
+	self.orbitRadius = data.meshBox.CoinOrbit.max[1] * self.s
+	self.orbitCenter = { data.fx.FX_CoinOrbit.inHrp[1] * self.s, data.fx.FX_CoinOrbit.inHrp[2] * self.s, data.fx.FX_CoinOrbit.inHrp[3] * self.s } -- {x,y,z} relative to the root
 	return self
 end
 
@@ -118,8 +118,8 @@ function Vfx:_clip_Event_HostileTakeover(token: number, el: number)
 	if not a0 then
 		return
 	end
-	local length = -self.data.meshBox.TakeoverBeam_Neon.min[2]
-	local radius = self.data.meshBox.TakeoverBeam_Neon.max[1]
+	local length = -self.data.meshBox.TakeoverBeam_Neon.min[2] * self.s
+	local radius = self.data.meshBox.TakeoverBeam_Neon.max[1] * self.s
 	self:_at(token, t0 - el, function()
 		local a1 = Instance.new("Attachment")
 		a1.Name = PREFIX .. "BeamEnd"
@@ -202,7 +202,9 @@ function Vfx:_clip_Event_MarketCrash(token: number, el: number)
 	local box = self.data.meshBox.CoinRain
 	local sizeX, sizeZ = box.max[1] - box.min[1], box.max[3] - box.min[3]
 	self:_at(token, r0 - el, function()
-		local top = self.hrp.CFrame * CFrame.new(rainFx.inHrp[1] + (box.max[1] + box.min[1]) / 2, rainFx.inHrp[2], rainFx.inHrp[3] + (box.max[3] + box.min[3]) / 2)
+		local sc = self.s
+		local top = self.hrp.CFrame
+			* CFrame.new((rainFx.inHrp[1] + (box.max[1] + box.min[1]) / 2) * sc, rainFx.inHrp[2] * sc, (rainFx.inHrp[3] + (box.max[3] + box.min[3]) / 2) * sc)
 		local p = self:_anchor(top, Vector3.new(sizeX, 0.3, sizeZ), r1 - r0 + 2.5)
 		local rain = newEmitter(p, {
 			name = "CoinRain",
@@ -228,7 +230,7 @@ function Vfx:_clip_Event_MarketCrash(token: number, el: number)
 	end)
 	self:_at(token, m0 + 0.5 - el, function()
 		local box2 = self.data.meshBox.CoinRainMarks_Neon
-		local g = self:groundCF(marksFx.inHrp) * CFrame.new((box2.max[1] + box2.min[1]) / 2, 0, (box2.max[3] + box2.min[3]) / 2)
+		local g = self:groundCF(marksFx.inHrp) * CFrame.new((box2.max[1] + box2.min[1]) / 2 * self.s, 0, (box2.max[3] + box2.min[3]) / 2 * self.s)
 		local p = self:_anchor(g, Vector3.new(box2.max[1] - box2.min[1], 0.2, box2.max[3] - box2.min[3]), m1 - m0 + 1)
 		local marks = newEmitter(p, {
 			name = "CoinMarks",

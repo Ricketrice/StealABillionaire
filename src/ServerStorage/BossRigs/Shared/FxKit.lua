@@ -32,7 +32,24 @@ function FxKit.cs(keys: { { any } }): ColorSequence
 end
 local ns, cs = FxKit.ns, FxKit.cs
 
+-- The boss scale of the model an effect belongs to (attribute BossScale, set by HeistService on the big Boss Heist chaser; absent = 1). Effects are authored at scale 1 and
+-- scaled here / in the Vfx modules, so a 2.5x chaser gets 2.5x rings, sparks, rocks and reach.
+function FxKit.scaleOf(inst: Instance): number
+	local m = inst:FindFirstAncestorOfClass("Model")
+	local s = if m then m:GetAttribute("BossScale") else nil
+	return if type(s) == "number" then s else 1
+end
+
+local function scaleSeq(seq: NumberSequence, s: number): NumberSequence
+	local k = {}
+	for _, p in seq.Keypoints do
+		table.insert(k, NumberSequenceKeypoint.new(p.Time, p.Value * s, p.Envelope * s))
+	end
+	return NumberSequence.new(k)
+end
+
 function FxKit.newEmitter(parent: Instance, props: { [string]: any }): ParticleEmitter
+	local s = FxKit.scaleOf(parent)
 	local e = Instance.new("ParticleEmitter")
 	e.Name = PREFIX .. (props.name or "Emitter")
 	e.Texture = SPARK
@@ -49,6 +66,11 @@ function FxKit.newEmitter(parent: Instance, props: { [string]: any }): ParticleE
 		if k ~= "name" then
 			(e :: any)[k] = v
 		end
+	end
+	if s ~= 1 then
+		e.Size = scaleSeq(e.Size, s)
+		e.Speed = NumberRange.new(e.Speed.Min * s, e.Speed.Max * s)
+		e.Acceleration = e.Acceleration * s
 	end
 	e.Parent = parent
 	return e
@@ -95,6 +117,7 @@ function FxKit.init(self: any, model: Model, data: any, assets: { [string]: stri
 	self.col = colors
 	self.low = if opts and opts.lowFx ~= nil then opts.lowFx else UserInputService.TouchEnabled
 	self.k = if self.low then 0.5 else 1
+	self.s = FxKit.scaleOf(model.PrimaryPart or model:WaitForChild("HumanoidRootPart"))
 	self.hrp = model:WaitForChild("HumanoidRootPart") :: BasePart
 	self.token = 0
 	self.updaters = {} :: { [any]: (number, number) -> boolean }
@@ -113,12 +136,12 @@ function FxKit.init(self: any, model: Model, data: any, assets: { [string]: stri
 	-- ground helper (invisible, follows the root): emitter shapes take their size from the part
 	local ground = Instance.new("Part")
 	ground.Name = PREFIX .. "Ground"
-	ground.Size = Vector3.new(4.6, 0.2, 4.6)
+	ground.Size = Vector3.new(4.6, 0.2, 4.6) * self.s
 	ground.Transparency = 1
 	ground.Anchored, ground.CanCollide, ground.CanQuery, ground.CanTouch, ground.CastShadow = true, false, false, false, false
 	ground.Parent = self.folder
 	self.ground = ground
-	self.groundOffset = CFrame.new(0, -data.hrpHeight + 0.05, 0)
+	self.groundOffset = CFrame.new(0, (-data.hrpHeight + 0.05) * self.s, 0)
 	ground.CFrame = self.hrp.CFrame * self.groundOffset
 end
 
@@ -134,7 +157,7 @@ end
 function Base:_anchor(cf: CFrame, size: Vector3?, life: number): (Part, Attachment)
 	local p = Instance.new("Part")
 	p.Name = PREFIX .. "Anchor"
-	p.Size = size or Vector3.new(0.2, 0.2, 0.2)
+	p.Size = (size or Vector3.new(0.2, 0.2, 0.2)) * self.s
 	p.Transparency = 1
 	p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
 	p.CFrame = cf
@@ -182,7 +205,7 @@ end
 
 function Base:groundCF(rel: { number }?): CFrame
 	local r = rel or { 0, -self.data.hrpHeight + 0.06, 0 }
-	return self.hrp.CFrame * CFrame.new(r[1], r[2], r[3])
+	return self.hrp.CFrame * CFrame.new(r[1] * self.s, r[2] * self.s, r[3] * self.s)
 end
 
 -- the clip started `el` seconds ago (server time)

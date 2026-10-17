@@ -11,24 +11,24 @@ Driver.__index = Driver
 local FADE = 0.15 -- cross-fade between clips, seconds
 
 -- i = index of the key's time value; the quaternion follows it (and the position after that when stride = 8)
-local function cfAt(track: { number }, i: number, stride: number): CFrame
+local function cfAt(track: { number }, i: number, stride: number, k: number): CFrame
 	if stride == 8 then
-		return CFrame.new(track[i + 5], track[i + 6], track[i + 7], track[i + 1], track[i + 2], track[i + 3], track[i + 4])
+		return CFrame.new(track[i + 5] * k, track[i + 6] * k, track[i + 7] * k, track[i + 1], track[i + 2], track[i + 3], track[i + 4])
 	end
 	return CFrame.new(0, 0, 0, track[i + 1], track[i + 2], track[i + 3], track[i + 4])
 end
 
 -- Interpolated Transform of one joint at time t (clamped to the track).
-local function sampleTrack(track: { number }, t: number): CFrame
+local function sampleTrack(track: { number }, t: number, k: number): CFrame
 	local stride = track[1]
 	local n = (#track - 1) // stride
 	local first = 2
 	if n == 1 or t <= track[first] then
-		return cfAt(track, first, stride)
+		return cfAt(track, first, stride, k)
 	end
 	local lastIdx = first + (n - 1) * stride
 	if t >= track[lastIdx] then
-		return cfAt(track, lastIdx, stride)
+		return cfAt(track, lastIdx, stride, k)
 	end
 	local lo, hi = 0, n - 1
 	while hi - lo > 1 do
@@ -41,7 +41,7 @@ local function sampleTrack(track: { number }, t: number): CFrame
 	end
 	local a, b = first + lo * stride, first + hi * stride
 	local u = (t - track[a]) / (track[b] - track[a])
-	return cfAt(track, a, stride):Lerp(cfAt(track, b, stride), u)
+	return cfAt(track, a, stride, k):Lerp(cfAt(track, b, stride, k), u)
 end
 
 local function sampleScale(track: { number }?, t: number): number
@@ -65,15 +65,15 @@ local function sampleScale(track: { number }?, t: number): number
 	return 1
 end
 
--- Pure function (used by the tests): the pose table { jointName = CFrame } of a clip at time t (looped when the clip loops).
-function Driver.samplePose(clip: any, t: number): { [string]: CFrame }
+-- Pure function (used by the tests): the pose table { jointName = CFrame } of a clip at time t (looped when the clip loops). k = the model's scale (translations are in studs at scale 1).
+function Driver.samplePose(clip: any, t: number, k: number?): { [string]: CFrame }
 	local tt = t
 	if clip.loop then
 		tt = t % clip.length
 	end
 	local pose = {}
 	for name, track in clip.joints do
-		pose[name] = sampleTrack(track, tt)
+		pose[name] = sampleTrack(track, tt, k or 1)
 	end
 	return pose
 end
@@ -83,6 +83,8 @@ function Driver.new(model: Model, data: any, clips: { [string]: any })
 	self.model = model
 	self.data = data
 	self.clips = clips
+	local bs = model:GetAttribute("BossScale") -- the big Boss Heist chaser (set by HeistService): clip translations scale with the model
+	self.s = if type(bs) == "number" then bs else 1
 	self.motors = {} :: { [string]: Motor6D }
 	for jointName, j in data.joints do
 		local part1 = model:FindFirstChild(j.p1)
@@ -215,7 +217,7 @@ function Driver:step(now: number)
 	if typeof(frozen) == "number" then
 		local fc = self.clips[self.model:GetAttribute("VW_Clip")]
 		if fc then
-			self:_apply(Driver.samplePose(fc, frozen), fc, frozen)
+			self:_apply(Driver.samplePose(fc, frozen, self.s), fc, frozen)
 			self.from = nil
 			return
 		end
@@ -241,7 +243,7 @@ function Driver:step(now: number)
 	if not clip then
 		return
 	end
-	local pose = Driver.samplePose(clip, t :: number)
+	local pose = Driver.samplePose(clip, t :: number, self.s)
 	scales = clip.scales
 	local alpha = 1
 	local from = self.from

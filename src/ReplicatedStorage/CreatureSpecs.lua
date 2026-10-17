@@ -841,7 +841,7 @@ local function aquarisBoss(): Spec
 	bubbles({ { -0.60, 2.00, -1.17, 0.07 }, { 0.67, 1.53, -0.03, 0.08 }, { -0.53, 1.33, 1.13, 0.06 }, { 0.53, 1.00, 2.13, 0.07 }, { -0.07, 2.73, -1.37, 0.05 } }, "BubbleC", "Captured")
 	return {
 		hideBody = true,
-		scale = 3,
+		scale = 1, -- normal creature size as a collectible (wild, carried, pad); the Boss Heist chaser is this x BOSS_SCALE (HeistService)
 		skin = BLUE,
 		props = props,
 		fx = {
