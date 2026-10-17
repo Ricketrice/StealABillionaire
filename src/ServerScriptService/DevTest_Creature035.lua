@@ -106,6 +106,10 @@ local KIT_SIGNATURE = {
 	ceo_chad = { "Sword_Blade", "Burst_Halo" },
 	mystery_millionaire = { "Shield_Blue", "Sword_Blade" },
 }
+local BOSS_SIGNATURE = {
+	mystery_millionaire = { "Greatsword", "TatteredCape", "Head" },
+	the_trillionaire = { "WizardTopHat", "Tool_LedgerScepter", "Head" },
+}
 local ODDS = { Common = 70, Rare = 20, Epic = 8, Legendary = 1.8, Secret = 0.2 }
 local SIGNATURE = {
 	broke_bob = { "SwordBlade", "Helmet" },
@@ -219,9 +223,34 @@ local function models_()
 			if spec.kit then
 				info(id .. " kit", if kitModel then "using " .. tostring(kitModel) else "FALLBACK (import missing / wrong axes): part-built look")
 			end
-			local n = if kitModel then visibleParts(model) else parts(model)
-			local cap = if kitModel then KIT_BUDGET[worker.rarity] else BUDGET[worker.rarity]
-			expect(("%s %sparts %d within %s budget %d"):format(id, if kitModel then "visible " else "", n, worker.rarity, cap), n <= cap)
+			local rigName = model:GetAttribute("BossRigName") -- 036 boss pass: a rigged boss welded to the hidden R15 root
+			local visible = kitModel or rigName
+			local n = if visible then visibleParts(model) else parts(model)
+			local cap = if visible then KIT_BUDGET[worker.rarity] else BUDGET[worker.rarity]
+			expect(("%s %sparts %d within %s budget %d"):format(id, if visible then "visible " else "", n, worker.rarity, cap), n <= cap)
+			if rigName then
+				local rig = model:FindFirstChild("BossRig")
+				local motors, loose = 0, 0
+				if rig then
+					for _, d in rig:GetDescendants() do
+						if d:IsA("Motor6D") then
+							motors += 1
+						end
+					end
+					for _, d in rig:GetChildren() do
+						if d:IsA("BasePart") and d.Anchored then
+							loose += 1
+						end
+					end
+				end
+				local complete = rig ~= nil and rig:FindFirstChild("Runtime") ~= nil and rig:FindFirstChild("Client") ~= nil
+				local welded = rig ~= nil and rig:FindFirstChild("HumanoidRootPart") ~= nil and (rig :: any).HumanoidRootPart:FindFirstChild("BossRigRoot") ~= nil
+				expect(
+					id .. " boss rig " .. tostring(rigName) .. ": Runtime, Client, root weld, 18+ Motor6D, nothing anchored",
+					complete and welded and motors >= 18 and loose == 0,
+					("%d motors, %d anchored"):format(motors, loose)
+				)
+			end
 			if kitModel then
 				local kd = require(ReplicatedStorage:WaitForChild("CreatureKitData")) :: any
 				local tris = kd[kitModel].tris
@@ -243,17 +272,19 @@ local function models_()
 				h ~= nil and model:FindFirstChild("Animate") ~= nil and model:FindFirstChild("UpperTorso") ~= nil and model:FindFirstChild("RightHand") ~= nil
 			)
 			expect(id .. " tagged Creature", CollectionService:HasTag(model, "Creature"))
-			for _, sig in (if kitModel then KIT_SIGNATURE[id] else SIGNATURE[id]) or {} do
+			for _, sig in (if kitModel then KIT_SIGNATURE[id] elseif model:GetAttribute("BossRigName") then BOSS_SIGNATURE[id] else SIGNATURE[id]) or {} do
 				expect(id .. " has signature item " .. sig, model:FindFirstChild(sig, true) ~= nil)
 			end
-			if worker.rarity ~= "Common" and worker.rarity ~= "Rare" then
+			if worker.rarity ~= "Common" and worker.rarity ~= "Rare" and not model:GetAttribute("BossRigName") then -- (a boss rig makes its aura on the client from its Vfx module)
 				expect(
 					id .. " (" .. worker.rarity .. ") has an aura or glow (Epic and up)",
 					model:FindFirstChildWhichIsA("ParticleEmitter", true) ~= nil or model:FindFirstChildWhichIsA("PointLight", true) ~= nil
 				)
 			end
-			local state = CreatureAnim.bind(model)
-			expect(id .. " has an animated prop", #state.items >= 1, #state.items)
+			if not model:GetAttribute("BossRigName") then -- (a boss rig animates through its own Driver on the client)
+				local state = CreatureAnim.bind(model)
+				expect(id .. " has an animated prop", #state.items >= 1, #state.items)
+			end
 		end
 	end
 	info("creatures with a spec", count)

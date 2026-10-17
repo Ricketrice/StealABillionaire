@@ -437,8 +437,56 @@ local function bodyOf(model: Model, name: string): BasePart?
 	return if p and p:IsA("BasePart") then p else nil
 end
 
+-- A rigged boss (CreatureSpecs.bossRig): ServerStorage.BossRigs.<name>.Template, built by BossRigs.Shared.Builder from the owner's Import 3D meshes.
+local function bossTemplate(name: string): Model?
+	local rigs = ServerStorage:FindFirstChild("BossRigs")
+	local char = rigs and rigs:FindFirstChild(name)
+	local template = char and char:FindFirstChild("Template")
+	return if template and template:IsA("Model") and template.PrimaryPart then template else nil
+end
+
+-- Welds a clone of the boss rig to the (hidden) R15 root so it walks, is carried and stands on a pad with the creature. The rig animates itself on every client
+-- (its Client script, inside the model): Walk while the creature moves, Idle otherwise (attribute BossFollow). Feet on the creature's ground.
+local function attachBossRig(model: Model, template: Model)
+	local root = model:FindFirstChild("HumanoidRootPart") :: BasePart
+	local humanoid = model:FindFirstChildOfClass("Humanoid") :: Humanoid
+	local rig = template:Clone()
+	rig.Name = "BossRig"
+	local data = require(rig.Runtime.Data) :: any
+	-- (Humanoid.HipHeight reads 0 on the R15 template: the ground is the lowest foot of the hidden rig, as for the halo)
+	local ground = root.Position.Y - root.Size.Y / 2 - humanoid.HipHeight
+	for _, p in model:GetChildren() do
+		if p:IsA("BasePart") and p.Name:match("Foot$") then
+			ground = math.min(ground, p.Position.Y - p.Size.Y / 2)
+		end
+	end
+	local rigRoot = rig.PrimaryPart :: BasePart
+	rig:PivotTo(CFrame.new(root.Position.X, ground + data.hrpHeight, root.Position.Z) * root.CFrame.Rotation)
+	rigRoot.Anchored = false
+	rigRoot.Massless = true
+	local weld = Instance.new("Weld")
+	weld.Name = "BossRigRoot"
+	weld.Part0, weld.Part1 = root, rigRoot
+	weld.C0 = root.CFrame:ToObjectSpace(rigRoot.CFrame)
+	weld.Parent = rigRoot
+	local controller = rig:FindFirstChild("AnimationController")
+	if controller then
+		controller:Destroy()
+	end
+	rig:SetAttribute("BossFollow", true)
+	rig.Parent = model
+end
+
 -- Builds one creature model from its spec.
 function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
+	local rigTemplate: Model? = nil
+	if spec.bossRig then
+		rigTemplate = bossTemplate(spec.bossRig)
+		if not rigTemplate then
+			warn("[CreatureBuilder]", id, "boss rig", spec.bossRig, "has no ServerStorage.BossRigs Template: building the fallback look")
+			spec = spec.fallback or spec
+		end
+	end
 	-- A kit spec (CreatureSpecs.KIT_B1) needs its imported meshes; without them (or with a bad import) the previous part-built look is built.
 	local kitInfo: { data: any, src: Instance, k: number }? = nil
 	if spec.kit then
@@ -646,6 +694,10 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 		model.LevelOfDetail = Enum.ModelLevelOfDetail.Automatic -- far away: the engine swaps in a low-detail stand-in
 	end
 	folder.Parent = model
+	if rigTemplate then
+		attachBossRig(model, rigTemplate)
+		model:SetAttribute("BossRigName", spec.bossRig)
+	end
 
 	local scale = spec.scale or 1
 	for _, fx in spec.fx or {} do

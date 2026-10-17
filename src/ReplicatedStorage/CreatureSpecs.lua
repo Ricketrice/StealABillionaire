@@ -59,6 +59,7 @@ export type Spec = {
 	kit: string?, -- 035 roster: a Blender kit model (ServerStorage.Imports035.<kit>, data in CreatureKitData); props stay empty
 	rig: any?, -- joint heights of the hidden rig (see CreatureBuilder RIG_NOOB); default = the classic noob rig
 	fallback: any?, -- the part-built spec the builder uses when the kit import is missing or wrong
+	bossRig: string?, -- 036 boss pass: a rigged boss (ServerStorage.BossRigs.<name>.Template), welded to the hidden R15 root and animated on the client (BossRigs.Shared.Client)
 }
 
 -- Outfit colours by body region (anything not listed shows skin).
@@ -2121,6 +2122,29 @@ if KIT_B1 then
 		end
 	else
 		warn("[CreatureSpecs] KIT_B1 is on but CreatureKitData is missing: the old looks stay")
+	end
+end
+
+-- Boss pass (rigged zone bosses): the Secret slot of Knight's Keep and Ember Academy shows a rigged boss from ServerStorage.BossRigs (Sir Malgrave, the Vault Wizard)
+-- instead of the part-built figure. BOSS_RIGS = false keeps the old looks (the fallback, like AQUARIS_BOSS / KIT_B1); CreatureBuilder also falls back per creature when a
+-- Template is missing. Ids, names, rarities, odds, income, spawns: untouched. Aquaris (Sunken Kingdom) is already a model of its own (AQUARIS_BOSS).
+local BOSS_RIGS = true
+CreatureSpecs.BOSS_RIGS = BOSS_RIGS
+local BOSS_RIG_OF = { mystery_millionaire = "Malgrave", the_trillionaire = "Vault" } -- (kept local: CreatureBuilder.buildAll builds every table in CreatureSpecs)
+if BOSS_RIGS then
+	for id, rigName in BOSS_RIG_OF do
+		local old = CreatureSpecs[id]
+		if type(old) == "table" then
+			CreatureSpecs[id] = {
+				bossRig = rigName,
+				fallback = old,
+				scale = 1,
+				skin = old.skin,
+				props = {},
+				hideBody = true,
+				sound = old.sound,
+			}
+		end
 	end
 end
 
