@@ -3,6 +3,8 @@
 -- settings/favourites and the V1 screens. Inert unless Studio started the session with
 -- StudioTestService and one of these arguments (2 clients, in-memory save: ServerStorage
 -- StudioMemoryStore = true or Studio API access off):
+--   (036: V1 is live in code (D46): launch "v1029:off" with the ServerStorage attributes StudioUiV1/StudioStore/StudioRewards/StudioIndexBonus
+--   set to FALSE (unset = the live value, on); put them back after the launch)
 --   "v1029:off"  launched with every V1 switch OFF: old HUD, nothing new, no save changes; then the
 --                switches are turned on at run time and the server logic is tested through the real
 --                remotes (claims, double claims, streaks, playtime, offline, index bonus, spam)
@@ -199,7 +201,7 @@ end
 -- "off": flags off, then the server logic -------------------------------------------------------------------
 if mode == "off" then
 	scenario("all switches off", function()
-		setFlags(nil)
+		setFlags(false) -- (036: an unset attribute now means the live value, which is ON: off must be false)
 		for _, name in V1Flags.NAMES do
 			expect(name .. " is not published", ReplicatedStorage:GetAttribute(V1Flags.PUBLISHED[name]) == nil)
 		end
@@ -401,9 +403,25 @@ if mode == "off" then
 		expect("the client sends it again: stored", stored and WorkerInventory.getRecord(A, uid :: string).loc == "inventory", nil, true)
 		expect("the client has nothing left waiting", (ask(A, "inv", { action = "none" }).pending or -1) == 0)
 		-- a late duplicate never runs twice
+		task.wait(0.3) -- (past the 0.2 s request cooldown: a raw message is never re-sent)
 		ask(A, "invRaw", { action = "Equip", uid = uid, id = 900001 })
 		task.wait(0.6)
-		expect("Equip (id 900001) puts it on a station", WorkerInventory.getRecord(A, uid :: string).loc == "station")
+		local onStations, plotFree = 0, 0
+		for _, w in (PlayerData.get(A) :: any).workers do
+			if w.loc == "station" then
+				onStations += 1
+			end
+		end
+		for _, st in (PlotService.getPlot(A) :: any).Stations:GetChildren() do
+			if st:GetAttribute("Occupied") ~= true then
+				plotFree += 1
+			end
+		end
+		expect(
+			"Equip (id 900001) puts it on a station",
+			WorkerInventory.getRecord(A, uid :: string).loc == "station",
+			("loc %s, A's records on stations %d, free station parts %d"):format(tostring(WorkerInventory.getRecord(A, uid :: string).loc), onStations, plotFree)
+		)
 		ask(A, "invRaw", { action = "Store", uid = uid, id = 900002 })
 		task.wait(0.6)
 		expect("Store (id 900002) puts it back", WorkerInventory.getRecord(A, uid :: string).loc == "inventory")

@@ -12,9 +12,9 @@
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local LaunchFlag = require(game:GetService("ReplicatedStorage"):WaitForChild("LaunchFlag"))
 local HubConfig = require(ReplicatedStorage:WaitForChild("HubConfig"))
 local CashService = require(script.Parent:WaitForChild("CashService"))
 local NPCClaim = require(script.Parent:WaitForChild("NPCClaim"))
@@ -43,7 +43,7 @@ HubBase.FlagsChanged = flagsChanged.Event
 HubBase.stats = { dropped = 0, handled = 0 }
 
 function HubBase.flag(name: string): boolean
-	return HubConfig[name] == true or (RunService:IsStudio() and ServerStorage:GetAttribute(HubConfig.STUDIO_ATTRIBUTES[name]) == true)
+	return LaunchFlag(HubConfig[name], HubConfig.STUDIO_ATTRIBUTES[name])
 end
 function HubBase.anyFlag(): boolean
 	for _, name in FLAGS do

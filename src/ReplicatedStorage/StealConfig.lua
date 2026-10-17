@@ -12,7 +12,7 @@
 
 local StealConfig = {}
 
-StealConfig.FAIR_ENABLED = false
+StealConfig.FAIR_ENABLED = true -- D46: live
 StealConfig.STUDIO_ATTRIBUTE = "StudioFairSteal"
 StealConfig.PUBLISHED = "FairStealOn"
 
@@ -28,7 +28,7 @@ StealConfig.NO_OFFER_AFTER_LOSS = 300 -- seconds without any shop offer after be
 function StealConfig.on(): boolean
 	local RunService = game:GetService("RunService")
 	if RunService:IsServer() then
-		return StealConfig.FAIR_ENABLED == true or (RunService:IsStudio() and game:GetService("ServerStorage"):GetAttribute(StealConfig.STUDIO_ATTRIBUTE) == true)
+		return (require(script.Parent:WaitForChild("LaunchFlag")) :: any)(StealConfig.FAIR_ENABLED, StealConfig.STUDIO_ATTRIBUTE)
 	end
 	return game:GetService("ReplicatedStorage"):GetAttribute(StealConfig.PUBLISHED) == true
 end

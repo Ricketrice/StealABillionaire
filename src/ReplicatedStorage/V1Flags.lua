@@ -15,10 +15,10 @@
 
 local V1Flags = {}
 
-V1Flags.UI_V1_ENABLED = false
-V1Flags.STORE_ENABLED = false
-V1Flags.REWARDS_ENABLED = false
-V1Flags.INDEX_BONUS_ENABLED = false
+V1Flags.UI_V1_ENABLED = true -- D46: live
+V1Flags.STORE_ENABLED = true
+V1Flags.REWARDS_ENABLED = true
+V1Flags.INDEX_BONUS_ENABLED = true
 
 V1Flags.NAMES = { "UI_V1_ENABLED", "STORE_ENABLED", "REWARDS_ENABLED", "INDEX_BONUS_ENABLED" }
 V1Flags.STUDIO_ATTRIBUTES = {
@@ -42,10 +42,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- server published.
 function V1Flags.on(name: string): boolean
 	if RunService:IsServer() then
-		if (V1Flags :: any)[name] == true then
-			return true
-		end
-		return RunService:IsStudio() and game:GetService("ServerStorage"):GetAttribute(V1Flags.STUDIO_ATTRIBUTES[name]) == true
+		return (require(script.Parent:WaitForChild("LaunchFlag")) :: any)((V1Flags :: any)[name], V1Flags.STUDIO_ATTRIBUTES[name])
 	end
 	return ReplicatedStorage:GetAttribute(V1Flags.PUBLISHED[name]) == true
 end

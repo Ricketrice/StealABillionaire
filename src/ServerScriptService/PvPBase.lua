@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local LaunchFlag = require(game:GetService("ReplicatedStorage"):WaitForChild("LaunchFlag"))
 local PvPConfig = require(ReplicatedStorage:WaitForChild("PvPConfig"))
 local NPCClaim = require(script.Parent:WaitForChild("NPCClaim"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
@@ -43,7 +44,7 @@ PvPBase.stats = { dropped = 0, handled = 0 } -- requests refused by the rate lim
 
 -- Flags ---------------------------------------------------------------------------------------------
 local function flag(configured: boolean, studioAttribute: string): boolean
-	return configured or (RunService:IsStudio() and ServerStorage:GetAttribute(studioAttribute) == true)
+	return LaunchFlag(configured, studioAttribute) -- 036: a set Studio attribute wins (true or false)
 end
 function PvPBase.stealing(): boolean
 	return flag(PvPConfig.PVP_STEALING_ENABLED, PvPConfig.STUDIO_STEALING_ATTRIBUTE)

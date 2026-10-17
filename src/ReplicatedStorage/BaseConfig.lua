@@ -12,7 +12,7 @@
 
 local BaseConfig = {}
 
-BaseConfig.LIVING_ENABLED = false
+BaseConfig.LIVING_ENABLED = true -- D46: live (levels and pads stay off: PROPOSED prices)
 BaseConfig.LEVELS_ENABLED = false
 BaseConfig.PADS_ENABLED = false
 BaseConfig.FLAGS = {
@@ -28,7 +28,7 @@ function BaseConfig.on(key: string): boolean
 	assert(flag, "unknown BaseConfig flag " .. tostring(key))
 	local RunService = game:GetService("RunService")
 	if RunService:IsServer() then
-		return (BaseConfig :: any)[key] == true or (RunService:IsStudio() and game:GetService("ServerStorage"):GetAttribute(flag.studio) == true)
+		return (require(script.Parent:WaitForChild("LaunchFlag")) :: any)((BaseConfig :: any)[key], flag.studio)
 	end
 	return game:GetService("ReplicatedStorage"):GetAttribute(flag.published) == true
 end

@@ -37,6 +37,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local LaunchFlag = require(game:GetService("ReplicatedStorage"):WaitForChild("LaunchFlag"))
 local RaceConfig = require(ReplicatedStorage:WaitForChild("RaceConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local ZoneConfig = require(ReplicatedStorage:WaitForChild("ZoneConfig"))
@@ -53,7 +54,7 @@ local function serverNow(): number
 end
 
 function RaceService.enabled(): boolean
-	return RaceConfig.ENABLED == true or (RunService:IsStudio() and ServerStorage:GetAttribute(RaceConfig.STUDIO_ATTRIBUTE) == true)
+	return LaunchFlag(RaceConfig.ENABLED, RaceConfig.STUDIO_ATTRIBUTE)
 end
 
 local function getRemote(name: string): RemoteEvent

@@ -38,6 +38,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local LaunchFlag = require(game:GetService("ReplicatedStorage"):WaitForChild("LaunchFlag"))
 local BossHeist = require(ReplicatedStorage:WaitForChild("BossHeist"))
 local HeistConfig = require(ReplicatedStorage:WaitForChild("HeistConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
@@ -60,7 +61,7 @@ local function serverNow(): number
 end
 
 function HeistService.enabled(): boolean
-	return HeistConfig.ENABLED == true or (RunService:IsStudio() and ServerStorage:GetAttribute(HeistConfig.STUDIO_ATTRIBUTE) == true)
+	return LaunchFlag(HeistConfig.ENABLED, HeistConfig.STUDIO_ATTRIBUTE)
 end
 
 local function getRemote(name: string): RemoteEvent

@@ -27,6 +27,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local LaunchFlag = require(game:GetService("ReplicatedStorage"):WaitForChild("LaunchFlag"))
 local CashFormat = require(ReplicatedStorage:WaitForChild("CashFormat"))
 local ParadeConfig = require(ReplicatedStorage:WaitForChild("ParadeConfig"))
 local V1Flags = require(ReplicatedStorage:WaitForChild("V1Flags"))
@@ -50,7 +51,7 @@ local function serverNow(): number
 end
 
 function ParadeService.flag(name: string): boolean
-	return ParadeConfig[name] == true or (RunService:IsStudio() and ServerStorage:GetAttribute(ParadeConfig.STUDIO_ATTRIBUTES[name]) == true)
+	return LaunchFlag(ParadeConfig[name], ParadeConfig.STUDIO_ATTRIBUTES[name])
 end
 
 local function getRemote(name: string): RemoteEvent

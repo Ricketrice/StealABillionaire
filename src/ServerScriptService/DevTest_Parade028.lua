@@ -618,7 +618,7 @@ scenario("perf with 8 walkers and effects", function()
 		)
 	)
 	expect("perf probe answered", s.frameAvg ~= nil)
-	setFlags(nil)
+	setFlags(false) -- (036: unset = the live value, ON; off must be false)
 	task.wait(1)
 	local off = probe(A, "perf")
 	note(
@@ -635,7 +635,7 @@ scenario("perf with 8 walkers and effects", function()
 end)
 
 scenario("flags off", function()
-	setFlags(nil)
+	setFlags(false)
 	task.wait(0.6)
 	expect(
 		"parade gone: no Workspace.Parade, flags unpublished",

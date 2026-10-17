@@ -11,6 +11,7 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - Shops: `HubShops` (Bat Boutique, Lot & Decor, Upgrade Office; stations 7–8 built at run time)
 - Arena: `HubArena` (Battle Arena in the plaza; scoreboard = `Venues.Arena.Scoreboard` Label)
 - Tutorial / Guide / Daily quests / shopkeepers: `HubQuests` (avatars from `ServerStorage.HubNPCs_026`, root anchored only) · client `HubClient` · client `HubNPCLife` (idle, look-at ≤15 studs, wave; tag `HubNPC`)
+- Launch switches (036, D46): every flag reader goes through `ReplicatedStorage.LaunchFlag(config, studioAttribute)` (live = config value; Studio = attribute when set, true or false).
 - Feature flags: `ReplicatedStorage.HubConfig` (ARENA/SHOPS/NPC_QUESTS/UPGRADES) and `PvPConfig` (stealing, weapons); Studio overrides = `ServerStorage` attributes `Studio*`
 - Zone gates / unlocks: `ZoneConfig` (`requires` = explicit prerequisite, `prerequisite()`) · `ZoneServer` → `ZoneProgress` (`entryPoint`, lane gates = Gate attribute `LaneGate`) · client `ZoneGates`
 - Entry points: `HubServer` (plots, placement, income, saves) · `HubServer026` (hub gameplay) · `PvPServer` · `ZoneServer` · `NPCSpawner`

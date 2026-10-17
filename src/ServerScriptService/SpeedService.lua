@@ -14,9 +14,8 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local ServerStorage = game:GetService("ServerStorage")
 
+local LaunchFlag = require(game:GetService("ReplicatedStorage"):WaitForChild("LaunchFlag"))
 local SpeedConfig = require(ReplicatedStorage:WaitForChild("SpeedConfig"))
 local CashService = require(script.Parent:WaitForChild("CashService"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
@@ -27,7 +26,7 @@ local CARRY = 0.85 -- the same slowdown as NPCCarry's CARRY_SPEED_MULTIPLIER
 local CARRY_ATTRIBUTES = { "CarryingNPC", "CarryingStolen", "HeistCarrying" }
 
 function SpeedService.enabled(): boolean
-	return SpeedConfig.ENABLED == true or (RunService:IsStudio() and ServerStorage:GetAttribute(SpeedConfig.STUDIO_ATTRIBUTE) == true)
+	return LaunchFlag(SpeedConfig.ENABLED, SpeedConfig.STUDIO_ATTRIBUTE)
 end
 
 local request = ReplicatedStorage:FindFirstChild("SpeedRequest") :: RemoteFunction?

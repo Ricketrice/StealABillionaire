@@ -8,7 +8,7 @@
 
 local SpeedConfig = {}
 
-SpeedConfig.ENABLED = false
+SpeedConfig.ENABLED = true -- D46: live
 SpeedConfig.STUDIO_ATTRIBUTE = "StudioSpeed"
 SpeedConfig.PUBLISHED = "SpeedOn"
 

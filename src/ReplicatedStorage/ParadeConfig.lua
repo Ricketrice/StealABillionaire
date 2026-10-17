@@ -17,10 +17,10 @@ local WorkerCatalogue = require(script.Parent:WaitForChild("WorkerCatalogue"))
 
 local ParadeConfig = {}
 
-ParadeConfig.PARADE_ENABLED = false -- mystery workers walking down the red lane, Golden Parade
-ParadeConfig.JUICE_ENABLED = false -- reveal/carry/place/cash/steal/idle effects (client only)
-ParadeConfig.GOAL_HUD_ENABLED = false -- one next goal with a progress bar
-ParadeConfig.BOOK_ENABLED = false -- collection book (records caught workers in the save's hub field)
+ParadeConfig.PARADE_ENABLED = true -- D46 live: mystery workers walking down the red lane, Golden Parade
+ParadeConfig.JUICE_ENABLED = true -- D46 live: reveal/carry/place/cash/steal/idle effects (client only)
+ParadeConfig.GOAL_HUD_ENABLED = true -- D46 live: one next goal with a progress bar
+ParadeConfig.BOOK_ENABLED = true -- D46 live: collection book (records caught workers in the save's hub field)
 
 ParadeConfig.STUDIO_ATTRIBUTES = { PARADE_ENABLED = "StudioParade", JUICE_ENABLED = "StudioJuice", GOAL_HUD_ENABLED = "StudioGoalHud", BOOK_ENABLED = "StudioBook" }
 ParadeConfig.PUBLISHED = { PARADE_ENABLED = "ParadeOn", JUICE_ENABLED = "JuiceOn", GOAL_HUD_ENABLED = "GoalHudOn", BOOK_ENABLED = "BookOn" }

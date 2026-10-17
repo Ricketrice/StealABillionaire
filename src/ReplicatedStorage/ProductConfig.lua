@@ -16,7 +16,7 @@ local CashFormat = require(script.Parent:WaitForChild("CashFormat"))
 
 local ProductConfig = {}
 
-ProductConfig.PURCHASES_ENABLED = false
+ProductConfig.PURCHASES_ENABLED = true -- D46: live
 ProductConfig.STUDIO_ATTRIBUTE = "StudioPurchases"
 ProductConfig.PUBLISHED = "PurchasesOn"
 ProductConfig.RECEIPTS_KEPT = 50
@@ -113,7 +113,7 @@ end
 function ProductConfig.on(): boolean
 	local RunService = game:GetService("RunService")
 	if RunService:IsServer() then
-		return ProductConfig.PURCHASES_ENABLED == true or (RunService:IsStudio() and game:GetService("ServerStorage"):GetAttribute(ProductConfig.STUDIO_ATTRIBUTE) == true)
+		return (require(script.Parent:WaitForChild("LaunchFlag")) :: any)(ProductConfig.PURCHASES_ENABLED, ProductConfig.STUDIO_ATTRIBUTE)
 	end
 	return game:GetService("ReplicatedStorage"):GetAttribute(ProductConfig.PUBLISHED) == true
 end

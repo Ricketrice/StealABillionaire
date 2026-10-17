@@ -10,7 +10,7 @@ local WorkerCatalogue = require(script.Parent:WaitForChild("WorkerCatalogue"))
 
 local HeistConfig = {}
 
-HeistConfig.ENABLED = false
+HeistConfig.ENABLED = true -- D46: live
 HeistConfig.STUDIO_ATTRIBUTE = "StudioHeist"
 HeistConfig.PUBLISHED = "HeistOn"
 
