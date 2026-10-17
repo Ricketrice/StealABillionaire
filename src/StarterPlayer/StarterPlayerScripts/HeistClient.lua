@@ -18,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 
+local AquarisChaser = require(ReplicatedStorage:WaitForChild("AquarisChaser"))
 local BossHeist = require(ReplicatedStorage:WaitForChild("BossHeist"))
 local HeistConfig = require(ReplicatedStorage:WaitForChild("HeistConfig"))
 local FxKit = require(ReplicatedStorage:WaitForChild("FxKit"))
@@ -186,6 +187,7 @@ local shown = { pos = nil :: Vector3?, yaw = 0, phase = 0, lift = 0, raise = 0, 
 local bossModel: Model? = nil -- (its root arrives with the rest of the model when the player gets near: stepRobot picks it up)
 local bossRoot: BasePart? = nil -- 036 boss chaser (BossHeist): the boss model replaces the robot parts; the rig animates itself from the server's clip attributes
 local bossLift = 0
+local aquaris: any = nil -- AquarisChaser when the boss is Aquaris (no rig: its welds are posed here)
 local bossEntry: BossHeist.Boss? = nil
 local bossLens: Instance? = nil
 local lightAim: Vector3? = nil -- world point the searchlight looks at
@@ -214,7 +216,7 @@ local function bindRobot(model: Instance)
 	end)
 	table.clear(robotParts)
 	table.clear(robotList)
-	bossRoot, bossEntry, bossLens, bossModel = nil, nil, nil, nil
+	bossRoot, bossEntry, bossLens, bossModel, aquaris = nil, nil, nil, nil, nil
 	local bossZone = model:GetAttribute("BossHeist")
 	if bossZone then
 		bossEntry = BossHeist.forZone(bossZone)
@@ -266,7 +268,7 @@ end
 local robotConns: { RBXScriptConnection } = {}
 
 local function dropRobot()
-	bossRoot, bossEntry, bossLens, bossModel = nil, nil, nil, nil
+	bossRoot, bossEntry, bossLens, bossModel, aquaris = nil, nil, nil, nil, nil
 	table.clear(robotParts)
 	table.clear(robotList)
 	siren1 = nil
@@ -312,7 +314,7 @@ local function unbind()
 		c:Disconnect()
 	end
 	table.clear(robotConns)
-	bossRoot, bossEntry, bossLens, bossModel = nil, nil, nil, nil
+	bossRoot, bossEntry, bossLens, bossModel, aquaris = nil, nil, nil, nil, nil
 	table.clear(robotParts)
 	table.clear(robotList)
 	table.clear(swings)
@@ -595,6 +597,9 @@ local function stepRobot(dt: number, t: number)
 			if bossPart and bossPart:IsA("BasePart") then
 				bossRoot = bossPart
 				bossLens = if bossEntry then bossModel:FindFirstChild(bossEntry.lens, true) else nil
+				if bossEntry and not bossEntry.rig then
+					aquaris = AquarisChaser.new(bossModel)
+				end
 				bossModel:SetAttribute("ClientBound", true) -- (local to this client: lets a Studio check see the chaser is bound)
 			end
 		end
@@ -617,7 +622,8 @@ local function stepRobot(dt: number, t: number)
 	shown.yaw += dyaw * math.clamp(dt * 8, 0, 1)
 	if bossRoot then -- the boss: only its root is placed here (smoothed like the robot); every joint follows the root
 		shown.last, shown.pos = pos, pos
-		bossRoot.CFrame = CFrame.new(pos + Vector3.new(0, bossLift, 0)) * CFrame.Angles(0, shown.yaw, 0)
+		local place = CFrame.new(pos + Vector3.new(0, bossLift, 0)) * CFrame.Angles(0, shown.yaw, 0)
+		bossRoot.CFrame = if aquaris then place * aquaris:step(t, place) else place
 		return
 	end
 	local moved = if shown.last then ((pos - shown.last) * Vector3.new(1, 0, 1)).Magnitude / math.max(dt, 1e-3) else 0

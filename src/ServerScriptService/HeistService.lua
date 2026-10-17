@@ -31,6 +31,7 @@
 -- RobotMode, RobotAt); the robot model there is moved by the clients only.
 -- Studio: ServerStorage attribute StudioHeistNow = true (or HeistService.forceOpen()) opens the vault now.
 
+local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -186,6 +187,7 @@ local function installBoss(folder: Folder)
 				end
 			end
 			clone:SetAttribute("CreatureBuiltScale", clone:GetAttribute("CreatureScale")) -- (CreatureScaler would otherwise shrink it to scale 1)
+			CollectionService:RemoveTag(clone, "Creature") -- (the client's AquarisChaser animates it, not CreatureClient: both would write the same welds)
 			local cloneRoot = clone:FindFirstChild("HumanoidRootPart") :: BasePart
 			cloneRoot.PivotOffset = CFrame.identity -- (the creature's pivot sits below the root: PivotTo must place the root itself)
 			clone.PrimaryPart = cloneRoot
