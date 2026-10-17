@@ -61,6 +61,13 @@ function NPCAnimation.attach(npc: Model)
 		animate.Enabled = false
 	end
 
+	-- 037: a creature wearing a rig (CreatureBuilder.attachBossRig) animates only through the rig's own Driver on the client. The hidden R15 body
+	-- plays nothing: its Animator matches poses to every joint in the model by part name, so the R15 "Head" pose was retargeted onto an R6 rig's Neck
+	-- (head turned ~90 deg) and the walk fought the rig's clips.
+	if npc:FindFirstChild("BossRig") then
+		return
+	end
+
 	local walkTrack = animator:LoadAnimation(walkAnimation)
 	local idleTrack = animator:LoadAnimation(idleAnimation)
 	walkTrack.Priority = Enum.AnimationPriority.Movement

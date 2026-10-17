@@ -14,6 +14,8 @@
 --   cap      real server, player standing in each zone: wanderers reach the cap (10 Knight's Keep, 8 Sunken Kingdom /
 --            Ember Academy for one player) and never exceed it; most spawn within ~125 studs of the player; wanderers
 --            more than 80 studs away are Dormant (frozen), near ones are not; parts of the zone's wanderers at the cap
+--   upright  (037) every creature wild-walking, carried and on a pad, measured on the client (ClientHelper): head > torso > feet,
+--            root up > 0.9 (carried: in the root's frame, root up = the carrier's back), head within 60 deg of the torso
 
 local RunService = game:GetService("RunService")
 if not RunService:IsStudio() then
@@ -209,6 +211,48 @@ if not (A and ready(A)) then
 end
 local models = ReplicatedStorage:WaitForChild(CreatureBuilder.FOLDER)
 
+-- 037: client half (ClientHelper): teleports (a server-set CFrame on the client-owned character does not always stick) and the upright probe.
+local bridge = Instance.new("RemoteEvent")
+bridge.Name = "Test035Bridge"
+bridge.Parent = ReplicatedStorage
+local replies, helperReady, seq = {}, false, 0
+bridge.OnServerEvent:Connect(function(p, kind, rid, value)
+	if p ~= A then
+		return
+	elseif kind == "reply" and type(rid) == "number" then
+		replies[rid] = value
+	elseif kind == "ready" then
+		helperReady = true
+	end
+end)
+local helperGui = Instance.new("ScreenGui")
+helperGui.Name = "Test035Helper"
+helperGui.ResetOnSpawn = false
+local helperScript = script:WaitForChild("ClientHelper"):Clone() :: LocalScript
+helperScript.Disabled = false
+helperScript.Parent = helperGui
+helperGui.Parent = A:WaitForChild("PlayerGui")
+local function ask(kind: string, arg: any): any
+	seq += 1
+	local rid = seq
+	bridge:FireClient(A, kind, rid, arg)
+	local v = waitUntil(25, function()
+		return replies[rid]
+	end)
+	replies[rid] = nil
+	return v or {}
+end
+local function teleport(cf: CFrame)
+	local root = A.Character and A.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	if root then
+		root.CFrame = cf
+	end
+	if helperReady then
+		ask("tp", cf)
+	end
+	task.wait(0.2)
+end
+
 local function models_()
 	local missing = {}
 	for zoneId, roster in WorkerCatalogue.ZONES do
@@ -335,9 +379,8 @@ local function sameFor(zoneName: string)
 	local npc = wanderers[1]
 	local id = npc:GetAttribute("LookId")
 	local sigBefore = signature(npc)
-	local root = A.Character.HumanoidRootPart :: BasePart
 	local npcRoot = npc.HumanoidRootPart :: BasePart
-	root.CFrame = npcRoot.CFrame * CFrame.new(0, 0, -3)
+	teleport(npcRoot.CFrame * CFrame.new(0, 0, -3))
 	local ok, msg = NPCClaim.tryReserve(A, npc, zone)
 	expect("steal reserved", ok, msg)
 	local carried = waitUntil(15, function()
@@ -359,7 +402,7 @@ local function sameFor(zoneName: string)
 			break
 		end
 	end
-	root.CFrame = (target :: BasePart).CFrame * CFrame.new(0, 4, 0)
+	teleport((target :: BasePart).CFrame * CFrame.new(0, 4, 0))
 	task.wait(0.3)
 	local placed, pmsg = NPCPlacement.tryPlace(A, target :: BasePart)
 	expect("placed on a pad", placed, pmsg or station)
@@ -465,12 +508,12 @@ local function partsBudget()
 	end
 end
 
-local function capFor(zoneName: string, want: number)
+local function capFor(zoneName: string, want: number, waitFor: number?)
 	local zone = ZoneArea.new(workspace.Zones[zoneName])
 	local root = A.Character.HumanoidRootPart :: BasePart
 	local points = zone:getSpawnPoints()
 	local home = points[math.ceil(#points / 2)].Position + Vector3.new(0, 4, 0)
-	root.CFrame = CFrame.new(home)
+	teleport(CFrame.new(home))
 	task.wait(1)
 	local dists, maxSeen = {}, 0
 	local conn = zone.npcFolder.ChildAdded:Connect(function(npc)
@@ -480,7 +523,7 @@ local function capFor(zoneName: string, want: number)
 			table.insert(dists, (r.Position - root.Position).Magnitude)
 		end
 	end)
-	local full = waitUntil(110, function()
+	local full = waitUntil(waitFor or 110, function()
 		local n = #zone.npcFolder:GetChildren()
 		maxSeen = math.max(maxSeen, n)
 		return if n >= want then n else nil
@@ -523,6 +566,132 @@ local function capFor(zoneName: string, want: number)
 	expect(zoneName .. " dormant only when no player within 80 studs", wrong == 0, wrong)
 end
 
+-- 037: every creature stands upright in all three states, measured on the client after the rig Driver / Animator (ClientHelper):
+-- head above torso above feet, root up > 0.9, head turned less than 60 deg from the torso. Wild = the real NPCAnimation.attach + a Humanoid walk;
+-- carried = NPCCarry.start (it lies the creature across the shoulder on purpose: checked in the root's own frame, root up = the carrier's back);
+-- pad = NPCPlacement.placeOnStation.
+local function uprightAll()
+	local NPCWanderer, NPCCarry, NPCAnimation = mod("NPCWanderer"), mod("NPCCarry"), mod("NPCAnimation")
+	expect(
+		"client helper ready",
+		waitUntil(20, function()
+			return helperReady
+		end)
+	)
+	local leftover = NPCCarry.detach(A) -- an earlier scenario that failed may have left a creature on the shoulder
+	if leftover then
+		leftover:Destroy()
+	end
+	local function judge(id: string, mode: string, r: any)
+		local ok = r ~= nil and r.n ~= nil and r.n > 0 and r.headTorso > 0 and r.torsoFeet > 0 and r.up > 0.9 and r.tilt > 0.5
+		local detail = if r and r.n
+			then ("samples %d, moving %d, head-torso %.2f, torso-feet %.2f, root up %.2f, head-vs-torso up %.2f%s"):format(
+				r.n,
+				r.moving,
+				r.headTorso,
+				r.torsoFeet,
+				r.up,
+				r.tilt,
+				if r.rig then ", rig" else ""
+			)
+			else "not measured " .. tostring(r and r.error)
+		expect(("%s upright %s"):format(id, mode), ok, detail)
+		if r and r.rig then
+			info(("%s (rig) %s"):format(id, mode), detail)
+		end
+		return r
+	end
+
+	local ids = {}
+	for id, spec in CreatureSpecs do
+		if type(spec) == "table" and models:FindFirstChild(id) then
+			table.insert(ids, id)
+		end
+	end
+	table.sort(ids)
+	local zone = ZoneArea.new(workspace.Zones.MainStreet)
+	local points = zone:getSpawnPoints()
+	local plot = PlotService.getPlot(A) :: Model
+	local folder = Instance.new("Folder")
+	folder.Name = "_UprightProbe035"
+	folder.Parent = workspace
+	local walking, measured = 0, 0
+	local i = 1
+	while i <= #ids do
+		local free = {}
+		for _, s in plot.Stations:GetChildren() do
+			if s:IsA("BasePart") and s:GetAttribute("Occupied") ~= true then
+				table.insert(free, s)
+			end
+		end
+		local group = {}
+		for k = i, math.min(i + math.max(1, math.min(3, #free)) - 1, #ids) do
+			table.insert(group, ids[k])
+		end
+		i += #group
+		-- wild: walk between two spawn points
+		local npcs = {}
+		for k, id in group do
+			local from = points[(k % #points) + 1]
+			local to = from
+			for _, q in points do -- the farthest point: the walk lasts the whole sample
+				if (q.Position - from.Position).Magnitude > (to.Position - from.Position).Magnitude then
+					to = q
+				end
+			end
+			local npc = NPCWanderer.cloneRig(models[id])
+			local humanoid = npc:FindFirstChildOfClass("Humanoid") :: Humanoid
+			local root = npc:FindFirstChild("HumanoidRootPart") :: BasePart
+			local ground = zone:findGround(from.Position)
+			local gy = if ground then ground.Y else from.Position.Y
+			npc:PivotTo(CFrame.new(from.Position.X, gy + humanoid.HipHeight + root.Size.Y / 2, from.Position.Z) * root.CFrame:ToObjectSpace(npc:GetPivot()))
+			npc:SetAttribute("_Probe035", id)
+			npc.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
+			humanoid.WalkSpeed = 8
+			npc.Parent = folder
+			root:SetNetworkOwner(nil)
+			NPCAnimation.attach(npc)
+			humanoid:MoveTo(to.Position)
+			npcs[id] = npc
+		end
+		task.wait(0.8)
+		local first = npcs[group[1]].HumanoidRootPart.Position
+		local wild = ask("probe", { mode = "wild", ids = group, secs = 2.5, near = first + Vector3.new(14, 4, 0) })
+		for _, id in group do
+			local r = judge(id, "wild-walking", wild[id])
+			if r and r.n then
+				measured += 1
+				walking += if r.moving > r.n / 2 then 1 else 0
+			end
+		end
+		-- carried, one at a time, then onto a free pad
+		for k, id in group do
+			local npc = npcs[id]
+			local humanoid = npc:FindFirstChildOfClass("Humanoid") :: Humanoid
+			humanoid:MoveTo((npc.HumanoidRootPart :: BasePart).Position)
+			NPCCarry.start(A, npc)
+			task.wait(0.6)
+			judge(id, "carried", ask("probe", { mode = "carried", ids = { id }, secs = 1.2 })[id])
+			local back = NPCCarry.detach(A)
+			if back and free[k] then
+				NPCPlacement.placeOnStation(back, free[k], plot)
+			end
+		end
+		task.wait(0.8)
+		local station = free[1] :: BasePart?
+		local pad = ask("probe", { mode = "pad", ids = group, secs = 1.5, near = if station then station.Position + Vector3.new(0, 4, 10) else nil })
+		for _, id in group do
+			judge(id, "on a pad", pad[id])
+		end
+		for _, npc in npcs do
+			npc:Destroy()
+		end
+		task.wait(0.3)
+	end
+	info("upright wild sample", ("%d of %d creatures walked for most of it"):format(walking, measured))
+	folder:Destroy()
+end
+
 local errorsSeen = {}
 local LogService = game:GetService("LogService")
 LogService.MessageOut:Connect(function(message, kind)
@@ -559,6 +728,7 @@ end)
 scenario("cap BillionaireHills", function()
 	capFor("BillionaireHills", 8)
 end)
+scenario("upright", uprightAll)
 section = "errors"
 expect("no creature / spawner errors in the log", #errorsSeen == 0, table.concat(errorsSeen, " | "))
 finish("DONE")
