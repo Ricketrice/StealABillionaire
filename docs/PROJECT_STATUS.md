@@ -52,6 +52,7 @@ _Keep under ~60 lines. Replace sections at each milestone end; don't append hist
 Merge, gear tiers, rebirth, base visual growth, group reward (no group yet, D40), creature models (035), Legendary/Secret animations (D12).
 
 ## Known issues
+- **First 60 s Play check (2026-10-18, solo, StudioDevTools off for the check, no input):** spawned (hp 100), 20 ScreenGuis up, no script errors. Found: (1) **7 errors "The experience doesn't have access permission to use asset id ..."** = the 7 custom sounds in `UIKit.CUSTOM` (pop, chime, epic, legendary, secret, steal + 71774379383351): they won't play live until shared with the experience (owner, by hand). (2) **The idle new player drifts along `ParadeLane`:** spawn `Workspace.SpawnLocation` (-157, 0.5, -4) sits at the lane's start; with no input the character moved +298 studs along X (~4-5 studs/s) and stopped at x 141 near the lane's end; lane itself has no velocity. Cause NOT traced (likely the parade walkers pushing; no rabbit hole per owner). (3) Studio-only noise: ~20 meshes/textures and animation 122193759333439 "Authentication required" / "could not fetch" (Vinegar Studio login; not seen live, unverified).
 - Nothing of 034 has been looked at in a picture (no screenshots): geometry checked by overlap/walk-ray scripts only. Owner play-check needed (looks, the underwater tint, Sir Ironclad's poses, book riding on a phone).
 - Spell Run timing is a bot's clean line; kids on phones will be slower (135 s limit, D45). `DevTest_Race031` is obsolete (circuit gone; inert unless launched).
 - Test windows can die at start-up with a GPU reset (`DXGI_ERROR_DEVICE_RESET`, Vinegar): Play quality level 1 + FFlag override in place. Prefer 1-client tests; never more than 3 clients.
@@ -62,6 +63,7 @@ Merge, gear tiers, rebirth, base visual growth, group reward (no group yet, D40)
 - Q1 Is Zone 2 in our launch? · Q3 HP fixed 100 or tied to Defence? · Q4 Arena stakes + lot stealing too harsh for kids? · Q5 Max players per server vs 12 lots?
 
 ## By-hand list for owner
+- **Before launch:** share the 7 `UIKit` sound assets with this experience (click the output error's "share access", or Creator Dashboard > the audio asset > Permissions > add the experience). Decide whether the spawn should move off the parade lane (see Known issues).
 - Save the place in Studio. Local backup of the state before this session's changes: `backups/pre034b.rbxl`.
 - Creator Dashboard renames (ids stay): 2x Cash → 2x Coins; Cash Stack / Cash Bag / Cash Vault → Coin Stack / Coin Bag / Coin Chest. Game name + description at launch.
 - On a machine with more free memory: rerun `pvp022` (3 clients, StudioPvPStealing/StudioWeaponCombat off at launch, back on after) and `lane030` (2 clients) to confirm the two changed checks. Local place copy from the pvp022 run: `backups/pre034c_tests.rbxl`.
