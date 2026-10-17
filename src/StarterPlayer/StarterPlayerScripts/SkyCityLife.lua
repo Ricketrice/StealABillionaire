@@ -1,7 +1,8 @@
 -- Studio location: StarterPlayer.StarterPlayerScripts.SkyCityLife (LocalScript)
 -- SkyCityLife  (Milestone 027): this client's view of the sky city. Display only; nothing is sent.
 --   * YOUR BASE: a soft gold light pillar and label over this player's own lot, and a gold beam from
---     the player to it for the first BEAM_SECONDS after each spawn and whenever they carry a worker.
+--     the player to it for the first BEAM_SECONDS after each spawn (not before the first free catch) and whenever
+--     they carry a worker.
 --     Both hide once the player is standing on their lot.
 --   * Ambient particles on parts tagged by the map: "Fx027Sparkle" (the Vault), "Fx027Coins" (spawn
 --     medallion), "Fx027Leaves" (a few trees). Few emitters, low rates, only within FX_RANGE studs.
@@ -200,7 +201,11 @@ while true do
 			end
 		end
 		if beam then
-			local recent = os.clock() - spawnedAt < BEAM_SECONDS
+			-- Before the first (free) catch the parade's FREE arrow is the one thing to follow (036): no beam home
+			-- until they carry something.
+			local parade = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("Parade")
+			local firstCatchPending = parade ~= nil and parade:GetAttribute("Free") == true
+			local recent = os.clock() - spawnedAt < BEAM_SECONDS and not firstCatchPending
 			beam.Enabled = away and (recent or player:GetAttribute("CarryingNPC") == true)
 		end
 	end
