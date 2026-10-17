@@ -2131,8 +2131,22 @@ end
 local BOSS_RIGS = true
 CreatureSpecs.BOSS_RIGS = BOSS_RIGS
 local BOSS_RIG_OF = { mystery_millionaire = "Malgrave", the_trillionaire = "Vault" } -- (kept local: CreatureBuilder.buildAll builds every table in CreatureSpecs)
-if BOSS_RIGS then
+-- 036 sweep: the owner's five Knight's Keep NPCs (R6 meshes, tools/keep_rigs.py + BossRigs.Shared.NpcBuilder) ride the same path as the boss rigs: Common = Squire / Peasant / Guard,
+-- Rare = Archer / Crusader. The other Keep slots (Epic, Legendary) keep their current look. KEEP_NPC_RIGS = false (or a missing Template) puts the old looks back, per creature.
+local KEEP_NPC_RIGS = true
+CreatureSpecs.KEEP_NPC_RIGS = KEEP_NPC_RIGS
+if KEEP_NPC_RIGS then
+	BOSS_RIG_OF.broke_bob = "Squire" -- Rookie Squire
+	BOSS_RIG_OF.delivery_dave = "Peasant" -- Scroll Page
+	BOSS_RIG_OF.training_dummy = "Guard"
+	BOSS_RIG_OF.street_hustler = "Archer" -- Apple Archer
+	BOSS_RIG_OF.business_betty = "Crusader" -- Banner Bearer
+end
+if BOSS_RIGS or KEEP_NPC_RIGS then
 	for id, rigName in BOSS_RIG_OF do
+		if not BOSS_RIGS and (id == "mystery_millionaire" or id == "the_trillionaire") then
+			continue
+		end
 		local old = CreatureSpecs[id]
 		if type(old) == "table" then
 			CreatureSpecs[id] = {

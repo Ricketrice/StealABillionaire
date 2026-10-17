@@ -117,6 +117,11 @@ local KIT_SIGNATURE = {
 local BOSS_SIGNATURE = {
 	mystery_millionaire = { "Greatsword", "TatteredCape", "Head" },
 	the_trillionaire = { "WizardTopHat", "Tool_LedgerScepter", "Head" },
+	broke_bob = { "Torso", "Head", "Right Arm" }, -- Knight's Keep NPC rigs (R6 part names)
+	delivery_dave = { "Torso", "Head", "Right Arm" },
+	training_dummy = { "Torso", "Head", "Right Arm" },
+	street_hustler = { "Torso", "Head", "Right Arm" },
+	business_betty = { "Torso", "Head", "Shield", "Longsword" },
 }
 local ODDS = { Common = 70, Rare = 20, Epic = 8, Legendary = 1.8, Secret = 0.2 }
 local SIGNATURE = {
@@ -254,8 +259,8 @@ local function models_()
 				local complete = rig ~= nil and rig:FindFirstChild("Runtime") ~= nil and rig:FindFirstChild("Client") ~= nil
 				local welded = rig ~= nil and rig:FindFirstChild("HumanoidRootPart") ~= nil and (rig :: any).HumanoidRootPart:FindFirstChild("BossRigRoot") ~= nil
 				expect(
-					id .. " boss rig " .. tostring(rigName) .. ": Runtime, Client, root weld, 18+ Motor6D, nothing anchored",
-					complete and welded and motors >= 18 and loose == 0,
+					id .. " boss rig " .. tostring(rigName) .. ": Runtime, Client, root weld, every Motor6D of its data, nothing anchored",
+					complete and welded and motors >= #(require((rig :: any).Runtime.Data) :: any).order and loose == 0,
 					("%d motors, %d anchored"):format(motors, loose)
 				)
 			end
