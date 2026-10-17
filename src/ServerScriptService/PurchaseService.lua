@@ -23,6 +23,7 @@ local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
 local ProductConfig = require(ReplicatedStorage:WaitForChild("ProductConfig"))
+local Analytics = require(script.Parent:WaitForChild("Analytics"))
 local CashService = require(script.Parent:WaitForChild("CashService"))
 local PassiveIncome = require(script.Parent:WaitForChild("PassiveIncome"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
@@ -238,6 +239,7 @@ function PurchaseService.buy(player: Player, key: any): (boolean, string?)
 		if PurchaseService.owns(player, item.key) then
 			return false, "You already have this pass."
 		end
+		Analytics.step(player, "FirstPurchasePrompt")
 		MarketplaceService:PromptGamePassPurchase(player, item.id)
 	else
 		if item.oneTime and player:GetAttribute("StarterOwned") == true then
@@ -246,6 +248,7 @@ function PurchaseService.buy(player: Player, key: any): (boolean, string?)
 		if item.oneTime and not starterShown(player) then
 			return false, "The Starter Pack is for new players."
 		end
+		Analytics.step(player, "FirstPurchasePrompt")
 		MarketplaceService:PromptProductPurchase(player, item.id)
 	end
 	return true, nil

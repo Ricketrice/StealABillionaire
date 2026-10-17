@@ -42,6 +42,7 @@ local LaunchFlag = require(game:GetService("ReplicatedStorage"):WaitForChild("La
 local BossHeist = require(ReplicatedStorage:WaitForChild("BossHeist"))
 local HeistConfig = require(ReplicatedStorage:WaitForChild("HeistConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
+local Analytics = require(script.Parent:WaitForChild("Analytics"))
 local NPCCarry = require(script.Parent:WaitForChild("NPCCarry"))
 local NPCClaim = require(script.Parent:WaitForChild("NPCClaim"))
 local ParadeService = require(script.Parent:WaitForChild("ParadeService"))
@@ -486,6 +487,7 @@ local function deliver(c: Carrier)
 	end
 	HeistService.stats.safe += 1
 	local worker = WorkerCatalogue.get(workerId)
+	Analytics.event(player, "BossHeistWin", 1, worker and worker.rarity or "?")
 	clientEvent:FireAllClients("Safe", { userId = player.UserId, where = where, rarity = worker and worker.rarity })
 	task.delay(REVEAL_DELAY, function()
 		if player.Parent then
@@ -571,6 +573,7 @@ function HeistService.grab(player: Player): boolean
 	HeistService.stats.grabs += 1
 	clientEvent:FireAllClients("Grab", { userId = player.UserId, deadline = now + HeistConfig.CARRY_LIMIT })
 	print(("[HeistService] %s grabbed a Boss Capsule (%s)"):format(player.Name, o.id))
+	Analytics.event(player, "BossHeistStart")
 	return true
 end
 

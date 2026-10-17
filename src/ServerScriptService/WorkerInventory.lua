@@ -30,6 +30,7 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local InventoryConfig = require(ReplicatedStorage:WaitForChild("InventoryConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
+local Analytics = require(script.Parent:WaitForChild("Analytics"))
 local NPCCarry = require(script.Parent:WaitForChild("NPCCarry"))
 local NPCClaim = require(script.Parent:WaitForChild("NPCClaim"))
 local NPCPlacement = require(script.Parent:WaitForChild("NPCPlacement"))
@@ -262,6 +263,11 @@ function WorkerInventory.onClaimed(player: Player, npc: Model)
 	table.insert(data.workers, record)
 	index[record.uid] = record
 	push(player)
+	Analytics.step(player, "FirstCatch")
+	local worker = WorkerCatalogue.get(record.id)
+	if worker and worker.rarity == "Secret" then
+		Analytics.event(player, "SecretCatch", 1, record.id)
+	end
 end
 
 -- NPCPlacement placed handler: the carried worker is now on a station.
@@ -273,6 +279,7 @@ local function onPlaced(player: Player, npc: Model, station: BasePart)
 	if record then
 		record.loc, record.station = "station", station:GetAttribute("StationIndex")
 		push(player)
+		Analytics.step(player, "FirstPadPlace")
 	end
 end
 
