@@ -320,7 +320,12 @@ local GRAB = (template:WaitForChild("GrabSpot") :: BasePart).Position
 local STAND_A = Vector3.new(GRAB.X + 4.5, 15.6, GRAB.Z + 2)
 local STAND_B = Vector3.new(GRAB.X + 4.5, 15.6, GRAB.Z - 2)
 local LOOK = Vector3.new(GRAB.X - 20, 15.6, GRAB.Z)
-local HOME = { Vector3.new(-157, 15.3, -326), Vector3.new(-157, 15.3, -176), Vector3.new(-157, 9, -140), Vector3.new(-157, 3.3, -104) }
+-- 037 Knight's Keep map: from the treasury, behind the castle -> through the hall door -> down the courtyard stairs -> gate -> bridge -> ramp
+local THROUGH_HALL = { Vector3.new(-157, 13.3, -336), Vector3.new(-157, 18.5, -319), Vector3.new(-157, 18.5, -309) }
+local HOME = table.clone(THROUGH_HALL)
+for _, p in { Vector3.new(-157, 14.5, -262), Vector3.new(-157, 14.5, -212), Vector3.new(-157, 15.3, -176), Vector3.new(-157, 9, -140), Vector3.new(-157, 3.3, -104) } do
+	table.insert(HOME, p)
+end
 local CASH0, lowest = {}, {}
 for _, p in everyone do
 	CASH0[p] = CashService.get(p)
@@ -404,8 +409,10 @@ local function dodges()
 
 	-- dodges in the open street, robot in front of A (A walks there: a carrier who teleports loses the capsule)
 	waitAttackOver()
-	ask(A, "walk", { points = { Vector3.new(-157, 15.6, -326), Vector3.new(-157, 15.6, -296) } }, 20)
-	HeistService._test.placeRobot(Vector3.new(-157, 12.3, -306))
+	local toCourtyard = table.clone(THROUGH_HALL)
+	table.insert(toCourtyard, Vector3.new(-157, 15.6, -262)) -- the open courtyard (037 map)
+	ask(A, "walk", { points = toCourtyard }, 30)
+	HeistService._test.placeRobot(Vector3.new(-157, 13.5, -272))
 	task.wait(1)
 	local dodgeStart = now()
 	local perf: any = nil
