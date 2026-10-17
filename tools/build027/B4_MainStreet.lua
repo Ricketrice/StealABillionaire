@@ -255,6 +255,7 @@ return function(): string
 			size = Vector3.new(0.1, 7, 7),
 			cf = CFrame.new(s.X, top + 0.12, s.Y) * CFrame.Angles(0, 0, math.rad(90)),
 			color = C.Trim,
+			transparency = 1, -- 037 (owner): the catch-spot rings are hidden; spawning uses Zones.MainStreet.SpawnPoints, not these
 			deco = true,
 		}) -- above the runner
 		K.part({
@@ -264,6 +265,7 @@ return function(): string
 			size = Vector3.new(0.1, 5.8, 5.8),
 			cf = CFrame.new(s.X, top + 0.14, s.Y) * CFrame.Angles(0, 0, math.rad(90)),
 			color = C.Stone,
+			transparency = 1,
 			deco = true,
 		})
 	end

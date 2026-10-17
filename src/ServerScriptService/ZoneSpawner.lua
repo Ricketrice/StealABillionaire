@@ -32,6 +32,10 @@ export type Config = {
 	-- (nil = spawn the plain template and roll at the steal, as before).
 	pick: (() -> (Model, string?))?,
 	adopt: ((npc: Model, workerId: string) -> ())?,
+	-- 037: batch mode (Knight's Keep): every batchEvery seconds the unclaimed wanderers go and up to batchSize new ones spawn; no refill and
+	-- no lifetime despawn in between, so a zone rolls at most batchSize creatures per batchEvery seconds.
+	batchSize: number?,
+	batchEvery: number?,
 }
 
 local ZoneSpawner = {}
@@ -40,6 +44,7 @@ local NEAR_MIN, NEAR_MAX = 20, 120 -- studs from a player: close enough to find,
 local DEFAULT_ACTIVE_RADIUS = 80
 local DORMANCY_TICK = 1 -- seconds between proximity checks
 local SPAWN_CLEARANCE = 3 -- studs; a spawn point with an NPC this close is treated as occupied
+local BATCH_FILL_TIME = 20 -- seconds a batch may take to fill (there can be fewer spawn points than batch members: they walk off their points first)
 
 local function getFlatDistance(a: Vector3, b: Vector3): number
 	return Vector3.new(a.X - b.X, 0, a.Z - b.Z).Magnitude
@@ -129,6 +134,35 @@ local function scheduleDespawn(zone: ZoneArea, npc: Model, lifetime: number)
 	end)
 end
 
+-- Spawns one wanderer at a free spawn point (preferring points near `near`). Returns the NPC, or nil when no point is free or the spawn failed.
+local function spawnOne(zone: ZoneArea, config: Config, near: { Vector3 }): Model?
+	local point = chooseSpawnPoint(zone, near)
+	if not point then
+		return nil -- every spawn point is occupied; try again later
+	end
+
+	local template, rolledId = config.template, nil
+	if config.pick then
+		template, rolledId = config.pick()
+	end
+	local ok, result = pcall(NPCWanderer.spawn, template, zone, point, config.walkSpeed)
+	if not ok then
+		warn("[ZoneSpawner]", zone.folder.Name, "failed to spawn", config.template.Name, "-", result)
+		return nil
+	end
+
+	if rolledId and config.adopt then
+		config.adopt(result, rolledId)
+	end
+	NPCClaim.attach(result, zone)
+	local prompt = (result:FindFirstChild("HumanoidRootPart") :: Instance?) and result.HumanoidRootPart:FindFirstChild("StealPrompt")
+	if rolledId and prompt then
+		prompt.ObjectText = result:GetAttribute("PromptName") or result.Name
+	end
+	print(("[ZoneSpawner] %s: spawned %s at %s (%d active)"):format(zone.folder.Name, config.template.Name, point.Name, countActive(zone)))
+	return result
+end
+
 -- Spawns one wanderer if the zone is below its cap. Returns the cap it used (ZoneSpawner.start paces itself by it).
 local function trySpawn(zone: ZoneArea, config: Config): number
 	local near = playersInZone(zone)
@@ -140,33 +174,39 @@ local function trySpawn(zone: ZoneArea, config: Config): number
 		return cap
 	end
 
-	local point = chooseSpawnPoint(zone, near)
-	if not point then
-		return cap -- every spawn point is occupied; try again next interval
+	local npc = spawnOne(zone, config, near)
+	if npc then
+		scheduleDespawn(zone, npc, config.lifetime)
 	end
-
-	local template, rolledId = config.template, nil
-	if config.pick then
-		template, rolledId = config.pick()
-	end
-	local ok, result = pcall(NPCWanderer.spawn, template, zone, point, config.walkSpeed)
-	if not ok then
-		warn("[ZoneSpawner]", zone.folder.Name, "failed to spawn", config.template.Name, "-", result)
-		return cap
-	end
-
-	if rolledId and config.adopt then
-		config.adopt(result, rolledId)
-	end
-	NPCClaim.attach(result, zone)
-	local prompt = (result:FindFirstChild("HumanoidRootPart") :: Instance?) and result.HumanoidRootPart:FindFirstChild("StealPrompt")
-	if rolledId and prompt then
-		prompt.ObjectText = result:GetAttribute("PromptName") or result.Name
-	end
-	scheduleDespawn(zone, result, config.lifetime)
-	print(("[ZoneSpawner] %s: spawned %s at %s (%d/%d active)"):format(zone.folder.Name, config.template.Name, point.Name, countActive(zone), cap))
 	return cap
 end
+
+-- Batch mode: the unclaimed wanderers go (a claimed one has already left the NPCs folder), then up to batchSize new ones spawn.
+-- Returns how many were spawned (= creatures rolled).
+local function refreshBatch(zone: ZoneArea, config: Config): number
+	for _, npc in zone.npcFolder:GetChildren() do
+		if npc:GetAttribute("Claimed") ~= true then
+			npc:Destroy()
+		end
+	end
+	if config.shouldSpawn and not config.shouldSpawn() then
+		return 0
+	end
+	local size = config.batchSize :: number
+	local spawned = 0
+	local deadline = os.clock() + BATCH_FILL_TIME
+	while spawned < size and countActive(zone) < size and os.clock() < deadline do
+		if spawnOne(zone, config, playersInZone(zone)) then
+			spawned += 1
+			task.wait(0.2)
+		else
+			task.wait(0.5)
+		end
+	end
+	print(("[ZoneSpawner] %s: new batch of %d (%d active)"):format(zone.folder.Name, spawned, countActive(zone)))
+	return spawned
+end
+ZoneSpawner.refreshBatch = refreshBatch -- for DevTest_Creature035
 
 -- Wanderers with no player within `radius` studs stand still and stop animating (attribute Dormant).
 local function updateDormancy(zone: ZoneArea, radius: number)
@@ -199,13 +239,20 @@ end
 -- Starts the spawn loop for a zone. Runs for the lifetime of the server.
 function ZoneSpawner.start(zone: ZoneArea, config: Config)
 	task.spawn(function()
+		if config.batchSize and config.batchEvery then
+			while true do
+				local t0 = os.clock()
+				refreshBatch(zone, config)
+				task.wait(math.max(1, config.batchEvery - (os.clock() - t0)))
+			end
+		end
 		while true do
 			local cap = trySpawn(zone, config)
 			-- fast enough that `cap` wanderers can be alive at once given their lifetime
 			task.wait(math.min(config.spawnInterval, config.lifetime / cap * 0.9))
 		end
 	end)
-	if config.activeCap then
+	if config.activeCap or config.batchSize then
 		local radius = config.activeRadius or DEFAULT_ACTIVE_RADIUS
 		task.spawn(function()
 			while true do

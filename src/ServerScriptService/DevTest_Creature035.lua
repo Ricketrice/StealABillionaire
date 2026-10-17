@@ -14,6 +14,7 @@
 --   cap      real server, player standing in each zone: wanderers reach the cap (10 Knight's Keep, 8 Sunken Kingdom /
 --            Ember Academy for one player) and never exceed it; most spawn within ~125 studs of the player; wanderers
 --            more than 80 studs away are Dormant (frozen), near ones are not; parts of the zone's wanderers at the cap
+--   batch    (037) Knight's Keep (MainStreet): at most 8 at once, a fresh batch every 120 s, <= 8 spawns (rolls) per batch
 --   upright  (037) every creature wild-walking, carried and on a pad, measured on the client (ClientHelper): head > torso > feet,
 --            root up > 0.9 (carried: in the root's frame, root up = the carrier's back), head within 60 deg of the torso
 
@@ -491,11 +492,17 @@ local function partsBudget()
 				cr += n
 				crN += 1
 			end
+			if i % 12 == 0 then
+				task.wait() -- 037: a slow machine hit "Script timeout" here (168 clones without a yield)
+			end
 		end
 		local after = 0
-		for _, d in workspace:GetDescendants() do
+		for k, d in workspace:GetDescendants() do
 			if d:IsA("BasePart") then
 				after += 1
+			end
+			if k % 5000 == 0 then
+				task.wait()
 			end
 		end
 		local avg = if crN > 0 then cr / crN else 0
@@ -692,6 +699,42 @@ local function uprightAll()
 	folder:Destroy()
 end
 
+-- 037: Knight's Keep (zone MainStreet) runs in batches: never more than `size` wanderers, all replaced every `every` seconds, no refill in between.
+local function batchFor(zoneName: string, size: number, every: number)
+	local zone = ZoneArea.new(workspace.Zones[zoneName])
+	local added: { number } = {}
+	local maxSeen = 0
+	local conn = zone.npcFolder.ChildAdded:Connect(function()
+		table.insert(added, os.clock())
+	end)
+	local window = every + 25
+	local t0 = os.clock()
+	while os.clock() - t0 < window do
+		maxSeen = math.max(maxSeen, #zone.npcFolder:GetChildren())
+		task.wait(0.25)
+	end
+	conn:Disconnect()
+	local batches, cur = {}, 0
+	for k, t in added do
+		if k > 1 and t - added[k - 1] > 30 then
+			table.insert(batches, cur)
+			cur = 0
+		end
+		cur += 1
+	end
+	if cur > 0 then
+		table.insert(batches, cur)
+	end
+	local biggest = 0
+	for _, n in batches do
+		biggest = math.max(biggest, n)
+	end
+	info(("%s spawns in %d s"):format(zoneName, window), ("%d in %d batch(es): %s"):format(#added, #batches, table.concat(batches, ", ")))
+	expect(("%s never more than %d wanderers at once (%d s)"):format(zoneName, size, window), maxSeen <= size, maxSeen)
+	expect(("%s refreshed its batch within %d s"):format(zoneName, window), #batches >= 1, #added)
+	expect(("%s at most %d spawns (rolls) per batch"):format(zoneName, size), biggest <= size, biggest)
+end
+
 local errorsSeen = {}
 local LogService = game:GetService("LogService")
 LogService.MessageOut:Connect(function(message, kind)
@@ -720,7 +763,10 @@ scenario("swap", swapAll)
 scenario("odds", odds)
 scenario("parts", partsBudget)
 scenario("cap MainStreet", function()
-	capFor("MainStreet", 10)
+	capFor("MainStreet", 8, 135) -- 037: batch mode (8, refreshed every 120 s): a creature stolen above comes back at the next batch
+end)
+scenario("batch MainStreet", function()
+	batchFor("MainStreet", 8, 120)
 end)
 scenario("cap SunkenKingdom", function()
 	capFor("SunkenKingdom", 8)

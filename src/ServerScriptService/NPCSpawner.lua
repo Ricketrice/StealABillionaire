@@ -72,6 +72,11 @@ local ZONES = {
 		activeRadius = 80, -- wanderers freeze when no player is this close
 		lifetime = 60, -- seconds before an unclaimed NPC despawns
 		walkSpeed = 6, -- studs per second
+		-- 037 (owner): Knight's Keep runs in batches instead: at most batchSize wanderers at once (any number of players), all unclaimed ones
+		-- replaced by a fresh batch every batchEvery seconds, no refill in between (<= 8 rolls per 2 min = 240 an hour; it was ~600 with one
+		-- player in the zone). maxNPCs / activeCap / maxCap / lifetime / spawnInterval are not used in batch mode.
+		batchSize = 8,
+		batchEvery = 120,
 	},
 	-- Districts: fewer NPCs each so a full server stays light on mobile. Food Court (Zone 2) is
 	-- teammate-owned and has no spawner until its roster is approved.
@@ -176,6 +181,8 @@ for _, settings in ZONES do
 		activeRadius = settings.activeRadius,
 		lifetime = settings.lifetime,
 		walkSpeed = settings.walkSpeed,
+		batchSize = settings.batchSize,
+		batchEvery = settings.batchEvery,
 		shouldSpawn = if settings.district
 			then function()
 				return anyoneUnlocked(settings.zone)
