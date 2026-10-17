@@ -5,6 +5,9 @@
 -- anchored root; welded pieces follow), skipped beyond 120 studs. Does nothing when there is no showcase.
 
 local RunService = game:GetService("RunService")
+if not RunService:IsStudio() then
+	return -- the showcase is Studio-only (036 publish check)
+end
 
 local RANGE = 120
 
