@@ -78,8 +78,7 @@ local ZONES = {
 		batchSize = 8,
 		batchEvery = 120,
 	},
-	-- Districts: fewer NPCs each so a full server stays light on mobile. Food Court (Zone 2) is
-	-- teammate-owned and has no spawner until its roster is approved.
+	-- Districts: fewer NPCs each so a full server stays light on mobile.
 	{
 		zone = "SunkenKingdom",
 		npcModel = "MysteryNPC",
@@ -105,34 +104,7 @@ local ZONES = {
 		walkSpeed = 6,
 		district = true,
 	},
-	-- Teammate zones (4-7 after 034): untouched, not ours to tune.
-	{
-		zone = "BeachBoardwalk",
-		npcModel = "MysteryNPC",
-		spawnInterval = 12,
-		maxNPCs = 4,
-		lifetime = 60,
-		walkSpeed = 6,
-		district = true,
-	},
-	{
-		zone = "ToyTown",
-		npcModel = "MysteryNPC",
-		spawnInterval = 12,
-		maxNPCs = 4,
-		lifetime = 60,
-		walkSpeed = 6,
-		district = true,
-	},
-	{
-		zone = "NeonDowntown",
-		npcModel = "MysteryNPC",
-		spawnInterval = 12,
-		maxNPCs = 4,
-		lifetime = 60,
-		walkSpeed = 6,
-		district = true,
-	},
+	-- (D48: the teammate zones 4-7 and their spawners are removed; their Workspace.Zones folders are parked.)
 }
 
 -- True while at least one player in the server can collect from this zone.

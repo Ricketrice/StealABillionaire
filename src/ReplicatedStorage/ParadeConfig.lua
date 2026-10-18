@@ -99,11 +99,7 @@ ParadeConfig.BOOK_PAGES = {
 	{ zone = "MainStreet", title = "Knight's Keep" },
 	{ zone = "SunkenKingdom", title = "Sunken Kingdom" },
 	{ zone = "BillionaireHills", title = "Ember Academy" },
-	{ zone = "FoodCourt", title = "Food Court" },
-	{ zone = "BeachBoardwalk", title = "Beach Boardwalk" },
-	{ zone = "ToyTown", title = "Toy Town" },
-	{ zone = "NeonDowntown", title = "Neon Downtown" },
-}
+} -- (D48: the teammate zones' pages are gone with the zones)
 ParadeConfig.BOOK_MAX = 200 -- most entries a save's book keeps
 
 function ParadeConfig.validate()

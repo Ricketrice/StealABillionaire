@@ -54,9 +54,10 @@ local function count(set: { [string]: boolean }): number
 	end
 	return n
 end
+-- Every creature that can be caught = the book pages' rosters (D48: not the retired teammate rosters still in the catalogue).
 local TOTAL = 0
-for _ in WorkerCatalogue.WORKERS do
-	TOTAL += 1
+for _, page in ParadeConfig.BOOK_PAGES do
+	TOTAL += #(WorkerCatalogue.ZONES[page.zone] or {})
 end
 
 local gui = Instance.new("ScreenGui")
