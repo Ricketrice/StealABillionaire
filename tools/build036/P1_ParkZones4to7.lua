@@ -4,7 +4,7 @@
 -- Kept (ours / shared): FutureZones.Zone6_BillionaireHills (Ember), Our_SunkenKingdom, BillionairePlaza (ArenaFloor: ZoneProgress);
 -- Islands.PlazaIsland (Vault, Arena venue), BillionaireHillsIsland; Bridges/BridgeGuards BillionaireHills*; WorldBounds PlazaRing*;
 -- Hub.GateLines Zone6_*; Lane clouds. Also closes the end of Ember Academy's avenue (z -836, the lane opening the ramp to stop 4
--- used) with a rail in the Balustrade's style (Ember036EndRail, 4 parts).
+-- used) with a rail in the Balustrade's style + an invisible 16-stud blocker behind it (Ember036EndRail).
 local UNDO = false
 
 local ServerStorage = game:GetService("ServerStorage")
@@ -124,6 +124,14 @@ copy(base, Vector3.new(26, 1.2, 1.4), Vector3.new(-158, y + 0.5, z))
 copy(top, Vector3.new(26, 0.6, 1.2), Vector3.new(-158, y + 2.9, z))
 copy(post, Vector3.new(1.2, 3, 1.2), Vector3.new(-164.5, y + 1.4, z))
 copy(post, Vector3.new(1.2, 3, 1.2), Vector3.new(-151.5, y + 1.4, z))
+-- the rail is jumpable (3 studs): an invisible wall behind it so nobody jumps off into the void
+local blocker = Instance.new("Part")
+blocker.Name = "EndBlocker"
+blocker.Anchored, blocker.CanCollide, blocker.CanQuery, blocker.CanTouch, blocker.CastShadow = true, true, false, false, false
+blocker.Transparency = 1
+blocker.Size = Vector3.new(28, 16, 1)
+blocker.CFrame = CFrame.new(-158, y + 8, z - 1.2)
+blocker.Parent = rail
 rail.Parent = world.EmberAcademy
 
-return ("P1 parked %d objects, %d parts:\n%s\n+ Ember036EndRail (4 parts)"):format(#list, parts, table.concat(report, "\n"))
+return ("P1 parked %d objects, %d parts:\n%s\n+ Ember036EndRail (4 parts + invisible blocker)"):format(#list, parts, table.concat(report, "\n"))
