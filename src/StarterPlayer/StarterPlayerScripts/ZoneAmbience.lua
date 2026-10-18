@@ -8,6 +8,9 @@
 --     same book in the same place. The cover's velocity is set too, so a player standing on a book rides with it.
 --   * A ghost part with attribute Ambience = "Underwater" (Sunken Kingdom): while the camera is inside it, the
 --     sky turns sea-blue (a ColorCorrection tint + denser blue Atmosphere), and back when it leaves.
+--   * Ambience = "KeepSky" (Knight's Keep, 036): a bright blue sky with soft white clouds (Roblox's built-in default Sky,
+--     no assets), clearer air and a warm tint; the place's own Sky comes back on leaving. Client only: Lighting for the
+--     other zones and other players never changes.
 
 local CollectionService = game:GetService("CollectionService")
 local Lighting = game:GetService("Lighting")
@@ -131,10 +134,11 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
--- Underwater mood ---------------------------------------------------------------------------------
+-- Zone moods (Underwater, KeepSky) --------------------------------------------------------------------
+local MOODS = { Underwater = true, KeepSky = true }
 local volumes: { BasePart } = {}
 local function addVolume(inst: Instance)
-	if inst:IsA("BasePart") and inst:GetAttribute("Ambience") == "Underwater" and not table.find(volumes, inst) then
+	if inst:IsA("BasePart") and MOODS[inst:GetAttribute("Ambience")] and not table.find(volumes, inst) then
 		table.insert(volumes, inst)
 	end
 end
@@ -152,7 +156,24 @@ tint.Parent = Lighting
 
 local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
 local dry = if atmosphere then { Color = atmosphere.Color, Decay = atmosphere.Decay, Density = atmosphere.Density, Haze = atmosphere.Haze } else nil
-local WET = { Color = Color3.fromRGB(110, 190, 230), Decay = Color3.fromRGB(40, 110, 170), Density = 0.42, Haze = 2.2 }
+local LOOK = {
+	Underwater = {
+		tint = Color3.fromRGB(196, 228, 255),
+		saturation = 0.08,
+		air = { Color = Color3.fromRGB(110, 190, 230), Decay = Color3.fromRGB(40, 110, 170), Density = 0.42, Haze = 2.2 },
+	},
+	KeepSky = {
+		tint = Color3.fromRGB(255, 247, 234),
+		saturation = 0.06,
+		air = { Color = Color3.fromRGB(200, 222, 255), Decay = Color3.fromRGB(150, 176, 220), Density = 0.22, Haze = 0.1 },
+	},
+}
+
+-- The Keep's sky: a fresh Sky keeps Roblox's default skybox (blue with white clouds); a slightly bigger, warm sun.
+local keepSky = Instance.new("Sky")
+keepSky.Name = "ZoneAmbienceKeepSky"
+keepSky.SunAngularSize = 18
+local placeSky: Sky? = nil -- the place's own Sky while the Keep sky is up
 
 local function inside(part: BasePart, p: Vector3): boolean
 	local o = part.CFrame:PointToObjectSpace(p)
@@ -160,19 +181,35 @@ local function inside(part: BasePart, p: Vector3): boolean
 	return math.abs(o.X) <= h.X and math.abs(o.Y) <= h.Y and math.abs(o.Z) <= h.Z
 end
 
-local underwater = false
-local function setUnderwater(on: boolean)
-	if on == underwater then
+local mood: string? = nil
+local function setMood(name: string?)
+	if name == mood then
 		return
 	end
-	underwater = on
+	mood = name
+	local look = name and LOOK[name]
 	tint.Enabled = true
 	TweenService:Create(tint, MOOD_TWEEN, {
-		TintColor = if on then Color3.fromRGB(196, 228, 255) else Color3.new(1, 1, 1),
-		Saturation = if on then 0.08 else 0,
+		TintColor = if look then look.tint else Color3.new(1, 1, 1),
+		Saturation = if look then look.saturation else 0,
 	}):Play()
 	if atmosphere and dry then
-		TweenService:Create(atmosphere, MOOD_TWEEN, if on then WET else dry):Play()
+		TweenService:Create(atmosphere, MOOD_TWEEN, if look then look.air else dry):Play()
+	end
+	if name == "KeepSky" then
+		if not keepSky.Parent then
+			placeSky = Lighting:FindFirstChildOfClass("Sky")
+			if placeSky then
+				placeSky.Parent = nil
+			end
+			keepSky.Parent = Lighting
+		end
+	elseif keepSky.Parent then
+		keepSky.Parent = nil
+		if placeSky then
+			placeSky.Parent = Lighting
+			placeSky = nil
+		end
 	end
 end
 
@@ -180,16 +217,16 @@ while true do
 	task.wait(0.4)
 	local camera = Workspace.CurrentCamera
 	local eye = camera and camera.CFrame.Position
-	local wet = false
+	local now: string? = nil
 	if eye then
 		for i = #volumes, 1, -1 do
 			local v = volumes[i]
 			if not v.Parent then
 				table.remove(volumes, i)
-			elseif inside(v, eye) then
-				wet = true
+			elseif not now and inside(v, eye) then
+				now = v:GetAttribute("Ambience")
 			end
 		end
 	end
-	setUnderwater(wet)
+	setMood(now)
 end
