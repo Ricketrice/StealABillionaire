@@ -28,12 +28,15 @@ Purchases (live IDs): passes 2x Cash 2033726439, Extra Slots 2032784431, VIP 203
 - **Spawns:** max 8 wild creatures, refresh every 2 min (~240 rolls/h vs ~600 before; odds unchanged). If the zone feels empty → 1 min.
 - Tests: creature035 439/439, lane030 97/97 (single machine; multi-client = SIMULATED when memory blocks).
 
-**Now:** builder is on **036 soft launch** (`docs/prompts/036.md`), started with a full test pass. One failure being chased: "Equip puts it on a station" (30-min cap, then log as known issue).
+**Launch sweep done (2026-10-18, commits `8fc989e`…`03c48ce`, `6d54cde`):** spawn moved off parade lane + idle drift fixed (parade creatures no longer push players), Equip OK, first-60-s arrow/goal, phone UI OK (≥40 px buttons), AnalyticsService funnel, Studio-only photo mode (press P), publish check, final smoke PASS. **Private phone test PASSED.**
+- Mesh fix: Squire/Peasant/Guard/Archer uploads were broken → they use their old part-built look (`RIG_MESHES_UNAVAILABLE` in `CreatureSpecs`). Creature heads now built in code (old head mesh was another user's). Studio under Vinegar can't fetch assets ("Authentication required") — judge visuals on a live server/phone, not Studio Play.
 
-**Left before launch:** launch switches, first 60 s, phone check, icon + 3 thumbnails, analytics, cleanup (`_VaultWizardPreview`, `VaultWizardTest`, `_KK_NPCTest`, `CreatureGallery_TEMP`, parked old Keep after owner OK), no "Ironclad"/"Ignis" names visible, publish checklist.
-**Owner:** Dashboard "Cash" → "Coins", real phone play-test, Roblox Maturity & Compliance questionnaire, game Public + all devices, teammate message. Then soft launch (no promo 2–3 days), then TikTok/Shorts (boss chase, Secret catch, steal).
+**Now:** last polish pass on Knight's Keep (one castle-style bridge camp→gate instead of two, more detail/materials, Knight's Keep-only blue sky). Then launch.
 
-**After launch:** Baron/2nd Epic/Vanguard art, Sunken + Ember NPCs and vaults, one zone per update.
+**Launch steps (owner):** share access for 7 UI sounds → icon + 3 thumbnails (photo mode) → Dashboard: Cash→Coins, API access on, Maturity questionnaire, devices → File → Save + push → **set Public (soft launch, no promo 2–3 days)** → watch Analytics funnel (catch / pad place / 5-min stay) → TikTok/Shorts.
+
+**First update after launch:** re-import the 4 NPCs (Import 3D, untick anims) + rebuild Templates; Baron/2nd Epic/Vanguard art; Sunken + Ember NPCs and vaults; one zone per update.
+**Known small items:** pad purchases are switched OFF for launch (owner to decide — recommended ON); bottom menu row overlaps thumbstick on ≤320 px tall screens; `[ZoneSpawner]` debug prints.
 
 ## Rules that keep biting
 - Model swaps only: never change IDs, rarity, odds, income, save schema (=3), progression unless the owner says.
