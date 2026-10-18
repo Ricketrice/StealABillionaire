@@ -236,14 +236,44 @@ local function updateDormancy(zone: ZoneArea, radius: number)
 	end
 end
 
+-- Hub 2b: zones started here, by folder name, so a creature can be put back (ZoneSpawner.dropBack).
+local started: { [string]: { zone: ZoneArea, config: Config } } = {}
+
+-- Hub 2b (zone guardians): a creature a carrier lost goes back into its zone as a wanderer - the same creature, not a
+-- new roll (no odds involved). It spawns at a free spawn point and leaves with the next batch like any wanderer.
+function ZoneSpawner.dropBack(zoneName: string, template: Model, workerId: string): Model?
+	local entry = started[zoneName]
+	if not entry then
+		return nil
+	end
+	local config = table.clone(entry.config)
+	config.pick = function()
+		return template, workerId
+	end
+	local npc = spawnOne(entry.zone, config, playersInZone(entry.zone))
+	if npc and not config.batchSize then
+		scheduleDespawn(entry.zone, npc, config.lifetime)
+	end
+	return npc
+end
+
 -- Starts the spawn loop for a zone. Runs for the lifetime of the server.
 function ZoneSpawner.start(zone: ZoneArea, config: Config)
+	started[zone.folder.Name] = { zone = zone, config = config }
 	task.spawn(function()
 		if config.batchSize and config.batchEvery then
 			while true do
 				local t0 = os.clock()
 				refreshBatch(zone, config)
-				task.wait(math.max(1, config.batchEvery - (os.clock() - t0)))
+				if config.shouldSpawn and not config.shouldSpawn() then
+					-- Hub 2b: nobody here can collect yet (a district): look again every few seconds and start the rotation
+					-- as soon as someone can, instead of waiting a whole batchEvery with an empty zone
+					repeat
+						task.wait(3)
+					until config.shouldSpawn()
+				else
+					task.wait(math.max(1, config.batchEvery - (os.clock() - t0)))
+				end
 			end
 		end
 		while true do

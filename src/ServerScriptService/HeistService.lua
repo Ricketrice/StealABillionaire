@@ -31,7 +31,6 @@
 -- RobotMode, RobotAt); the robot model there is moved by the clients only.
 -- Studio: ServerStorage attribute StudioHeistNow = true (or HeistService.forceOpen()) opens the vault now.
 
-local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -43,6 +42,7 @@ local BossHeist = require(ReplicatedStorage:WaitForChild("BossHeist"))
 local HeistConfig = require(ReplicatedStorage:WaitForChild("HeistConfig"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local Analytics = require(script.Parent:WaitForChild("Analytics"))
+local BossChase = require(script.Parent:WaitForChild("BossChase"))
 local NPCCarry = require(script.Parent:WaitForChild("NPCCarry"))
 local NPCClaim = require(script.Parent:WaitForChild("NPCClaim"))
 local ParadeService = require(script.Parent:WaitForChild("ParadeService"))
@@ -78,19 +78,8 @@ local clientEvent = getRemote("HeistEvent") -- server -> client: (kind, info)
 local actionEvent = getRemote("HeistAction") -- client -> server: ("State")
 local revealEvent = getRemote("WorkerRevealed") -- the existing reveal card
 
-local function livingRoot(player: Player): (BasePart?, Humanoid?)
-	local character = player.Character
-	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	local root = character and character:FindFirstChild("HumanoidRootPart")
-	if humanoid and humanoid.Health > 0 and root and root:IsA("BasePart") then
-		return root, humanoid
-	end
-	return nil, nil
-end
-
-local function flat(v: Vector3): Vector3
-	return Vector3.new(v.X, 0, v.Z)
-end
+local livingRoot = BossChase.livingRoot
+local flat = BossChase.flat
 
 local function clock(seconds: number): string
 	seconds = math.max(0, math.ceil(seconds))
@@ -149,25 +138,7 @@ local bossBase = ""
 local bossMoveAt = -math.huge
 local bossLastMode = "Dock"
 
-local function lowestVisibleY(model: Model): number
-	local low = math.huge
-	for _, d in model:GetDescendants() do
-		if d:IsA("BasePart") and d.Transparency < 1 then
-			local half = d.Size / 2
-			for _, sx in { -1, 1 } do
-				for _, sy in { -1, 1 } do
-					for _, sz in { -1, 1 } do
-						low = math.min(low, d.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz)).Y)
-					end
-				end
-			end
-		end
-	end
-	return low
-end
-
--- The chaser is a big boss: BOSS_SCALE x the collectible's size (the Secret collectible itself stays at normal creature size). Attribute BossScale tells the rig's client driver
--- and effects (BossRigs.Shared.Driver / FxKit) to scale clip translations and effects with the model. Presentation only: ranges, radii and hits stay in HeistConfig.
+-- The chaser is a big boss: BOSS_SCALE x the collectible's size (the Secret collectible itself stays at normal creature size); built by BossChase.buildModel.
 local BOSS_SCALE = 2.5
 
 local function installBoss(folder: Folder)
@@ -179,45 +150,11 @@ local function installBoss(folder: Folder)
 	if not entry then
 		return
 	end
-	local model: Model? = nil
-	local lift = 0
-	if entry.rig then
-		local char = ServerStorage:FindFirstChild("BossRigs") and ServerStorage.BossRigs:FindFirstChild(entry.rig)
-		local template = char and char:FindFirstChild("Template")
-		if template and template:IsA("Model") and template.PrimaryPart then
-			local rig = template:Clone()
-			rig:SetAttribute("BossScale", BOSS_SCALE)
-			rig:ScaleTo(BOSS_SCALE)
-			lift = (require(rig.Runtime.Data :: ModuleScript) :: any).hrpHeight * BOSS_SCALE
-			model = rig
-		end
-	else -- the creature's own model (Aquaris): no Humanoid or scripts, the root stays put and the clients move it
-		local creatures = ReplicatedStorage:FindFirstChild("CreatureModels")
-		local source = creatures and creatures:FindFirstChild(entry.creature)
-		if source and source:IsA("Model") then
-			local clone = source:Clone()
-			for _, d in clone:GetDescendants() do
-				if d:IsA("Humanoid") or d:IsA("Script") or d:IsA("LocalScript") then
-					d:Destroy()
-				end
-			end
-			clone:ScaleTo(clone:GetScale() * BOSS_SCALE)
-			clone:SetAttribute("CreatureScale", (clone:GetAttribute("CreatureScale") or 1) * BOSS_SCALE) -- (AquarisChaser / CreatureAnim read the scale from here)
-			clone:SetAttribute("CreatureBuiltScale", clone:GetAttribute("CreatureScale")) -- (CreatureScaler would otherwise shrink it to scale 1)
-			CollectionService:RemoveTag(clone, "Creature") -- (the client's AquarisChaser animates it, not CreatureClient: both would write the same welds)
-			local cloneRoot = clone:FindFirstChild("HumanoidRootPart") :: BasePart
-			cloneRoot.PivotOffset = CFrame.identity -- (the creature's pivot sits below the root: PivotTo must place the root itself)
-			clone.PrimaryPart = cloneRoot
-			lift = cloneRoot.Position.Y - lowestVisibleY(clone)
-			model = clone
-		end
-	end
+	local model, lift = BossChase.buildModel(entry, BOSS_SCALE)
 	if not model then
 		warn("[HeistService] boss chaser for", zone, "is not available: the old robot stays")
 		return
 	end
-	local root = (model :: Model).PrimaryPart :: BasePart
-	root.Anchored = true
 	local old = folder:FindFirstChild("Robot")
 	if old then
 		old:Destroy()
@@ -230,21 +167,9 @@ local function installBoss(folder: Folder)
 	bossEntry, bossModel = entry, model
 end
 
--- Plays one of the boss's attack clips so that its impact lands at `impactAt` (server time). The attributes are written shortly before the clip starts: the clients read
--- the start time and the rig's driver fades the pose in.
+-- Plays one of the boss's attack clips so that its impact lands at `impactAt` (server time).
 local function playBoss(kind: string, impactAt: number)
-	local entry = bossEntry and bossEntry.attacks[kind]
-	local model = bossModel
-	if not (entry and model) then
-		return
-	end
-	local startAt = impactAt - entry.impact
-	task.delay(math.max(0, startAt - serverNow() - 0.1), function()
-		if model.Parent then
-			model:SetAttribute("VW_Clip", entry.clip)
-			model:SetAttribute("VW_ClipT0", math.max(startAt, serverNow()))
-		end
-	end)
+	BossChase.playClip(bossModel, bossEntry, kind, impactAt)
 end
 
 -- Signs: title, a status line the clients fill in ("Opens in 3:20" / "OPEN! 0:42"), the odds.
@@ -603,20 +528,7 @@ local function hit(c: Carrier, kind: string, now: number): boolean
 end
 
 -- Robot ------------------------------------------------------------------------------------------------------
-type Attack = {
-	id: number,
-	kind: string,
-	target: Player,
-	startAt: number,
-	warnAt: number, -- from here the danger zone is fixed and shown
-	hitAt: number, -- first moment anyone can be hit
-	endAt: number,
-	spot: Vector3?, -- searchlight (set when it locks)
-	centre: Vector3?, -- laser line centre / stomp centre
-	across: Vector3?, -- laser line direction (unit, flat)
-	hitPlayers: { [Player]: boolean },
-	log: any,
-}
+type Attack = BossChase.Attack
 local robot = { pos = Vector3.zero, yaw = 0, mode = "Dock", target = nil :: Player?, attack = nil :: Attack?, cooldown = 0, moving = false }
 local attackCount = 0
 local rng = Random.new()
@@ -649,39 +561,11 @@ local function clampToArea(p: Vector3): Vector3
 end
 
 local function groundAt(p: Vector3, fromY: number): number?
-	local result = workspace:Raycast(Vector3.new(p.X, fromY + 8, p.Z), Vector3.new(0, -30, 0), rayParams)
-	return result and result.Position.Y
+	return BossChase.groundAt(p, fromY, rayParams)
 end
 
-local function feetHeight(player: Player): number?
-	local root, humanoid = livingRoot(player)
-	if not (root and humanoid) then
-		return nil
-	end
-	local result = workspace:Raycast(root.Position, Vector3.new(0, -40, 0), rayParams)
-	if not result then
-		return math.huge
-	end
-	return root.Position.Y - root.Size.Y / 2 - humanoid.HipHeight - result.Position.Y
-end
-
--- Off the ground: feet above JUMP_FEET, or the Humanoid jumping / falling (the owner's client replicates it).
-local JUMP_FEET = 1.2
-local AIR_GRACE = 0.35 -- a jump counts this long after the server last saw it
--- The server sees each player ~0.1-0.2 s after they moved: the wave is judged where it was WAVE_LAG s ago, so a jump
--- timed right on the player's screen counts.
-local WAVE_LAG = 0.15
 local function airborne(player: Player): boolean
-	local _, humanoid = livingRoot(player)
-	if not humanoid then
-		return false
-	end
-	local state = humanoid:GetState()
-	if state == Enum.HumanoidStateType.Jumping or state == Enum.HumanoidStateType.Freefall then
-		return true
-	end
-	local feet = feetHeight(player)
-	return feet ~= nil and feet > JUMP_FEET
+	return BossChase.airborne(player, rayParams)
 end
 
 local function nearestCarrier(from: Vector3): (Player?, number)
@@ -751,47 +635,8 @@ end
 
 local function startAttack(kind: string, target: Player, targetRoot: BasePart, now: number)
 	attackCount += 1
-	local def = HeistConfig.ATTACKS[kind]
-	local a: Attack = {
-		id = attackCount,
-		kind = kind,
-		target = target,
-		startAt = now,
-		warnAt = now,
-		hitAt = now + def.warning,
-		endAt = now + def.warning + 0.6,
-		hitPlayers = {},
-		log = nil,
-	}
-	local info: { [string]: any } = { id = a.id, kind = kind, targetId = target.UserId, startAt = now, robot = robot.pos }
-	if kind == "Searchlight" then
-		-- follows the target for TRACK s, then locks: the fixed red circle is shown `warning` s before the zap
-		local track = 0.6
-		a.warnAt = now + track
-		a.hitAt = a.warnAt + def.warning
-		a.endAt = a.hitAt + 0.5
-		info.lockAt, info.hitAt, info.radius = a.warnAt, a.hitAt, def.radius
-	elseif kind == "Laser" then
-		local v = flat(targetRoot.AssemblyLinearVelocity)
-		local lead = v * (def.warning * 0.6)
-		if lead.Magnitude > 12 then
-			lead = lead.Unit * 12
-		end
-		local centre = targetRoot.Position + lead
-		local towards = flat(centre - robot.pos)
-		local across = if towards.Magnitude > 0.1 then Vector3.new(-towards.Unit.Z, 0, towards.Unit.X) else Vector3.new(1, 0, 0)
-		local y = groundAt(centre, targetRoot.Position.Y) or (targetRoot.Position.Y - 3)
-		a.centre = Vector3.new(centre.X, y, centre.Z)
-		a.across = across
-		info.centre, info.across, info.length, info.width, info.hitAt = a.centre, across, def.length, def.width, a.hitAt
-		face(centre)
-	else -- Stomp
-		local y = groundAt(robot.pos, robot.pos.Y) or robot.pos.Y
-		a.centre = Vector3.new(robot.pos.X, y, robot.pos.Z)
-		a.endAt = a.hitAt + WAVE_LAG + (def.radius + def.band) / def.waveSpeed + 0.2
-		info.centre, info.hitAt, info.radius, info.waveSpeed, info.band = a.centre, a.hitAt, def.radius, def.waveSpeed, def.band
-		face(targetRoot.Position)
-	end
+	local a, info, faceAt = BossChase.plan(kind, HeistConfig.ATTACKS[kind], attackCount, robot.pos, target, targetRoot, now, rayParams)
+	face(faceAt)
 	a.log = { id = a.id, kind = kind, startAt = now, warnAt = a.warnAt, hitAt = a.hitAt, hits = {}, target = target.UserId }
 	table.insert(HeistService.attackLog, a.log)
 	if #HeistService.attackLog > 200 then
@@ -804,105 +649,50 @@ local function startAttack(kind: string, target: Player, targetRoot: BasePart, n
 	clientEvent:FireAllClients("Attack", info)
 end
 
-local function tryHit(a: Attack, c: Carrier, now: number, detail: string?)
-	if a.hitPlayers[c.player] then
-		return
-	end
-	if hit(c, a.kind, now) then
-		a.hitPlayers[c.player] = true
-		table.insert(a.log.hits, { userId = c.player.UserId, at = now, detail = detail })
-	end
+-- What an attack can do in the heist: only carriers, a hit pops the shield / sends the capsule back.
+local function attackHooks(a: Attack, now: number): BossChase.Hooks
+	return {
+		candidates = function()
+			local list = {}
+			for player in carriers do
+				table.insert(list, player)
+			end
+			return list
+		end,
+		stillTarget = function(player)
+			local root = livingRoot(player)
+			return if root and carriers[player] then root else nil
+		end,
+		lastAir = function(player)
+			local c = carriers[player]
+			return if c then c.airAt else -math.huge
+		end,
+		face = face,
+		lock = function(attack)
+			attack.log.spot = attack.spot
+			clientEvent:FireAllClients("Lock", { id = attack.id, spot = attack.spot, hitAt = attack.hitAt })
+		end,
+		cancel = function(attack)
+			clientEvent:FireAllClients("Cancel", { id = attack.id })
+		end,
+		hit = function(player, detail)
+			local c = carriers[player]
+			if c and hit(c, a.kind, now) then
+				table.insert(a.log.hits, { userId = player.UserId, at = now, detail = detail })
+				return true
+			end
+			return false
+		end,
+	}
 end
 
 local function stepAttack(a: Attack, now: number)
-	local def = HeistConfig.ATTACKS[a.kind]
-	if a.kind == "Searchlight" then
-		if not a.spot then
-			local root = livingRoot(a.target)
-			if not (root and carriers[a.target]) then
-				a.endAt = now -- the target got away / home: no lock, nothing happens
-				clientEvent:FireAllClients("Cancel", { id = a.id })
-				return
-			end
-			face(root.Position)
-			if now >= a.warnAt then
-				local y = groundAt(root.Position, root.Position.Y) or (root.Position.Y - 3)
-				a.spot = Vector3.new(root.Position.X, y, root.Position.Z)
-				a.log.spot = a.spot
-				clientEvent:FireAllClients("Lock", { id = a.id, spot = a.spot, hitAt = a.hitAt })
-			end
-			return
-		end
-		if now >= a.hitAt and not a.log.fired then
-			a.log.fired = true
-			for _, c in carriers do
-				local root = livingRoot(c.player)
-				local spot = a.spot :: Vector3
-				if root and (flat(root.Position) - flat(spot)).Magnitude <= def.radius and math.abs(root.Position.Y - spot.Y) < 8 then
-					tryHit(a, c, now)
-				end
-			end
-		end
-	elseif a.kind == "Laser" then
-		if now >= a.hitAt and not a.log.fired then
-			a.log.fired = true
-			local centre, across = a.centre :: Vector3, a.across :: Vector3
-			local along = Vector3.new(across.Z, 0, -across.X) -- (across the line's width)
-			for _, c in carriers do
-				local root = livingRoot(c.player)
-				if root then
-					local rel = flat(root.Position - centre)
-					if math.abs(rel:Dot(across)) <= def.length / 2 and math.abs(rel:Dot(along)) <= def.width / 2 and math.abs(root.Position.Y - centre.Y) < 8 then
-						tryHit(a, c, now)
-					end
-				end
-			end
-		end
-	else -- Stomp: the wave front at radius waveSpeed * (now - hitAt); grounded players inside its band are hit
-		if now >= a.hitAt + WAVE_LAG then
-			local r = def.waveSpeed * (now - WAVE_LAG - a.hitAt)
-			if r <= def.radius + def.band then
-				local centre = a.centre :: Vector3
-				for _, c in carriers do
-					local root = livingRoot(c.player)
-					if root and math.abs(root.Position.Y - centre.Y) < 8 then
-						local d = (flat(root.Position) - flat(centre)).Magnitude
-						-- (lag-forgiving: a jump the server saw within AIR_GRACE s clears the wave)
-						if math.abs(d - r) <= def.band and not airborne(c.player) and now - c.airAt > AIR_GRACE then
-							local _, humanoid = livingRoot(c.player)
-							tryHit(
-								a,
-								c,
-								now,
-								("d %.1f r %.1f feet %.2f state %s lastAir %.2f s ago, %.2f s after hitAt"):format(
-									d,
-									r,
-									feetHeight(c.player) or -1,
-									if humanoid then humanoid:GetState().Name else "?",
-									now - c.airAt,
-									now - a.hitAt
-								)
-							)
-						end
-					end
-				end
-			end
-		end
-	end
+	BossChase.step(a, HeistConfig.ATTACKS[a.kind], now, attackHooks(a, now), rayParams)
+	a.log.fired = a.fired
 end
 
 local function chooseAttack(distance: number): string?
-	local options = {}
-	for kind, def in HeistConfig.ATTACKS do
-		if distance <= def.range then
-			table.insert(options, kind)
-		end
-	end
-	if #options == 0 then
-		return nil
-	end
-	table.sort(options)
-	return options[rng:NextInteger(1, #options)]
+	return BossChase.choose(distance, HeistConfig.ATTACKS, rng)
 end
 
 local function stepRobot(dt: number, now: number)

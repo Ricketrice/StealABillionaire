@@ -26,6 +26,7 @@ local ZoneConfig = require(ReplicatedStorage:WaitForChild("ZoneConfig"))
 local CustomWorkerRigs = require(script.Parent:WaitForChild("CustomWorkerRigs"))
 local WorkerCatalogue = require(ReplicatedStorage:WaitForChild("WorkerCatalogue"))
 local WorkerService = require(script.Parent:WaitForChild("WorkerService"))
+local WildSpawnConfig = require(ReplicatedStorage:WaitForChild("WildSpawnConfig"))
 
 -- A steal can only start once the player's data has loaded and they have room for another worker.
 -- Reserving a mystery NPC secretly rolls which worker it is. A completed steal reveals it to
@@ -75,8 +76,8 @@ local ZONES = {
 		-- 037 (owner): Knight's Keep runs in batches instead: at most batchSize wanderers at once (any number of players), all unclaimed ones
 		-- replaced by a fresh batch every batchEvery seconds, no refill in between (<= 8 rolls per 2 min = 240 an hour; it was ~600 with one
 		-- player in the zone). maxNPCs / activeCap / maxCap / lifetime / spawnInterval are not used in batch mode.
-		batchSize = 8,
-		batchEvery = 120,
+		batchSize = WildSpawnConfig.BATCH_SIZE,
+		batchEvery = WildSpawnConfig.BATCH_EVERY,
 	},
 	-- Districts: fewer NPCs each so a full server stays light on mobile.
 	{
@@ -90,6 +91,9 @@ local ZONES = {
 		lifetime = 60,
 		walkSpeed = 6,
 		district = true,
+		-- Hub 2b (owner): batches like Knight's Keep (maxNPCs / activeCap / maxCap / lifetime / spawnInterval unused then)
+		batchSize = WildSpawnConfig.BATCH_SIZE,
+		batchEvery = WildSpawnConfig.BATCH_EVERY,
 	}, -- 034, ours
 	-- Ember Academy (internal id BillionaireHills) is ours too.
 	{
@@ -103,6 +107,8 @@ local ZONES = {
 		lifetime = 60,
 		walkSpeed = 6,
 		district = true,
+		batchSize = WildSpawnConfig.BATCH_SIZE, -- Hub 2b (owner): batches like Knight's Keep
+		batchEvery = WildSpawnConfig.BATCH_EVERY,
 	},
 	-- (D48: the teammate zones 4-7 and their spawners are removed; their Workspace.Zones folders are parked.)
 }
