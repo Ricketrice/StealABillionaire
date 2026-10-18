@@ -235,6 +235,7 @@ bridge.OnClientEvent:Connect(function(kind, id, arg)
 		local door = vault and vault:FindFirstChild("Door")
 		local d = door and door:FindFirstChild("Door")
 		reply.doorLookX = d and (d :: BasePart).CFrame.LookVector.X -- closed = 1 (faces +X)
+		reply.doorLook = d and (d :: BasePart).CFrame.LookVector -- (Hub 2b: the server turns it back into the 037 frame)
 		local robot = folder and folder:FindFirstChild("Robot")
 		local torso = robot and robot:FindFirstChild("Torso")
 		reply.robotPos = torso and (torso :: BasePart).Position

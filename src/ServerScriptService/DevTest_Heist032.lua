@@ -316,15 +316,23 @@ local function telegraphCheck(p: Player, since: number): ({ string }, number, nu
 end
 
 local template = ServerStorage:WaitForChild("HeistVault032")
+-- Hub 2b: the Keep (and the treasury template with it) may have been moved as one block; HubMap2b attribute KeepMove2b is
+-- that move (037 world -> now). The points below are written in the 037 frame and go through it (identity when unmoved).
+local hubMap = workspace:FindFirstChild("HubMap2b")
+local K: CFrame = (hubMap and hubMap:GetAttribute("KeepMove2b")) or CFrame.identity
+local function W(v: Vector3): Vector3
+	return K * v
+end
 local GRAB = (template:WaitForChild("GrabSpot") :: BasePart).Position
-local STAND_A = Vector3.new(GRAB.X + 4.5, 15.6, GRAB.Z + 2)
-local STAND_B = Vector3.new(GRAB.X + 4.5, 15.6, GRAB.Z - 2)
-local LOOK = Vector3.new(GRAB.X - 20, 15.6, GRAB.Z)
+local GRAB0 = K:Inverse() * GRAB
+local STAND_A = W(Vector3.new(GRAB0.X + 4.5, 15.6, GRAB0.Z + 2))
+local STAND_B = W(Vector3.new(GRAB0.X + 4.5, 15.6, GRAB0.Z - 2))
+local LOOK = W(Vector3.new(GRAB0.X - 20, 15.6, GRAB0.Z))
 -- 037 Knight's Keep map: from the treasury, behind the castle -> through the hall door -> down the courtyard stairs -> gate -> bridge -> ramp
-local THROUGH_HALL = { Vector3.new(-157, 13.3, -336), Vector3.new(-157, 18.5, -319), Vector3.new(-157, 18.5, -309) }
+local THROUGH_HALL = { W(Vector3.new(-157, 13.3, -336)), W(Vector3.new(-157, 18.5, -319)), W(Vector3.new(-157, 18.5, -309)) }
 local HOME = table.clone(THROUGH_HALL)
 for _, p in { Vector3.new(-157, 14.5, -262), Vector3.new(-157, 14.5, -212), Vector3.new(-157, 15.3, -176), Vector3.new(-157, 9, -140), Vector3.new(-157, 3.3, -104) } do
-	table.insert(HOME, p)
+	table.insert(HOME, W(p))
 end
 local CASH0, lowest = {}, {}
 for _, p in everyone do
@@ -404,15 +412,17 @@ local function dodges()
 	expect("carrier panel shown", ui.panel == true)
 	expect("both shields shown", ui.shields[1] == 0 and ui.shields[2] == 0, ("%s/%s"):format(tostring(ui.shields[1]), tostring(ui.shields[2])))
 	expect("shield bubble drawn", ui.bubbles >= 1, ui.bubbles)
-	expect("vault door swung open on the client", type(ui.doorLookX) == "number" and ui.doorLookX < 0.5, ui.doorLookX)
+	-- closed = facing +X in the 037 frame (the treasury may be turned with the Keep: KeepMove2b)
+	local doorX = if typeof(ui.doorLook) == "Vector3" then (K.Rotation:Inverse() * ui.doorLook).X else ui.doorLookX
+	expect("vault door swung open on the client", type(doorX) == "number" and doorX < 0.5, doorX)
 	expect("vault sign says OPEN", type(ui.signStatus) == "string" and ui.signStatus:find("OPEN") ~= nil, ui.signStatus)
 
 	-- dodges in the open street, robot in front of A (A walks there: a carrier who teleports loses the capsule)
 	waitAttackOver()
 	local toCourtyard = table.clone(THROUGH_HALL)
-	table.insert(toCourtyard, Vector3.new(-157, 15.6, -262)) -- the open courtyard (037 map)
+	table.insert(toCourtyard, W(Vector3.new(-157, 15.6, -262))) -- the open courtyard (037 map)
 	ask(A, "walk", { points = toCourtyard }, 30)
-	HeistService._test.placeRobot(Vector3.new(-157, 13.5, -272))
+	HeistService._test.placeRobot(W(Vector3.new(-157, 13.5, -272)))
 	task.wait(1)
 	local dodgeStart = now()
 	local perf: any = nil
@@ -586,13 +596,14 @@ local function duplicates()
 	put(A, STAND_A, LOOK)
 	HeistService._test.holdAttacks(now() + 1000)
 	expect("A grabbed (teleport test)", ask(A, "grab", nil, 10).carrying == true)
-	local z = HeistService._test.safeLine()
-	put(A, Vector3.new(-157, 3.3, z + 8))
+	local _, _, linePos = HeistService._test.safeLine()
+	local z = (K:Inverse() * linePos).Z -- (the safe line in the 037 frame)
+	put(A, W(Vector3.new(-157, 3.3, z + 8)))
 	expect("teleported past the line: not delivered", carrying(A) and #newWorkers(A, beforeA) == 0)
-	ask(A, "walk", { points = { Vector3.new(-157, 3.3, z + 14) } }, 10)
+	ask(A, "walk", { points = { W(Vector3.new(-157, 3.3, z + 14)) } }, 10)
 	expect("walking on in the safe zone: still not delivered (no crossing)", carrying(A) and #newWorkers(A, beforeA) == 0)
 	put(A, STAND_A, LOOK)
-	put(A, Vector3.new(-157, 3.3, z + 8))
+	put(A, W(Vector3.new(-157, 3.3, z + 8)))
 	expect("three teleport-sized jumps: capsule back (no shortcuts)", waitUntil(3, function()
 		return not carrying(A)
 	end) == true and #newWorkers(A, beforeA) == 0)

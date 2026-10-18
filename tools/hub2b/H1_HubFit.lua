@@ -294,6 +294,7 @@ local COL = {
 	{ "COL_IH_Roof", -125, 22.5, 165, 82, 13, 58 },
 	-- added (the export has none here)
 	{ "COL_RedBand_Far", 0, -2, -82.5, 340, 4, 25 },
+	{ "COL_SpineJoin", 0, -2, -98, 40, 4, 8 }, -- (added after the Play check: the spine box starts at z -100)
 	{ "COL_Branch_W", -35, -2, -160, 30, 4, 12 }, { "COL_Branch_E", 35, -2, -160, 30, 4, 12 },
 	{ "COL_Platform_W", -130, -2, -160, 160, 4, 130 }, { "COL_Platform_E", 130, -2, -160, 160, 4, 130 },
 	{ "COL_NorthGate_W", -20, 15, -40, 9, 30, 9 }, { "COL_NorthGate_E", 20, 15, -40, 9, 30, 9 },
