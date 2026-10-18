@@ -7,6 +7,7 @@ Numbers marked *(tune)* are placeholders.
 ## Decisions (newest first — this section wins over everything below)
 | # | Decision | Date |
 |---|---|---|
+| D47 | **036 launch (owner, 2026-10-18):** pad purchases ON for launch (`BaseConfig.PADS_ENABLED = true`): pads 7-12 bought with coins at the base (prices as built in 033, D40: 5k/12k/30k/75k/180k/450k), 13-14 with the Extra Slots pass. Worker levels stay OFF. |  2026-10 |
 | D46 | **036 soft launch (owner, 2026-10-18):** live switches = PvP stealing + bats, V1 UI / Store / daily rewards / index bonus, Parade + juice + goal HUD + book, Boss Heist + Speed, Spell Run, living bases, fair stealing, purchases ON; Arena (D29), shops, guide/quests, upgrades, worker levels and pads 7-12 (PROPOSED prices) OFF. Parked old Keep (`ServerStorage._Parked037`) stays until after launch. No 036 prompt file: scope = ROADMAP 036 + the owner's message. | 2026-10 |
 | D45 | **034 tests (owner, 2026-10-15):** Spell Run time limit = **135 s** (about 2x the slowest 2-client run, 67.1 s); replaces the 90 s cap of D44. | 2026-10 |
 | D44 | **034 build (owner, 2026-10-15):** keep the "$" money sign for now; 035 swaps it for a coin symbol. Every amount goes through `CashFormat` (sign = `CashFormat.SYMBOL`), so the swap is one line. Spell Run time limit = 2x the slowest measured run (55.9 s) capped at 90 s = **90 s**. A landing was added at the end of Spell Run's first (walled) bridge so platform 1 is a straight jump, not a jump round the wall end. | 2026-10 |

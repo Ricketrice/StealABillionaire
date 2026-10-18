@@ -12,9 +12,9 @@
 
 local BaseConfig = {}
 
-BaseConfig.LIVING_ENABLED = true -- D46: live (levels and pads stay off: PROPOSED prices)
+BaseConfig.LIVING_ENABLED = true -- D46: live (levels stay off: PROPOSED prices)
 BaseConfig.LEVELS_ENABLED = false
-BaseConfig.PADS_ENABLED = false
+BaseConfig.PADS_ENABLED = true -- D47: live (pads 7-12 for coins, 13-14 with the Extra Slots pass; prices as built in 033)
 BaseConfig.FLAGS = {
 	LIVING_ENABLED = { studio = "StudioLiving", published = "LivingOn" },
 	LEVELS_ENABLED = { studio = "StudioLevels", published = "LevelsOn" },
