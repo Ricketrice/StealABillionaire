@@ -104,6 +104,12 @@ local capsuleMaster: Model? = nil
 local areas: { { cf: CFrame, half: Vector3 } } = {}
 local dockCF, guardCF = CFrame.new(), CFrame.new()
 local safeZ, safeY = math.huge, 0
+-- Hub 2b: the safe line may face any way. SafeLineWide attribute HomeSide (Vector3, flat) points from the zone to
+-- home; without it home is +Z (the old lane). Delivered = crossing the line towards HomeSide.
+local safePos, safeHome = Vector3.new(0, 0, math.huge), Vector3.new(0, 0, 1)
+local function homeSide(p: Vector3): number
+	return (p.X - safePos.X) * safeHome.X + (p.Z - safePos.Z) * safeHome.Z
+end
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -277,6 +283,9 @@ local function build(): boolean
 		return false
 	end
 	safeZ, safeY = line.Position.Z, line.Position.Y
+	safePos = line.Position
+	local home = line:GetAttribute("HomeSide")
+	safeHome = if typeof(home) == "Vector3" and Vector3.new(home.X, 0, home.Z).Magnitude > 0.01 then Vector3.new(home.X, 0, home.Z).Unit else Vector3.new(0, 0, 1)
 	table.clear(areas)
 	for _, box in template.RobotArea:GetChildren() do
 		if box:IsA("BasePart") then
@@ -969,7 +978,7 @@ local function stepCarriers(now: number)
 			lose(c, "time")
 		elseif c.warps >= WARP_LIMIT then
 			lose(c, "shortcut")
-		elseif not warped and last.Z < safeZ and pos.Z >= safeZ and pos.Y <= safeY + 12 then
+		elseif not warped and homeSide(last) < 0 and homeSide(pos) >= 0 and pos.Y <= safeY + 12 then
 			deliver(c)
 		end
 	end
@@ -985,7 +994,7 @@ HeistService._test = {
 	end,
 	grabbed = grabbed,
 	safeLine = function()
-		return safeZ, safeY
+		return safeZ, safeY, safePos, safeHome
 	end,
 	-- Studio only: the robot stands here now (positions the chase for a test; it keeps chasing from there).
 	placeRobot = function(pos: Vector3)

@@ -57,7 +57,19 @@ local returnPoints: { [string]: CFrame } = {}
 -- everything north of the barrier (smaller Z) within LANE_GATE_HALF_WIDTH of it, up to the next lane gate (034:
 -- Sunken Kingdom, then Ember Academy; the northmost gate a position is past wins).
 local LANE_GATE_HALF_WIDTH = 110
-local laneGates: { [string]: BasePart } = {}
+-- Hub 2b: a lane gate may face any way. Barrier attributes: Inward (Vector3, flat, from the gate into the zone;
+-- default north = (0, 0, -1)) and HalfWidth (studs either side of the gate's line; default LANE_GATE_HALF_WIDTH).
+-- Several gates match: the one later in ZoneConfig.ZONES wins (= the northmost on the old straight lane).
+type LaneGate = { part: BasePart, inward: Vector3, half: number, order: number }
+local laneGates: { [string]: LaneGate } = {}
+
+local function gateInward(barrier: BasePart): Vector3
+	local v = barrier:GetAttribute("Inward")
+	if typeof(v) == "Vector3" and Vector3.new(v.X, 0, v.Z).Magnitude > 0.01 then
+		return Vector3.new(v.X, 0, v.Z).Unit
+	end
+	return Vector3.new(0, 0, -1)
+end
 
 local function flat(v: Vector3): Vector3
 	return Vector3.new(v.X, 0, v.Z)
@@ -73,7 +85,7 @@ function ZoneProgress.buildRegions()
 	table.clear(laneGates)
 	gateRadius = math.huge
 	table.insert(anchors, { id = nil, position = (workspace:WaitForChild("Hub"):WaitForChild("Floor") :: BasePart).Position })
-	for _, zone in ZoneConfig.ZONES do
+	for order, zone in ZoneConfig.ZONES do
 		local folder = zone.folder and futureZones:FindFirstChild(zone.folder)
 		if not folder then
 			continue
@@ -86,12 +98,19 @@ function ZoneProgress.buildRegions()
 			table.insert(anchors, { id = zone.id, position = area.Position })
 		end
 		if onLane and barrier and barrier:IsA("BasePart") then
-			laneGates[zone.id] = barrier
-			-- where a turned-back player lands: just in front (south) of the barrier, on the landing
-			local front = barrier.Position + Vector3.new(0, 0, RETURN_DISTANCE)
+			local inward = gateInward(barrier)
+			local half = barrier:GetAttribute("HalfWidth")
+			laneGates[zone.id] = {
+				part = barrier,
+				inward = inward,
+				half = if type(half) == "number" and half > 0 then half else LANE_GATE_HALF_WIDTH,
+				order = order,
+			}
+			-- where a turned-back player lands: just in front (outside) of the barrier, on the landing
+			local front = barrier.Position - inward * RETURN_DISTANCE
 			local hit = workspace:Raycast(front + Vector3.new(0, 12, 0), Vector3.new(0, -40, 0))
 			local standAt = Vector3.new(front.X, (if hit then hit.Position.Y else barrier.Position.Y - 5) + 3, front.Z)
-			returnPoints[zone.id] = CFrame.lookAt(standAt, standAt + Vector3.new(0, 0, 1))
+			returnPoints[zone.id] = CFrame.lookAt(standAt, standAt - inward)
 		elseif barrier and barrier:IsA("BasePart") then
 			local offset = flat(barrier.Position - plaza.Position)
 			gateRadius = math.min(gateRadius, offset.Magnitude)
@@ -111,11 +130,14 @@ end
 
 -- The district a world position is in, or nil (home island, Main Street, bridges home, plaza).
 function ZoneProgress.zoneAt(position: Vector3): string?
-	local laneZone, laneZ = nil, math.huge
-	for id, barrier in laneGates do
-		local b = barrier.Position
-		if position.Z < b.Z - BOUNDARY_MARGIN and math.abs(position.X - b.X) < LANE_GATE_HALF_WIDTH and position.Y > b.Y - 30 and b.Z < laneZ then
-			laneZone, laneZ = id, b.Z
+	local laneZone, laneOrder = nil, -math.huge
+	for id, gate in laneGates do
+		local b, inward = gate.part.Position, gate.inward
+		local dx, dz = position.X - b.X, position.Z - b.Z
+		local along = dx * inward.X + dz * inward.Z
+		local across = math.abs(dx * inward.Z - dz * inward.X)
+		if along > BOUNDARY_MARGIN and across < gate.half and position.Y > b.Y - 30 and gate.order > laneOrder then
+			laneZone, laneOrder = id, gate.order
 		end
 	end
 	if laneZone then

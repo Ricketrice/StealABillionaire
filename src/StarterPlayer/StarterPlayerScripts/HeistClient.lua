@@ -344,14 +344,19 @@ local function watchCity()
 end
 task.spawn(watchCity)
 
-local function safeLine(): (number?, number?)
+-- The safe line's centre and the way home from it (Hub 2b attribute HomeSide; old lane = +Z).
+local function safeLine(): (Vector3?, Vector3)
 	local world = workspace:FindFirstChild("World")
 	local lane = world and world:FindFirstChild("SkyCity") and world.SkyCity:FindFirstChild("Lane")
 	local line = lane and lane:FindFirstChild("SafeLineWide")
 	if line and line:IsA("BasePart") then
-		return line.Position.Z, line.Position.Y
+		local home = line:GetAttribute("HomeSide")
+		if typeof(home) == "Vector3" and Vector3.new(home.X, 0, home.Z).Magnitude > 0.01 then
+			return line.Position, Vector3.new(home.X, 0, home.Z).Unit
+		end
+		return line.Position, Vector3.new(0, 0, 1)
 	end
-	return nil, nil
+	return nil, Vector3.new(0, 0, 1)
 end
 
 -- Attack warnings ------------------------------------------------------------------------------------------------
@@ -732,7 +737,7 @@ local function stepVault(dt: number, t: number)
 end
 
 -- Slow loop: signs, timer pill, carrier panel, prompt ---------------------------------------------------------------
-local vaultZ: number? = nil
+local vaultAt: Vector3? = nil
 local function setSign(folder: Folder, text: string, colour: Color3)
 	local vault = folder:FindFirstChild("Vault")
 	if not vault then
@@ -776,8 +781,8 @@ local function slow()
 			local busy = player:GetAttribute("HeistCarrying") == true or player:GetAttribute("CarryingNPC") == true or player:GetAttribute("CarryingStolen") == true
 			prompt.Enabled = open and not mine and not busy
 		end
-		if not vaultZ and spot and spot:IsA("BasePart") then
-			vaultZ = spot.Position.Z
+		if not vaultAt and spot and spot:IsA("BasePart") then
+			vaultAt = spot.Position
 		end
 	end
 	-- carrier panel
@@ -795,11 +800,14 @@ local function slow()
 		local deadline = player:GetAttribute("HeistDeadline") or t
 		timeLabel.Text = clock(deadline - t)
 		timeLabel.TextColor3 = if deadline - t < 15 then RED else T.Text
-		local z, _ = safeLine()
+		local lineAt, home = safeLine()
 		local character = player.Character
 		local r = character and character:FindFirstChild("HumanoidRootPart")
-		if z and vaultZ and r and r:IsA("BasePart") then
-			setTrack(math.clamp((r.Position.Z - vaultZ) / (z - vaultZ), 0, 1))
+		if lineAt and vaultAt and r and r:IsA("BasePart") then
+			local span = (lineAt - vaultAt):Dot(home)
+			if math.abs(span) > 1 then
+				setTrack(math.clamp((r.Position - vaultAt):Dot(home) / span, 0, 1))
+			end
 		end
 	end
 	gui:SetAttribute("Carrying", carrying)
