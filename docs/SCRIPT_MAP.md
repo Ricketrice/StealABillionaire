@@ -101,3 +101,4 @@ Sources: `src/<Service>/<Path>.lua` mirrors the place (first line = `-- Studio l
 - `ServerStorage.BossRigs.<Peasant|Squire|Guard|Archer|Crusader>.{Imported,Template}` — Knight's Keep NPC rigs (owner's Import 3D -> `Shared.NpcBuilder.build`; `CreatureSpecs.KEEP_NPC_RIGS`); see docs/KEEP_NPCS.md. Import 3D drops models into Workspace.
 - Analytics (036): `ServerScriptService.Analytics` (funnel steps + custom events, pcall'd) + `AnalyticsServer` (join/load/leave); calls from `WorkerInventory` (catch, place), `PurchaseService` (prompt shown), `HeistService` (grab, deliver).
 - Photo mode (036, Studio only): spots `ServerStorage.PhotoSpotsDev` (parts = camera poses) -> `StudioPhotoMode` -> client `PhotoModeClient` (P cycles, HUD hidden).
+- Keep polish 036: `KnightsKeep.Bridge036` / `Detail036` / `KeepSkyVolume036` built by `tools/build036/B1-B3` (re-runnable, UNDO flag); parked old bridge in `ServerStorage._Parked036.Bridge`; Keep sky = `ZoneAmbience` mood "KeepSky".
