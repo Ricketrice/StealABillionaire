@@ -2142,9 +2142,16 @@ if KEEP_NPC_RIGS then
 	BOSS_RIG_OF.street_hustler = "Archer" -- Apple Archer
 	BOSS_RIG_OF.business_betty = "Crusader" -- Banner Bearer
 end
+-- 036: these rigs' mesh uploads (owner, 2026-10-17) can't be fetched by anyone (Failure even in Studio Edit), so their creatures were
+-- invisible live. They keep the part-built look until the rig is re-imported (Import 3D) and its Template rebuilt; then remove it here.
+-- Crusader's meshes load fine.
+local RIG_MESHES_UNAVAILABLE = { Squire = true, Peasant = true, Guard = true, Archer = true }
 if BOSS_RIGS or KEEP_NPC_RIGS then
 	for id, rigName in BOSS_RIG_OF do
 		if not BOSS_RIGS and (id == "mystery_millionaire" or id == "the_trillionaire") then
+			continue
+		end
+		if RIG_MESHES_UNAVAILABLE[rigName] then
 			continue
 		end
 		local old = CreatureSpecs[id]

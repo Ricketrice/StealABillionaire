@@ -438,6 +438,36 @@ local function bodyOf(model: Model, name: string): BasePart?
 end
 
 -- A rigged boss (CreatureSpecs.bossRig): ServerStorage.BossRigs.<name>.Template, built by BossRigs.Shared.Builder from the owner's Import 3D meshes.
+-- Replaces a MeshPart with a plain Part of the same name, size, place and settings. Children move across (layered-clothing cages,
+-- which only work on a MeshPart, are dropped) and every joint in `model` that used the old part uses the new one.
+local function plainPart(model: Model, old: MeshPart): Part
+	local p = Instance.new("Part")
+	p.Name, p.Size, p.CFrame = old.Name, old.Size, old.CFrame
+	p.Color, p.Material, p.Transparency = old.Color, old.Material, old.Transparency
+	p.CanCollide, p.CanTouch, p.CanQuery, p.Massless, p.Anchored = old.CanCollide, old.CanTouch, old.CanQuery, old.Massless, old.Anchored
+	p.TopSurface, p.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+	for _, c in old:GetChildren() do
+		if c:IsA("BaseWrap") or c:IsA("WrapTarget") then
+			c:Destroy()
+		else
+			c.Parent = p
+		end
+	end
+	p.Parent = old.Parent
+	for _, j in model:GetDescendants() do
+		if j:IsA("JointInstance") or j:IsA("WeldConstraint") then
+			if j.Part0 == old then
+				j.Part0 = p
+			end
+			if j.Part1 == old then
+				j.Part1 = p
+			end
+		end
+	end
+	old:Destroy()
+	return p
+end
+
 local function bossTemplate(name: string): Model?
 	local rigs = ServerStorage:FindFirstChild("BossRigs")
 	local char = rigs and rigs:FindFirstChild(name)
@@ -502,6 +532,12 @@ function CreatureBuilder.build(id: string, spec: CreatureSpecs.Spec): Model
 	local source = ServerStorage:WaitForChild("NPCModels"):WaitForChild("MysteryNPC") :: Model
 	local model = source:Clone()
 	model.Name = id
+	-- 036: the MysteryNPC head mesh (asset 120512885710149) belongs to another account, so live servers can't load it and every
+	-- creature's head rendered as nothing. A plain block head of the same size instead (the noob rebuild below sizes it).
+	local meshHead = model:FindFirstChild("Head")
+	if meshHead and meshHead:IsA("MeshPart") then
+		plainPart(model, meshHead)
+	end
 	for _, child in model:GetChildren() do
 		if child:IsA("Accessory") or child:IsA("Clothing") or child:IsA("ShirtGraphic") or child:IsA("BodyColors") or child:IsA("HumanoidDescription") then
 			child:Destroy()
