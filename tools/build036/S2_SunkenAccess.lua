@@ -40,29 +40,32 @@ if mapLock then
 	mapLock.Parent = parked
 end
 
--- 2. collision + shadows by model name (first match wins)
+-- 2. collision + shadows by model name (first match wins). No PreciseConvexDecomposition anywhere (2026-10-19:
+-- precise collision on the big meshes plus a spatial scan froze Studio). Flat floors use Box (their bbox top is the
+-- walk surface: seabed 24.30, bridge deck 24.18); shapes a Box would fill (path with palace steps, gate arch, corner
+-- towers, bridge arches, rock island under the courtyard) don't collide and get simple access parts instead.
 local CF = Enum.CollisionFidelity
 local RULES = {
 	-- walk-through hall: collision comes from PalaceBlock / BackBlock
 	{ "^Palace_Grand", "none", true },
 	{ "^Wall_Back_Stone", "none", true },
 	-- floors
-	{ "^Seabed_Top", CF.PreciseConvexDecomposition, false },
-	{ "^Path_Main_Path_Mosaic", CF.PreciseConvexDecomposition, false },
-	{ "^Path_Main_Stone_Deep", CF.PreciseConvexDecomposition, false },
-	{ "^Bridge_Reef_Path_Mosaic", CF.PreciseConvexDecomposition, false },
-	{ "^Island_Reef_Reef_Rock", CF.PreciseConvexDecomposition, false },
-	{ "^Amphitheater_Shell_Stone_Sunken", CF.PreciseConvexDecomposition, false },
+	{ "^Seabed_Top", CF.Box, false },
+	{ "^Path_Main_Path_Mosaic", "none", false }, -- flat 24.30 = seabed; palace steps -> StepsRamp
+	{ "^Path_Main_Stone_Deep", "none", false },
+	{ "^Bridge_Reef_Path_Mosaic", CF.Box, false },
+	{ "^Island_Reef_Reef_Rock", "none", false }, -- under the seabed, out of reach
+	{ "^Amphitheater_Shell_Stone_Sunken", CF.Box, false }, -- low stage, 1.4 high
 	-- walls and big structures
-	{ "^Wall_Corner_Towers_Stone", CF.PreciseConvexDecomposition, true },
+	{ "^Wall_Corner_Towers_Stone", "none", true }, -- ~3 studs inside the corners, covered by the wall boxes
 	{ "^Wall_Front_[LR]_Stone", CF.Box, true },
 	{ "^Wall_Left_Stone", CF.Box, true },
 	{ "^Wall_Right_Stone", CF.Box, true },
-	{ "^Gate_SunkenKingdom_Stone_Deep", CF.PreciseConvexDecomposition, true },
-	{ "^Bridge_Reef_Stone_Sunken", CF.PreciseConvexDecomposition, true },
-	{ "^Ruin_Colonnade_Stone_Sunken", CF.PreciseConvexDecomposition, true },
-	{ "^Amphitheater_Shell_Coral_Pink", CF.PreciseConvexDecomposition, true },
-	{ "^Amphitheater_Shell_Shell_Pearl", CF.PreciseConvexDecomposition, true },
+	{ "^Gate_SunkenKingdom_Stone_Deep", "none", true }, -- arch above head height; the front walls frame it
+	{ "^Bridge_Reef_Stone_Sunken", "none", true }, -- curbs + arches; BridgeGuards hold the deck edges
+	{ "^Ruin_Colonnade_Stone_Sunken", CF.Box, true },
+	{ "^Amphitheater_Shell_Coral_Pink", CF.Box, true },
+	{ "^Amphitheater_Shell_Shell_Pearl", CF.Box, true },
 	{ "^Crystal_Tower_Stone_Sunken", CF.Hull, true },
 	{ "^Statue_SeaDragon_Verdigris", CF.Hull, true },
 	{ "^Habitat_Dome_.-_Glass_Dome", CF.Hull, false },
@@ -75,7 +78,10 @@ local RULES = {
 	{ "^Palace", "none", true },
 }
 local counts = { collide = 0, none = 0, shadow = 0 }
-for _, model in map:GetChildren() do
+for i, model in map:GetChildren() do
+	if i % 20 == 0 then
+		task.wait()
+	end
 	local rule
 	for _, r in RULES do
 		if model.Name:find(r[1]) then
@@ -88,6 +94,7 @@ for _, model in map:GetChildren() do
 			local fid = rule and rule[2] or "none"
 			if fid == "none" then
 				p.CanCollide, p.CanQuery, p.CanTouch = false, false, false
+				p.CollisionFidelity = CF.Box -- no precise collision data kept for parts that never collide
 				counts.none += 1
 			else
 				p.CollisionFidelity = fid
@@ -132,13 +139,16 @@ local X = -157
 local FLOOR = 24.3
 -- bridge: the GLB's bridge ends 10 studs before its deck starts (z -403..-412)
 part("BridgeGapPlate", CFrame.new(X, FLOOR - 0.25, -408), Vector3.new(9.6, 0.5, 10), true, MOSAIC)
--- guards: bridge edges (outside the curbs) and the entry pad's open south edge
--- the deck mesh's collision has a 1-stud seam at z -428: invisible plate just under the deck surface (24.2)
-part("BridgeDeckPlate", CFrame.new(X, 24.15 - 0.2, -431.5), Vector3.new(9.6, 0.4, 40), false)
-part("BridgeGuardL", CFrame.new(-165.4, FLOOR + 5, -425.1), Vector3.new(0.6, 10, 51), false)
-part("BridgeGuardR", CFrame.new(-148.6, FLOOR + 5, -425.1), Vector3.new(0.6, 10, 51), false)
-part("EntryGuardL", CFrame.new(-168.85, FLOOR + 5, -404.3), Vector3.new(6.3, 10, 0.6), false)
-part("EntryGuardR", CFrame.new(-145.15, FLOOR + 5, -404.3), Vector3.new(6.3, 10, 0.6), false)
+-- guards: on the deck edges (deck x -161.8..-152.2, pad edge z -404 to the front wall z -450.6) and the entry
+-- pad's open south edge (pad x -172..-142)
+part("BridgeGuardL", CFrame.new(-162.1, FLOOR + 5, -427.3), Vector3.new(0.6, 10, 46.6), false)
+part("BridgeGuardR", CFrame.new(-151.9, FLOOR + 5, -427.3), Vector3.new(0.6, 10, 46.6), false)
+part("EntryGuardL", CFrame.new(-166.9, FLOOR + 5, -404.3), Vector3.new(10.2, 10, 0.6), false)
+part("EntryGuardR", CFrame.new(-147.1, FLOOR + 5, -404.3), Vector3.new(10.2, 10, 0.6), false)
+-- palace steps (visual: path mesh, x -162..-152, z -539.2 at 24.30 up to z -545 at 26.74) as one invisible ramp;
+-- a WedgePart is tallest on its +Z side, the half turn puts the tall side at -Z (the palace)
+local steps = part("StepsRamp", CFrame.new(X, 0, 0), Vector3.new(11, 2.44, 5.8), false, nil, true, "WedgePart")
+steps.CFrame = CFrame.new(X, FLOOR + 2.44 / 2, -542.1) * CFrame.Angles(0, math.pi, 0)
 -- palace hall: floor at the top of the palace steps (y 26.7), corridor x -161..-153
 local HALL_Y = 26.7
 part("PalacePassFloor", CFrame.new(X, HALL_Y - 0.25, -554.1), Vector3.new(8, 0.5, 18.6), true, MOSAIC)
