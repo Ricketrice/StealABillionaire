@@ -83,24 +83,25 @@ BaseConfig.PAD_PRICES = { 5000, 12000, 30000, 75000, 180000, 450000 } -- PROPOSE
 BaseConfig.PASS_PADS = 2 -- pads 13-14 for the Extra Slots gamepass (ProductConfig), no cash price
 -- Pad spots, lot-local (x, z); the lot's front (gate) is -z. While PADS_ENABLED the lot's own six pads move to the
 -- back two rows and bought pads fill the middle rows; the two pass pads sit in the front corners and the front
--- middle stays clear for the gate. Hub 2b bases are 28 studs wide inside (walls at x +-14, back wall z +20, front
--- towers to z -20.5), so the grid is 3 columns x 5 rows: pad rings are 6.8 wide, 2.2 studs between columns,
--- 0.95 between rows, 1.6 from the side walls (the old 4-column grid at x +-4/+-12 reached into the walls).
+-- middle stays clear for the gate. Hub 2b bases are 28 studs wide inside (walls at x +-14, back wall z +20, gold wall
+-- brackets at z -8 reach x +-12.6, gate posts at x +-5.5 z -17.7). Measured against every base part (GLB triangles +
+-- colliders + gate): each pad ring (6.2 wide, the place's stations were shrunk from 6.8) is >= 1.5 studs from all of
+-- them (closest: pads 10/12 to the brackets 1.54, the back row to the back wall 1.55-1.7), 0.7 between pads.
 BaseConfig.PAD_SPOTS = {
-	{ -9, 15.5 },
-	{ 0, 15.5 },
-	{ 9, 15.5 },
-	{ -9, 7.75 },
-	{ 0, 7.75 },
-	{ 9, 7.75 }, -- 1-6 (the lot's own pads, moved)
-	{ -9, 0 },
-	{ 0, 0 },
-	{ 9, 0 },
-	{ -9, -7.75 },
-	{ 0, -7.75 },
-	{ 9, -7.75 }, -- 7-12 (cash)
-	{ -9, -15.5 },
-	{ 9, -15.5 }, -- 13-14 (Extra Slots pass)
+	{ -8.9, 15.2 },
+	{ 0, 15.2 },
+	{ 8.9, 15.2 },
+	{ -8.9, 8.3 },
+	{ 0, 8.3 },
+	{ 8.9, 8.3 }, -- 1-6 (the lot's own pads, moved)
+	{ -8.9, 1.35 },
+	{ 0, 1.35 },
+	{ 8.9, 1.35 },
+	{ -8.9, -5.6 },
+	{ 0, -5.6 },
+	{ 8.9, -5.6 }, -- 7-12 (cash)
+	{ -8.9, -12.6 },
+	{ 8.9, -12.6 }, -- 13-14 (Extra Slots pass)
 }
 -- Decor spots (026 Lot & Decor) while the pad layout is on. Lot & Decor is off (HubConfig.SHOPS_ENABLED): these
 -- were made for the old lots and do NOT fit the hub 2b bases (two are in the walls, three on pads); redo before turning it on.
