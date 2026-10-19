@@ -189,3 +189,37 @@ Undo order: `V2_Undo.lua`, `V_Undo.lua`, `R_Undo.lua`, `Undo.lua`.
 - **Play check (solo):** rings 0.00 off; Keep attacks every ~3 s (warning 1.3 / 0.9 / 0.8 s, ~1.8 s after a hit); bat swing: arm
   raised from -39 to 88 deg and swept on a real swing (R15; R6 not tested); spawn -> Keep 312 studs walked (Keep leg ~half), no
   falls; 7 walkers; free catch -> pad; 0 script errors. Not run: multi-client, test suites.
+
+## 10. Pads + Zone 3 map (2026-10-20, D52; `tools/zone3/`)
+Backups: `backups/pre_zone3necro_20261020.rbxl` (before), `backups/zone3necro_20261020.rbxl` (after). Undo order: `Z2_IslandRail.lua`
+with `UNDO = true`, `Z1_Undo.lua`, `Z0_PadSize.lua` with `UNDO = true` (prelude via `run_file.py <file> "UNDO = true"`), then the older ones.
+- **Pads:** measured against every base part (the base GLB's triangles mapped into plot space: `pad_clear.py` / `pad_map.py`, plus the
+  colliders and the plot gate). The old 3x5 grid had pads 13/14 touching the gate posts (0.05), 10/12 0.5 from the gold wall brackets,
+  the back row 1.1 from the back wall; 14 pads at ring 6.8 don't fit with 1.5 clearance. Now `PAD_SPOTS` x ±8.9 / 0, z 15.2 / 8.3 /
+  1.35 / -5.6, pass pads (±8.9, -12.6); station pads 6 -> 5.4, rings 6.8 -> 6.2 (`Z0_PadSize.lua`, attr `PreZ0Size`). Closest: pads
+  10/12 to the brackets 1.54, back row to the back wall 1.55-1.7, others >= 2.0; 0.7 between pads. Ids, prices, count unchanged.
+- **Zone 3 map (`Z1_NecroZone3.lua`):** `necromap.glb` (owner's Import 3D, 1 stud = 1 m) -> `World.EmberAcademy.Zone3Map`, x3, gate
+  (GLB -Y) facing the Zone 3 price gate, GLB +X = +Z. GLB origin -> (391.52, 24.1, 540); gate front x 332, town x 330-453, z 464-616,
+  spire top y ~121. Colours from the GLB (linear -> sRGB), Neon for glow/FX, mist 0.82 / veil 0.85 transparent. All meshes no
+  collide/query/touch except `Ground_ground_ash` (Box). `Collision` = 138 boxes (GLB welded, loose parts, merged; buildings one box each);
+  `Guards` on the wall line (15 studs high), open only at the gate and at the east-wall gap (z 506-515) that leads onto Ember's island.
+  Scale 3 (hub scale is 3.57) because the Spell Run start pad (x 460-473, z 596-608) must stay outside the map.
+- **Kid-safe (Blender renders + names), parked in `ServerStorage._ParkedNecro`:** all 8 `*_bone` meshes (skulls, horned skull + ribcage
+  on the plaza throne, bone piles, horns on the spire/gate), the graveyard (`Graveyard_stone_dark/stone_grey` tombstones, crosses,
+  obelisks, crypt; `_cobble_dark` grave slabs; `_iron_black` fence + crypt door; `_glow_necro`, `_wood_dark`, `_vine`), `Plaza_glow_necro`
+  (the pentagram on the plaza floor + crystals). Kept: dark houses, the spire, chapel ruins, throne (stone), dead trees, lamps, wisps,
+  mist, the green pool. The 16 marker cubes are in `_ParkedNecro.Helpers_Markers`.
+- **Ember parked** (`ServerStorage._ParkedEmber`, 24 items): avenue, arch, towers, library, spire, lab, books, rune circles, lanterns,
+  balustrade. Kept: `SpellRun` (live Spell Run), `Summit031` rocks, the island, the price gate, the red path. The path's side guards
+  (`GUARD_Ember_Gate_N/S`, `BillionaireHillsBridgeGuard±1`) cut to end at x 334.5 inside the map's gate wall (attrs `PreZ1*`).
+  `Z2_IslandRail.lua`: Ember's balustrade is the island's 3-stud edge rail: the 33 pieces outside the map + `Ember036EndRail` are back,
+  4 long rails cut at the map's east wall (attrs `PreZ2*`), 18 pieces inside the map stay parked.
+- **Zone 3 anchors:** `ZoneBoundary` = the empty graveyard lot (69 x 42 at (391.5, 34.1, 491); wanderers walk straight lines, so the box
+  covers open ground only), `Spawn1-8` on the lot (all on the ground slab, nothing within 4 studs), `GuardianPost` (391.5, 24.1, 508.5).
+  Zone teleports still land in front of the price gate (unchanged). Guardian + Secret = Vault Wizard (the new boss was not in the place).
+- **Play check (solo, in-editor, StudioMemoryStore, StudioDevTools on):** pads at the new spots/sizes in Plot 11 (outer) and Plot 1
+  (inner, 8 pads), non-mesh clearance >= 1.70 in Plots 1/2/11/12 (unlock pad not shown: only appears when all pads are full; same spot
+  code). Walk Sunken back door -> path -> gate -> town -> lot, root y 27.1 inside (no falls); lot -> east gap -> Spell Run pad and back;
+  walking at the closed gaps stops at the guards. 8 wanderers spawned, all in the lot. Catch -> Vault Wizard attacked (hp 33 -> 14),
+  chased, max 6.7 studs outside the zone, went back to its post with the carrier 33 out; earlier a KO at 0 hp. 0 script errors (log).
+  Test walk speeds 24-30. Not run: multi-client, test suites.
