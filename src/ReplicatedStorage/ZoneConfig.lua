@@ -39,7 +39,7 @@ ZoneConfig.READY = {} :: { [string]: boolean }
 ZoneConfig.ZONES = {
 	{ id = "MainStreet", number = 1, name = "Knight's Keep", price = 0, purchasable = false, gate = false },
 	-- Ours (034): both are lane gates (Gate attribute LaneGate).
-	{ id = "SunkenKingdom", number = 2, name = "Sunken Kingdom", price = 50000, folder = "Our_SunkenKingdom", purchasable = true, gate = true },
+	{ id = "SunkenKingdom", number = 2, name = "Sunken Kingdom", price = 10000, folder = "Our_SunkenKingdom", purchasable = true, gate = true }, -- 10,000 (owner, 2026-10-20; was 50,000)
 	{ id = "BillionaireHills", number = 3, name = "Ember Academy", price = 500000, folder = "Zone6_BillionaireHills", purchasable = true, gate = true },
 } :: { Zone }
 

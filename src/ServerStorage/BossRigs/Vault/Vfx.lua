@@ -195,6 +195,13 @@ function Vfx:_clip_Normal_Repossess(token: number, el: number)
 end
 
 -- Event_MarketCrash: coin rain from the authored FX_CoinRain volume (falls over ~1 s) and impact rings (authored FX_CoinRainMarks)
+-- Where the zone guardian's attack lands (GuardianService sets VW_HitSpot = the warning's ground point), so the hit effects
+-- sit on the warning the hit is tested against. nil = the authored spot.
+local function hitSpot(self: any): Vector3?
+	local p = self.model:GetAttribute("VW_HitSpot")
+	return if typeof(p) == "Vector3" then p else nil
+end
+
 function Vfx:_clip_Event_MarketCrash(token: number, el: number)
 	local rainFx, marksFx = self.data.fx.FX_CoinRain, self.data.fx.FX_CoinRainMarks
 	local r0, r1 = ramp(rainFx, "Event_MarketCrash")
@@ -205,6 +212,10 @@ function Vfx:_clip_Event_MarketCrash(token: number, el: number)
 		local sc = self.s
 		local top = self.hrp.CFrame
 			* CFrame.new((rainFx.inHrp[1] + (box.max[1] + box.min[1]) / 2) * sc, rainFx.inHrp[2] * sc, (rainFx.inHrp[3] + (box.max[3] + box.min[3]) / 2) * sc)
+		local spot = hitSpot(self)
+		if spot then -- (the rain falls on the locked circle)
+			top = CFrame.new(spot.X, top.Position.Y, spot.Z) * top.Rotation
+		end
 		local p = self:_anchor(top, Vector3.new(sizeX, 0.3, sizeZ), r1 - r0 + 2.5)
 		local rain = newEmitter(p, {
 			name = "CoinRain",
@@ -231,6 +242,10 @@ function Vfx:_clip_Event_MarketCrash(token: number, el: number)
 	self:_at(token, m0 + 0.5 - el, function()
 		local box2 = self.data.meshBox.CoinRainMarks_Neon
 		local g = self:groundCF(marksFx.inHrp) * CFrame.new((box2.max[1] + box2.min[1]) / 2 * self.s, 0, (box2.max[3] + box2.min[3]) / 2 * self.s)
+		local spot = hitSpot(self)
+		if spot then
+			g = CFrame.new(spot + Vector3.new(0, 0.06 * self.s, 0)) * g.Rotation
+		end
 		local p = self:_anchor(g, Vector3.new(box2.max[1] - box2.min[1], 0.2, box2.max[3] - box2.min[3]), m1 - m0 + 1)
 		local marks = newEmitter(p, {
 			name = "CoinMarks",
@@ -305,7 +320,9 @@ function Vfx:_clip_Event_BankruptNova(token: number, el: number)
 	end)
 	for i = 0, 2 do
 		self:_at(token, t0 + i * 0.1 - el, function()
-			self:_ring(self:groundCF(fx.inHrp), r * 2, r * 2 * (10 - i * 1.4), life, if i == 1 then GOLD else LAV)
+			local spot = hitSpot(self) -- (the shockwave's centre)
+			local cf = if spot then CFrame.new(spot + Vector3.new(0, 0.06 * self.s, 0)) else self:groundCF(fx.inHrp)
+			self:_ring(cf, r * 2, r * 2 * (10 - i * 1.4), life, if i == 1 then GOLD else LAV)
 		end)
 	end
 	self:_at(token, t0 - el, function()

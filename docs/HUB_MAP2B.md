@@ -139,3 +139,29 @@ pieces are in `ServerStorage._ParkedR2` (attr `ParkedFrom`). `R_Undo.lua` (Edit)
   guardian woke on a Keep catch, chased + hit (100 → 46 hp), gave up and walked back to its post with the carrier on the bridge 28-50
   studs past the boundary (test run speed 24, rule 40); 0 game-script errors. Test speeds 40 (walks) / 24 (run-out), not the game's.
   Not run: any multi-client test, the test suites.
+
+## 8. Visual review fixes (2026-10-20, `V1_VisualFix.lua`, undo `V_Undo.lua`; D51)
+Everything new is in `Workspace.HubMap2b.VisualFix2b`; parked pieces are in `ServerStorage._Parked2b.VisualFix` (attr `ParkedFrom`).
+Undo order: `V_Undo.lua`, then `R_Undo.lua`, then `Undo.lua`. **§7's platforms, connector, Ember platform/pedestal and their guards
+are parked by this step.**
+- **Red path:** the export's red T (`ContestedLane_2a`: band + 40-stud spine, one mesh) + its rock parked and rebuilt as parts
+  (`VisualFix2b.RedPath`): band unchanged, spine 20 studs wide (x ±10), rock under both. Parade walkers stay on it (offsets ±3.5).
+- **Parked:** `Hub2b.ZoneConnectors_Unchanged` (grey platforms + short red branches), §7's `Repair2b.Platforms2b` / `Repair2b.Guards`,
+  `KnightsKeep.Bridge036`, both `SkyCity.Lane.Ramp` models, `Bridges.BillionaireHillsBridge`, `FutureZones.Zone6_BillionaireHills.Path`,
+  23 Collision2b boxes/guards (platforms, branches, old 40-wide spine, their guards).
+- **Red path to each entrance (collides, 20 wide, 25 invisible 6-stud edge guards):** west: junction → flat to x -50 → ramp to 13.5 at
+  x -98 → flat onto the Keep island (x -140), new `KeepEntranceArch` ("ZONE 1 · KNIGHT'S KEEP · FREE", a copy of the gate frame, no
+  barrier). East: junction → ramp to 12 at x 92 → under the Sunken gate paving to x 116 (gate x 104). Ember: from the Sunken palace's
+  back door (x 269.7, 13.6) → ramp to 24 at x 313 → under the Ember gate paving to its island (x 372; gate x 325.5).
+- **Gates:** `ZoneConfig` Sunken 10,000 (was 50,000). `ZoneGates` writes the price on the gate's lock plate ("10,000 COINS",
+  "500,000 COINS", gold, big) instead of "COIN UNLOCK"; unlock + save are the existing ZoneProgress ones.
+- **Treasury:** `HeistConfig.ENABLED = false` (no vault, no "Treasury m:ss" pill; the Golden pill stays).
+- **Boss hit effects on the warnings:** `GuardianService` sets `VW_HitSpot` (+ `VW_HitAcross` / `VW_HitLength` for the line) on the boss
+  model; Malgrave's and the Vault Wizard's `Vfx` use it (copied into `BossRigs.<Name>.Template.Runtime.Vfx` too): the thrown sword
+  lands on the locked circle (was 3-19 studs off; now 0.7-0.8), Riftcleave's crack runs along the red strip, Ironcall / Coin Nova
+  rings and Coin Rain sit on the warning centre (0.0 off). Damage, ranges, timing unchanged. Aquaris draws no ground circles of its own.
+- **Play check (solo, in-editor, StudioMemoryStore):** spawn → narrow red path (7 walkers seen, all within 2.9 of the centre line) →
+  free catch → pad 1, 11/s; plot → Knight's Keep along the red path, no unlock needed, no falls; Sunken gate blocks (stopped at x 102.9),
+  plate "10,000 COINS", buying with 1,606 refused, with 12,256 bought (-10,000), walked through, then up to the Ember gate (blocked at
+  324.5; with dev tools on, into Ember, no falls); attacks measured as above; HUD: Golden pill only; 0 game-script errors. Test walk speed
+  30-40; coins via Studio `/devcash`. Not run: multi-client, the test suites (heist032 / lane030 / hub026 expect the old setup).

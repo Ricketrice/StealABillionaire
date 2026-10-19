@@ -200,6 +200,15 @@ local function applyGate(zone: ZoneConfig.Zone, unlocked: { [string]: boolean })
 		for _, child in plate:GetChildren() do
 			if child:IsA("SurfaceGui") then
 				child.Enabled = not isOpen
+				-- the plate's small "COIN UNLOCK" line shows the price from ZoneConfig, big and gold (2026-10-20)
+				for _, label in child:GetDescendants() do
+					if label:IsA("TextLabel") and (label:GetAttribute("PriceLabel") or label.Text == "COIN UNLOCK") then
+						label:SetAttribute("PriceLabel", true)
+						label.Text = (CashFormat.format(zone.price):gsub("^%$", "")) .. " COINS"
+						label.Size = UDim2.fromScale(0.86, 0.3)
+						label.TextColor3 = C.Gold
+					end
+				end
 			end
 		end
 	end

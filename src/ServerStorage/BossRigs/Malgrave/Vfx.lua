@@ -180,6 +180,13 @@ local function trail(self: any, part: BasePart, life: number, duration: number)
 end
 
 -- Basic_SwordSwing: blade trail through the swing + a flat slash arc at waist height (authored FX_SlashArc)
+-- Where the zone guardian's attack lands (GuardianService sets VW_HitSpot = the warning's ground point, plus VW_HitAcross /
+-- VW_HitLength for the line attack), so the hit effects sit on the warning the hit is tested against. nil = authored spot.
+local function hitSpot(self: any): Vector3?
+	local p = self.model:GetAttribute("VW_HitSpot")
+	return if typeof(p) == "Vector3" then p else nil
+end
+
 function Vfx:_clip_Basic_SwordSwing(token: number, el: number)
 	local fx = self.data.fx.FX_SlashArc
 	local t0, t1 = ramp(fx, "Basic_SwordSwing")
@@ -214,6 +221,13 @@ function Vfx:_clip_Special_Riftcleave(token: number, el: number)
 	local near = -fb.max[3] * sc
 	self:_at(token, f0 - el, function()
 		local base = self.hrp.CFrame * CFrame.new(fis.inHrp[1] * sc, (fis.inHrp[2] + 0.1) * sc, fis.inHrp[3] * sc)
+		local spot, across, length = hitSpot(self), self.model:GetAttribute("VW_HitAcross"), self.model:GetAttribute("VW_HitLength")
+		if spot and typeof(across) == "Vector3" and type(length) == "number" then
+			-- the crack runs along the red warning strip, end to end (that strip is where the hit lands)
+			local from = spot - across * (length / 2) + Vector3.new(0, 0.1 * sc, 0)
+			base = CFrame.lookAt(from, from + across)
+			near, len = 0, length
+		end
 		local pa, a0 = self:_anchor(base * CFrame.new(0, 0, -near), nil, f1 - f0 + 1)
 		local _, a1 = self:_anchor(base * CFrame.new(0, 0, -near), nil, f1 - f0 + 1)
 		local glow, core = Instance.new("Beam"), Instance.new("Beam")
@@ -374,6 +388,16 @@ function Vfx:_clip_Special_OathbreakerThrow(token: number, el: number)
 		local start = os.clock() - math.max(0, el - t0)
 		local hit = false
 		local key = {}
+		local spot = hitSpot(self)
+		-- (with a spot: the authored flight is shifted sideways, growing to the full shift at the hit and back to the hand)
+		local function shiftAt(t: number): Vector3
+			if not spot then
+				return Vector3.zero
+			end
+			local authored = (self.hrp.CFrame * interpTrs(rows, hitT, sc) * child).Position
+			local w = if t <= hitT then (t - t0) / math.max(hitT - t0, 1e-3) else 1 - (t - hitT) / math.max(t1 - hitT, 1e-3)
+			return Vector3.new(spot.X - authored.X, 0, spot.Z - authored.Z) * math.clamp(w, 0, 1)
+		end
 		self.updaters[key] = function()
 			if token ~= self.token or not self.model.Parent then
 				return false
@@ -386,14 +410,14 @@ function Vfx:_clip_Special_OathbreakerThrow(token: number, el: number)
 				return false
 			end
 			local node = interpTrs(rows, t, sc)
-			local cf = self.hrp.CFrame * node * child * rest:Inverse()
+			local cf = self.hrp.CFrame * node * child * rest:Inverse() + shiftAt(t)
 			for _, c in copies do
 				c.CFrame = cf
 			end
 			if not hit and t >= hitT then
 				hit = true
-				local pos = (self.hrp.CFrame * node * child).Position
-				local g = CFrame.new(pos.X, self.hrp.Position.Y - (self.data.hrpHeight - 0.06 / sc) * sc, pos.Z)
+				local pos = (self.hrp.CFrame * node * child).Position + shiftAt(hitT)
+				local g = CFrame.new(pos.X, if spot then spot.Y + 0.06 * sc else self.hrp.Position.Y - (self.data.hrpHeight - 0.06 / sc) * sc, pos.Z)
 				self:_ring(g, 1.5, 9, 0.5, RED)
 				self:_burst(CFrame.new(pos), 20, {
 					name = "ThrowHit",
@@ -416,14 +440,19 @@ function Vfx:_clip_Special_Ironcall(token: number, el: number)
 	local sc = self.s
 	local m0, m1 = ramp(marks, "Special_Ironcall")
 	local s0, s1 = ramp(shock, "Special_Ironcall")
+	-- with a spot (the shockwave's centre): centred there instead of the authored offsets
+	local function at(rel: { number }): CFrame
+		local spot = hitSpot(self)
+		return if spot then CFrame.new(spot + Vector3.new(0, 0.06 * sc, 0)) * self.hrp.CFrame.Rotation else self:groundCF(rel)
+	end
 	self:_at(token, m0 - el, function()
 		local w = d.meshBox.IronMarks_FX.max[1] * 2
-		self:_flat(self:groundCF(marks.inHrp), self.sigilTex, w * 0.8, w, m1 - m0, RED, 20)
+		self:_flat(at(marks.inHrp), self.sigilTex, w * 0.8, w, m1 - m0, RED, 20)
 	end)
 	self:_at(token, s0 - el, function()
 		local r = d.meshBox.IronShock_FX.max[1]
-		self:_ring(self:groundCF(shock.inHrp), r * 2, r * 2 * 11, s1 - s0, RED)
-		self:_burst(self:groundCF(shock.inHrp), 24, {
+		self:_ring(at(shock.inHrp), r * 2, r * 2 * 11, s1 - s0, RED)
+		self:_burst(at(shock.inHrp), 24, {
 			name = "IronShockSparks",
 			Lifetime = NumberRange.new(0.4, 0.8),
 			Speed = NumberRange.new(10, 18),
@@ -443,6 +472,10 @@ function Vfx:_clip_Special_Ironcall(token: number, el: number)
 		local count = math.max(4, math.floor(spec[3] * self.k))
 		self:_at(token, b0 - 0.05 - el, function()
 			local origin = self.hrp.CFrame * CFrame.new(fx.inHrp[1] * sc, 0, fx.inHrp[3] * sc)
+			local spot = hitSpot(self)
+			if spot then
+				origin = CFrame.new(spot.X, origin.Position.Y, spot.Z) * origin.Rotation
+			end
 			local blades = {}
 			for i = 1, count do
 				local a = (i - 1) * math.pi * 2 / count

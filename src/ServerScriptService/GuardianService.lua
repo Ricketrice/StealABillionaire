@@ -244,6 +244,13 @@ local function startAttack(g: Guardian, kind: string, target: Player, targetRoot
 	GuardianService.stats.attacks += 1
 	g.attack = a
 	g.mode = "Attack"
+	-- where this attack lands, for the boss's own hit effects (BossRigs Vfx): the effect sits on the warning shape the
+	-- hit is tested against (presentation only; the searchlight's spot is set when it locks)
+	if g.model then
+		g.model:SetAttribute("VW_HitSpot", if kind == "Searchlight" then nil else a.centre)
+		g.model:SetAttribute("VW_HitAcross", if kind == "Laser" then a.across else nil)
+		g.model:SetAttribute("VW_HitLength", if kind == "Laser" then (GuardianConfig.ATTACKS[kind] :: any).length else nil)
+	end
 	BossChase.playClip(g.model, g.entry, kind, a.hitAt)
 	clientEvent:FireAllClients("Attack", info)
 end
@@ -264,6 +271,9 @@ local function hooks(g: Guardian, a: BossChase.Attack, now: number): BossChase.H
 		end,
 		lock = function(attack)
 			attack.log.spot = attack.spot
+			if g.model then
+				g.model:SetAttribute("VW_HitSpot", attack.spot)
+			end
 			clientEvent:FireAllClients("Lock", { id = attack.id, spot = attack.spot, hitAt = attack.hitAt, zone = g.zone })
 		end,
 		cancel = function(attack)

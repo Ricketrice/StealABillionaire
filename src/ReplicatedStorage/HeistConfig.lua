@@ -10,7 +10,8 @@ local WorkerCatalogue = require(script.Parent:WaitForChild("WorkerCatalogue"))
 
 local HeistConfig = {}
 
-HeistConfig.ENABLED = true -- D46: live
+HeistConfig.ENABLED = false -- off (owner, 2026-10-20): the zone guardians attack creature carriers now, so the timed
+-- Treasury heist (vault every 10 min + its HUD countdown) is retired. Was true (D46).
 HeistConfig.STUDIO_ATTRIBUTE = "StudioHeist"
 HeistConfig.PUBLISHED = "HeistOn"
 
