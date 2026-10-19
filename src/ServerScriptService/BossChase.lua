@@ -27,7 +27,7 @@ BossChase.AIR_GRACE = 0.35 -- a jump counts this long after the server last saw 
 -- timed right on the player's screen counts.
 BossChase.WAVE_LAG = 0.15
 
-export type Def = { warning: number, range: number, radius: number?, length: number?, width: number?, waveSpeed: number?, band: number? }
+export type Def = { warning: number, track: number?, range: number, radius: number?, length: number?, width: number?, waveSpeed: number?, band: number? }
 export type Attack = {
 	id: number,
 	kind: string,
@@ -172,7 +172,8 @@ function BossChase.playClip(model: Model?, entry: BossHeist.Boss?, kind: string,
 	task.delay(math.max(0, startAt - workspace:GetServerTimeNow() - 0.1), function()
 		if model.Parent then
 			model:SetAttribute("VW_Clip", attack.clip)
-			model:SetAttribute("VW_ClipT0", math.max(startAt, workspace:GetServerTimeNow()))
+			-- (a clip whose wind-up is longer than the warning starts part-way through, so its impact still lands at impactAt)
+			model:SetAttribute("VW_ClipT0", startAt)
 		end
 	end)
 end
@@ -221,7 +222,7 @@ function BossChase.plan(
 	local faceAt = targetRoot.Position
 	if kind == "Searchlight" then
 		-- follows the target for TRACK s, then locks: the fixed red circle is shown `warning` s before the zap
-		local track = 0.6
+		local track = def.track or 0.6 -- (GuardianConfig sets its own; the Boss Heist keeps 0.6)
 		a.warnAt = now + track
 		a.hitAt = a.warnAt + def.warning
 		a.endAt = a.hitAt + 0.5

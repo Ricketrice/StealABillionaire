@@ -10,7 +10,7 @@ RBXL=$HOME/.var/app/org.vinegarhq.Vinegar/data/vinegar/prefixes/studio/drive_c/u
 marker=$(mktemp); start=$(date +%s)
 while [ ! "$RBXL" -nt "$marker" ]; do
   sleep 1
-  if [ $(( $(date +%s) - start )) -gt 120 ]; then echo "TIMEOUT: no new server.rbxl"; rm -f "$marker"; exit 1; fi
+  if [ $(( $(date +%s) - start )) -gt 300 ]; then echo "TIMEOUT: no new server.rbxl"; rm -f "$marker"; exit 1; fi
 done
 sleep 3 # let Studio finish writing
 cp "$RBXL" "backups/$name.rbxl"; rm -f "$marker"

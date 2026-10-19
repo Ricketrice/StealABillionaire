@@ -55,7 +55,12 @@ function Vfx.new(model: Model, data: any, assets: { [string]: string }?, opts: {
 		Enabled = true,
 	})
 	-- the rune circle: one big flat sprite at a time, slowly spinning and pulsing (VelocityPerpendicular + tiny upward velocity = lies flat on the ground)
-	self.sigil = newEmitter(ground, {
+	-- the ground rings come out of ONE point under the root (an emitter on the flat ground part would spawn each
+	-- ring anywhere on that part, so rings sat off to the side of the boss)
+	local centre = Instance.new("Attachment")
+	centre.Name = PREFIX .. "GroundCentre"
+	centre.Parent = ground
+	self.sigil = newEmitter(centre, {
 		name = "Sigil",
 		Texture = self.sigilTex,
 		Rate = 0.5,

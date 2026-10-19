@@ -88,10 +88,12 @@ end
 -- Poses ---------------------------------------------------------------------------------------------
 -- The right arm and the body lean are posed by adding to the joints' Transform after the normal
 -- animations have run each frame, so they blend with walking and need no animation assets.
+-- (2026-10-20: avatars with Roblox's joint upgrade have AnimationConstraint joints instead of Motor6Ds; both have the
+-- Transform the animations write, so either is posed the same way. Without this the bat never visibly swung.)
 local function joint(character: Model, partName: string, jointName: string): Motor6D?
 	local part = character:FindFirstChild(partName)
 	local motor = part and part:FindFirstChild(jointName)
-	return if motor and motor:IsA("Motor6D") then motor else nil
+	return if motor and (motor:IsA("Motor6D") or motor:IsA("AnimationConstraint")) then motor :: any else nil
 end
 local function shoulder(character: Model): Motor6D?
 	return joint(character, "RightUpperArm", "RightShoulder") or joint(character, "Torso", "Right Shoulder")

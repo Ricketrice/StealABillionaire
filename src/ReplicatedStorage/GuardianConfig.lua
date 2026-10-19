@@ -27,15 +27,16 @@ GuardianConfig.STOP_SHORT = 7 -- studs: stops this far from the target
 GuardianConfig.LEASH = 8 -- studs: the guardian itself never walks further than this outside its ZoneBoundary
 GuardianConfig.GIVE_UP_MARGIN = 40 -- studs outside the ZoneBoundary (flat) where it gives up on the carrier
 GuardianConfig.WAKE_DELAY = 1.0 -- seconds between the catch and the first step (the wake-up flourish plays)
-GuardianConfig.MIN_WARNING = 1.5 -- every attack shows its fixed warning at least this long before it can hit
-GuardianConfig.ATTACK_GAP = 2.5 -- rest between two attacks
+GuardianConfig.MIN_WARNING = 0.8 -- every attack shows its fixed warning at least this long before it can hit (2026-10-20: was 1.5)
+GuardianConfig.ATTACK_GAP = 1.25 -- rest between two attacks (2026-10-20, owner: about half, was 2.5)
 GuardianConfig.HIT_GRACE = 1.5 -- after a hit, that player can't be hit again for this long
 -- The same three attack shapes and ranges as the Boss Heist (HeistConfig.ATTACKS) + damage per hit (Humanoid health 100):
 -- 4-5 hits knock a full-health carrier out; a careful player dodges them all.
 GuardianConfig.ATTACKS = {
-	Searchlight = { warning = 2.0, range = 60, radius = 6, damage = 20 }, -- circle follows, locks red, zaps: walk out of it
-	Laser = { warning = 1.8, range = 40, length = 36, width = 4, damage = 25 }, -- red line on the ground, then a sweep: step off it
-	Stomp = { warning = 1.6, range = 24, radius = 28, waveSpeed = 22, band = 2.5, damage = 20 }, -- ring + shockwave: jump it
+	-- 2026-10-20 (owner: urgent): warnings about half (were 2.0 / 1.8 / 1.6; searchlight follow 0.6), damage unchanged
+	Searchlight = { warning = 1.0, track = 0.3, range = 60, radius = 6, damage = 20 }, -- circle follows `track` s, locks red, zaps: walk out of it
+	Laser = { warning = 0.9, range = 40, length = 36, width = 4, damage = 25 }, -- red line on the ground, then a sweep: step off it
+	Stomp = { warning = 0.8, range = 24, radius = 28, waveSpeed = 22, band = 2.5, damage = 20 }, -- ring + shockwave: jump it
 }
 
 do

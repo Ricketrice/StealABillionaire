@@ -28,7 +28,12 @@ function Vfx.new(model: Model, data: any, assets: { [string]: string }?, opts: {
 	ground.Size = Vector3.new(auraR * 2, 0.2, auraR * 2) * self.s
 
 	-- the rune circle (authored GroundSigil) and the energy ring (AuraEnergy)
-	self.sigil = newEmitter(ground, {
+	-- the ground rings come out of ONE point under the root (an emitter on the flat ground part would spawn each
+	-- ring anywhere on that part, so rings sat off to the side of the boss)
+	local centre = Instance.new("Attachment")
+	centre.Name = PREFIX .. "GroundCentre"
+	centre.Parent = ground
+	self.sigil = newEmitter(centre, {
 		name = "Sigil",
 		Texture = self.sigilTex,
 		Rate = 0.5,
@@ -42,7 +47,7 @@ function Vfx.new(model: Model, data: any, assets: { [string]: string }?, opts: {
 		Rotation = NumberRange.new(0, 360),
 		Enabled = true,
 	})
-	self.energy = newEmitter(ground, {
+	self.energy = newEmitter(centre, {
 		name = "AuraEnergy",
 		Texture = self.ringTex,
 		Rate = 0.8,

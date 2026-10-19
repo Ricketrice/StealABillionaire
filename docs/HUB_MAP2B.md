@@ -165,3 +165,27 @@ are parked by this step.**
   plate "10,000 COINS", buying with 1,606 refused, with 12,256 bought (-10,000), walked through, then up to the Ember gate (blocked at
   324.5; with dev tools on, into Ember, no falls); attacks measured as above; HUD: Golden pill only; 0 game-script errors. Test walk speed
   30-40; coins via Studio `/devcash`. Not run: multi-client, the test suites (heist032 / lane030 / hub026 expect the old setup).
+
+## 9. Visual review 2 (2026-10-20, `V2_Review2.lua`, undo `V2_Undo.lua`)
+New parts: `Workspace.HubMap2b.Review2`; parked: `ServerStorage._Parked2b.Review2`; moved/resized: tag `MovedV2` (attrs `PreV2*`).
+Undo order: `V2_Undo.lua`, `V_Undo.lua`, `R_Undo.lua`, `Undo.lua`.
+- **Knight's Keep 66 studs closer** (rigid +X move, no turn): KnightsKeep, Zones.MainStreet (ZoneBoundary now centred x -125.5,
+  SpawnPoints, GuardianPost), SkyCity.MainStreet / Ground.Island4 / MainStreetCurb / MainStreet, Start_MainStreet, hedges, rocks,
+  trees, a cloud, PhotoSpotsDev, the HeistVault032 template (+ Hinge/WheelCentre), the FREE arch. `KeepMove2b` updated.
+- **Keep path** 20 wide, x -10..-76 (was -10..-140): flat to -22, ramp to 13.5 at -66, onto the island. The "SAFE ZONE ENDS HERE"
+  gate stands on the flat part at x -16, fitted to the path (posts on its edges, sign 18 / gold line 20 long, the 2 stripes that
+  hung over the void parked).
+- **Red band** 55 -> 30 deep (z -70..-40); the spine reaches it at z -70 (collision = `COL_ReturnPlaza`; `COL_RedBand_Far` parked;
+  `Ext2b` band/rock and `COL_Ext_RedBand_*`, `GUARD_Ext_End_*` resized). Every base door has floor in front; parade unchanged.
+- **Boss rings:** the rune circle and energy ring (Malgrave, Vault Wizard) were emitted from the whole flat ground helper part, so
+  each ring spawned anywhere up to the aura radius from the boss; now from a centre attachment (0.00 studs off, measured).
+  Aquaris' ring is drawn around its root (already centred). Warnings: stomp ring 0.01 studs off the boss.
+- **Faster attacks** (`GuardianConfig`): warnings 1.0 / 0.9 / 0.8 s (were 2.0 / 1.8 / 1.6), searchlight follow `track` 0.3
+  (was 0.6, now in config), `ATTACK_GAP` 1.25 (was 2.5), `MIN_WARNING` 0.8; damage unchanged. Clips whose wind-up is longer than the
+  new warning start part-way (`BossChase.playClip`: `VW_ClipT0` = the planned start), so impacts still land on the hit.
+- **Bat swing:** avatars now have `AnimationConstraint` joints (Roblox joint upgrade), not Motor6Ds; `PvPFx` only looked for Motor6D,
+  so the code-posed swing never showed. It now poses either (R15 `RightShoulder`, R6 `Right Shoulder`). Bat damage/cooldown/knockback
+  unchanged.
+- **Play check (solo):** rings 0.00 off; Keep attacks every ~3 s (warning 1.3 / 0.9 / 0.8 s, ~1.8 s after a hit); bat swing: arm
+  raised from -39 to 88 deg and swept on a real swing (R15; R6 not tested); spawn -> Keep 312 studs walked (Keep leg ~half), no
+  falls; 7 walkers; free catch -> pad; 0 script errors. Not run: multi-client, test suites.
