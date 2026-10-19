@@ -15,7 +15,7 @@ Everything is in the **open Studio, not saved**: owner must File → Save. Scrip
   (branches x ±20..50). Grey platforms x ±50..210, z -95..-225.
 - **12 lots, not 8:** the export has **8 bases** (4 + 4 beside the NorthGate), not 6 + 6. Capacity stays 12: four copies of `Base4`
   (`Base9..12`) extend the row to x ±184 / ±220 (their inner walls line up with the town's end walls), on new floor/red band/rock parts
-  (`HubMap2b.Ext2b`). **Owner check:** the outer two bases each side stand outside the town wall (doors face the red band; no back way into town).
+  (`HubMap2b.Ext2b`). Since the 10-20 repair (§7) the town wall stands at x ±242, so all 12 bases are inside and every base's back door opens onto the town walkway.
 - **Fit (`H1_HubFit.lua`):** ScaleTo ×3.5714, half turn (Import 3D's), placed by Base1's centre (checks: Base8/TeleportHall/NorthGate within 0.05 studs).
   All meshes anchored, no collision / query / touch, `CollisionFidelity` Box; colours = GLB `baseColorFactor` (linear → sRGB);
   Wood / CorrodedMetal / Fabric for wood / iron / cloth, Neon for glow + portal surfaces, Glass for water/windows, Plastic otherwise;
@@ -24,23 +24,22 @@ Everything is in the **open Studio, not saved**: owner must File → Save. Scrip
 - **Plots:** Plot1..12 (names, PlotId and code unchanged) moved into the bases, front = north (the red band); Plot1/2 next to the gate,
   then outwards (Plot1 → Base4, Plot2 → Base5, … Plot9..12 → Base9..12). Floor top y 0.35 (on the base floor). The plot's low fence is
   hidden (the base walls are the fence; the lock is logical, PvP `isInside` uses the Floor). The map's own 72 gold slot pads are parked
-  (`_Parked2b.MapSlots`): the plot's stations are the pads. Pad spots (`BaseConfig.PAD_SPOTS`, 30 × 32 studs) fit the 28 × 46 base inside
-  except the outer pad columns touch the side walls by ~1 stud.
+  (`_Parked2b.MapSlots`): the plot's stations are the pads. Pad spots (`BaseConfig.PAD_SPOTS`): 3 columns × 5 rows since §7
+  (inside a base: x ±14, back wall z +20, front towers to z -20.5; every ring ≥ 1.6 studs from the side walls, ≥ 1.1 from the back wall).
 - **Spawn** `Workspace.SpawnLocation` at hub (0, 0.5, 56) by the fountain, facing the bases. `SafeHubVolume` = the plaza (x ±50, z 10..120).
   `Hub.Floor` (home anchor) at the plaza centre. Shops / quest board / guide / `TopBillionaires` moved into the town
   (CosmeticShop, UpgradeForge, TradingPlaza west stall, beside the TeleportHall, EventStage west board). Arena + `BillionairePlaza` stay where they were (off at launch).
-- **Parade:** `SkyCity.Ground.ParadeLane.Lane` (invisible now) along the red spine from the junction (z -162) to the NorthGate (z -50):
-  walkers walk towards the town. 112 studs at 4 studs/s = 28 s per walker, one every 9 s → ~3 on the lane (was up to 8 on the 322-stud lane;
-  ParadeConfig unchanged). Pinstripes/edge parked.
+- **Parade:** `SkyCity.Ground.ParadeLane.Lane` (invisible now) along the whole red spine since §7 (spine end z -233 → NorthGate z -44):
+  walkers walk towards the town; 179 studs at 2.6 studs/s ≈ 69 s, one every 9 s → 7-8 on the lane. Pinstripes/edge parked.
 - **Parked** (`ServerStorage._Parked2b`, each with `ParkedFrom`): old LotBases, ReservedPlots, HideoutCamp, SkyCity.Hub pieces, hub ground/rocks/edges/trees,
   lane mouth tiles. Old hub: 647 parts (167 MeshParts). New hub: 476 parts (307 MeshParts + 169 blocks, 160 of them invisible collision);
   mesh tris ≈ 59.3k (57,550 − 8 × 6 slot pads + 4 copied bases). Old hub mesh tris: not measurable in Studio (no tri count API).
 
 ## 2. Zones on the grey platforms (`H2_Zones.lua`, `H2b_Portals.lua`)
 - **Knight's Keep → west platform:** one rigid move, quarter turn (the Keep's north is now west); the bridge foot lands on the end of the
-  west branch (hub -50, 0, -160). Spans hub x -50..-294 (the platform is 160 deep: the castle stands past its far edge, not scaled).
+  west branch (hub -50, 0, -160). Spans hub x -50..-294 (the platform reaches x -290 since §7).
 - **Sunken Kingdom + Ember Academy → east platform:** ONE move for both (the Sunken → Ember ramp still connects), quarter turn the other way,
-  the Sunken ramp foot on the east branch (hub 50, 0, -160), 12.3 lower. Sunken x 50..276, Ember x 389..660 (not scaled).
+  the Sunken ramp foot on the east branch (hub 50, 0, -160), 12.3 lower. Sunken x 50..276, Ember x 389..660 (not scaled; platforms under both since §7).
 - Moved with them: `KnightsKeep`, `SunkenKingdom`, `EmberAcademy`, `Zones.*` (ZoneBoundary, SpawnPoints), `FutureZones.Our_SunkenKingdom` /
   `Zone6_BillionaireHills` (lane gates), `Bridges`, `BridgeGuards`, lane ramps/landings, `Start_MainStreet`, the safe line + banner,
   terrace/rocks/trees/clouds by position, and the ServerStorage templates that hold world positions: `HeistVault032` (door `Hinge` /
@@ -102,8 +101,41 @@ each (8 = a batch can always fill; `H4_SpawnPoints.lua`).
 - `verify_sync`: every file changed tonight matches (only the known old differences remain).
 
 ## 6. Undo
+0. The 10-20 layout repair first: `tools/hub2b/R_Undo.lua` (Edit) — see §7.
 1. Map: run `tools/hub2b/Undo.lua` (Edit): unparks `_Parked2b`, moves every `Moved2b` back (`Pre2bCFrame`/`Pre2bSize`), restores turned
    attributes, fences and lane look, puts created parts and the fitted map into `ServerStorage._Undone2b` and the as-imported `HubMap2b`
    back. Nothing is deleted. In-place copies: `ServerStorage._Backups.Pre2b`.
 2. Code: `git checkout art-skin -- src` (+ `push_to_studio.py`), or the scripts in `backups/pre_hub2b_20261019_scripts`.
 3. Whole place: `backups/pre_hub2b_20261019.rbxl` (before anything tonight, with the import). Per part: `backups/hub2b_part1_…`, `_part2_…`, `_part34_…`.
+
+## 7. Layout repair (2026-10-20, `R1_LayoutRepair.lua`, undo `R_Undo.lua`)
+Everything new is in `Workspace.HubMap2b.Repair2b`; moved/resized parts have attrs `PreR2CFrame`/`PreR2Size` + tag `MovedR2`; parked
+pieces are in `ServerStorage._ParkedR2` (attr `ParkedFrom`). `R_Undo.lua` (Edit) reverts exactly (tested: run, undone, re-run).
+- **Town wall at x ±242 (was ±170), all 12 bases inside.** The export's `KingdomWall` is one merged mesh per colour (both sides in one
+  mesh), and Studio's cut-mesh pieces (`IntersectAsync` on a MeshPart → MeshPart without a MeshId) are NOT saved in the place file, so the
+  wall is parked (`_ParkedR2.KingdomWall`) and rebuilt from parts in `Repair2b.KingdomWall2b` (123 parts): the same boxes, sizes and
+  colours (side walls 3×8 + gold trim + merlons, end walls 4×14 at ±240, back wall z 200 now x ±17..242), towers / gold rings / cone roofs
+  as 12-sided part unions (block minus 12 outside blocks: part unions ARE saved), flags/poles. The two AgeDetails meshes with pieces on the
+  old side walls (stone_worn, foliage_light) are parked and rebuilt as parts in `Repair2b.AgeDetails2b` (wall pieces on the new walls).
+- **Town strips** x ±170..243.5: grass (z 38..200) + rock below, the base-row floor `Ext2b.BaseRowFloor_*` now also the walkway (z -40..38),
+  red band / rock extended to the new corner, 2 lanterns each side (x ±194, ±230). Collision: `COL_West/East` → ±242, `COL_EndWall_*` → ±240,
+  `COL_South_*` to ±242, `COL_Ext_*` resized, new `Repair2b.Collision` (town strips + the 6 towers); `GUARD_Ext_Back_*` (behind bases 9-12's
+  back doors) and `GUARD_Band_N_WW/EE` parked, `GUARD_Ext_End_*` moved to the band's new end (x ±245.5).
+- **Grey platforms** (`Repair2b.Platforms2b`, collide): west extended to x -290 (Keep reaches -284), east to x 280 (Sunken to 274), a
+  connector under the Sunken → Ember ramp (x 280..357, z -185..-135) and a third platform under Ember Academy (x 357..647, z -283..-17,
+  covers the island and the Spell Run). Ember's island floats 15 studs up: its 4 cliff parts are carried down to the platform
+  (`EmberPedestal_Cliff1..4`, same shape/colour/footprint). 14 invisible edge guards (`Repair2b.Guards`). Ember's hanging rocks and two
+  clouds (`Summit031`) lowered so they don't poke through the new floor. Spell Run falls onto that floor are still caught (FallZone box
+  reaches y -124..16).
+- **Pads:** `BaseConfig.PAD_SPOTS` = 3 × 5 grid (x -9/0/9; z 15.5/7.75/0/-7.75/-15.5): pads 1-6 back two rows, 7-12 middle, 13-14 front
+  corners, front middle free for the gate. Ids, prices, count (14) unchanged.
+- **Parade:** lane = whole spine (above); `ParadeConfig.WALK_SPEED` 4 → 2.6 (spawn rate unchanged: one walker every 9 s, so catches on
+  offer per minute are the same); walkers `ModelStreamingMode.Persistent` (they move on the clients only, the server copy stays at the spawn
+  point, so streaming could drop one a player can see).
+- **Play check (solo, in-editor, StudioMemoryStore, test player held to Plot 12 = Base12 by marking Plots 1-11 taken; cleared after):**
+  all 12 bases → plaza on foot through their back doors (path 98-247 studs, symmetric W/E), no falls; plaza → Keep courtyard (junction →
+  west branch → bridge) and plaza → Sunken → Ember (lane centre line) no falls; free parade catch → Plot 12 pad 1, income 11/s; pads in the
+  base ≥ 1.6 studs from the side walls; parade: server 7-8 walkers steady, client sees 6-7 complete walkers from the spawn point; Keep
+  guardian woke on a Keep catch, chased + hit (100 → 46 hp), gave up and walked back to its post with the carrier on the bridge 28-50
+  studs past the boundary (test run speed 24, rule 40); 0 game-script errors. Test speeds 40 (walks) / 24 (run-out), not the game's.
+  Not run: any multi-client test, the test suites.

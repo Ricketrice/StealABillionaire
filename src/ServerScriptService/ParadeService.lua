@@ -307,6 +307,9 @@ function ParadeService.spawn(age: number?): Model?
 	local l = lane :: Lane
 	npc:PivotTo(CFrame.lookAt(pos, pos + l.dir) * root.CFrame:ToObjectSpace(npc:GetPivot()))
 	addPrompt(npc)
+	-- Walkers move on the clients only (the server copy stays where it spawned), so with StreamingEnabled a walker
+	-- far from its spawn point could stream out for a player who can see it: always sent to every client.
+	npc.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
 	npc.Parent = walkers
 	local remaining = (l.length - ((serverNow() - npc:GetAttribute("SpawnT")) * ParadeConfig.WALK_SPEED)) / ParadeConfig.WALK_SPEED
 	task.delay(math.max(0, remaining), function()

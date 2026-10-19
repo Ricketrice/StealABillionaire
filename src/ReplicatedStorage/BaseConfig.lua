@@ -6,7 +6,7 @@
 -- publishes a ReplicatedStorage attribute for clients:
 --   LIVING_ENABLED  workers do a job at their pad (client-side code animation)   Studio StudioLiving  -> LivingOn
 --   LEVELS_ENABLED  worker levels 1-10 bought with cash                           Studio StudioLevels  -> LevelsOn
---   PADS_ENABLED    pads 7-12 bought with cash at the base (new 4x3 pad layout)    Studio StudioPads    -> PadsOn
+--   PADS_ENABLED    pads 7-12 bought with cash at the base (3x5 pad grid)    Studio StudioPads    -> PadsOn
 -- Save (optional fields, schema stays 3): the worker record's existing `level` (1..10); hub.pads = pads bought
 -- beyond the first 6 (0..6); hub.intro = { levels = true, pads = true } once each NEW! hint was shown.
 
@@ -82,25 +82,28 @@ BaseConfig.FIRST_PADS = 6 -- every base starts with these
 BaseConfig.PAD_PRICES = { 5000, 12000, 30000, 75000, 180000, 450000 } -- PROPOSED: pads 7, 8, 9, 10, 11, 12 (in order)
 BaseConfig.PASS_PADS = 2 -- pads 13-14 for the Extra Slots gamepass (ProductConfig), no cash price
 -- Pad spots, lot-local (x, z); the lot's front (gate) is -z. While PADS_ENABLED the lot's own six pads move to the
--- inner columns and bought pads fill the outer ones: 4 columns x 3 rows, the gate path stays clear. The two pass
--- pads sit in the front corners. Pads are 6 studs wide: 2 studs between columns, 3 between rows.
+-- back two rows and bought pads fill the middle rows; the two pass pads sit in the front corners and the front
+-- middle stays clear for the gate. Hub 2b bases are 28 studs wide inside (walls at x +-14, back wall z +20, front
+-- towers to z -20.5), so the grid is 3 columns x 5 rows: pad rings are 6.8 wide, 2.2 studs between columns,
+-- 0.95 between rows, 1.6 from the side walls (the old 4-column grid at x +-4/+-12 reached into the walls).
 BaseConfig.PAD_SPOTS = {
-	{ -4, 12 },
-	{ 4, 12 },
-	{ -4, 3 },
-	{ 4, 3 },
-	{ -4, -6 },
-	{ 4, -6 }, -- 1-6 (the lot's own pads, moved)
-	{ -12, 12 },
-	{ 12, 12 },
-	{ -12, 3 },
-	{ 12, 3 },
-	{ -12, -6 },
-	{ 12, -6 }, -- 7-12 (cash)
-	{ -12, -14.4 },
-	{ 12, -14.4 }, -- 13-14 (Extra Slots pass)
+	{ -9, 15.5 },
+	{ 0, 15.5 },
+	{ 9, 15.5 },
+	{ -9, 7.75 },
+	{ 0, 7.75 },
+	{ 9, 7.75 }, -- 1-6 (the lot's own pads, moved)
+	{ -9, 0 },
+	{ 0, 0 },
+	{ 9, 0 },
+	{ -9, -7.75 },
+	{ 0, -7.75 },
+	{ 9, -7.75 }, -- 7-12 (cash)
+	{ -9, -15.5 },
+	{ 9, -15.5 }, -- 13-14 (Extra Slots pass)
 }
--- Decor spots (026 Lot & Decor) while the pad layout is on, clear of every pad.
+-- Decor spots (026 Lot & Decor) while the pad layout is on. Lot & Decor is off (HubConfig.SHOPS_ENABLED): these
+-- were made for the old lots and do NOT fit the hub 2b bases (two are in the walls, three on pads); redo before turning it on.
 BaseConfig.DECOR_SPOTS = { { -16, 16 }, { 16, 16 }, { -7.5, -15.5 }, { 7.5, -15.5 }, { 0, 16 } }
 
 -- Price of the next pad for a player who has bought `bought` pads (0..5), or nil when all 6 are bought.

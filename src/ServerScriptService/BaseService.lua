@@ -7,8 +7,8 @@
 -- Levels: the worker record's `level` (already saved, schema 3). Level up = cash (BaseConfig.levelCost of the
 -- worker's catalogue income), from the card (BaseRequest "LevelUp" uid) or the "Level up" prompt on its pad. Only
 -- income rises (WorkerCatalogue.getStats). A stolen worker keeps its level (the record travels with it).
--- Pads: while PADS_ENABLED the lot's own six pads move to the inner columns (BaseConfig.PAD_SPOTS) and bought pads go
--- up in the outer ones, on the owner's lot only (taken down when they leave). hub.pads = pads bought (0..6). The
+-- Pads: while PADS_ENABLED the lot's own six pads move to the back rows (BaseConfig.PAD_SPOTS) and bought pads go
+-- up in the rows in front, on the owner's lot only (taken down when they leave). hub.pads = pads bought (0..6). The
 -- next pad shows as a glowing "Unlock $X" pad once the player's pads are all full (and from then on).
 -- Extra Slots gamepass (033, player attribute Pass_slots): +PASS_PADS pads, numbered after the bought ones.
 -- Feature reveal (D28): level-up appears once REVEAL_LEVELS_AT workers are on pads; both get one NEW! hint
