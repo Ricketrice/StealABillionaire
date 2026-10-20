@@ -191,7 +191,7 @@ Undo order: `V2_Undo.lua`, `V_Undo.lua`, `R_Undo.lua`, `Undo.lua`.
   falls; 7 walkers; free catch -> pad; 0 script errors. Not run: multi-client, test suites.
 
 ## 10. Pads + Zone 3 map (2026-10-20, D52; `tools/zone3/`)
-Backups: `backups/pre_zone3necro_20261020.rbxl` (before), `backups/zone3necro_20261020.rbxl` (after). Undo order: `Z2_IslandRail.lua`
+Backups: `backups/pre_zone3necro_20261020.rbxl` (before), `backups/zone3necro_playsnap_20261020_0302.rbxl` (after; the 03:02 Play snapshot, the planned after-backup was never written). Undo order: `Z2_IslandRail.lua`
 with `UNDO = true`, `Z1_Undo.lua`, `Z0_PadSize.lua` with `UNDO = true` (prelude via `run_file.py <file> "UNDO = true"`), then the older ones.
 - **Pads:** measured against every base part (the base GLB's triangles mapped into plot space: `pad_clear.py` / `pad_map.py`, plus the
   colliders and the plot gate). The old 3x5 grid had pads 13/14 touching the gate posts (0.05), 10/12 0.5 from the gold wall brackets,
