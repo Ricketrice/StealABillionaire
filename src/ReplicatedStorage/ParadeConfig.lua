@@ -31,7 +31,7 @@ ParadeConfig.PUBLISHED = { PARADE_ENABLED = "ParadeOn", JUICE_ENABLED = "JuiceOn
 ParadeConfig.ZONE = "MainStreet" -- roster and odds the parade rolls from (existing pool, unchanged)
 ParadeConfig.CATCH_PRICE = 75 -- cash per catch (D16)
 ParadeConfig.FIRST_CATCH_FREE = true -- a player's first worker ever, caught at the parade, costs nothing
-ParadeConfig.WALK_SPEED = 2.6 -- studs per second (hub 2b lane = the red spine, ~179 studs -> ~69 s end to end, ~8 on it;
+ParadeConfig.WALK_SPEED = 2.6 -- studs per second (D54: lane = the red band in front of the bases, 185 long, ~175 walked -> ~67 s, 7-8 on it;
 -- was 4 on the old ~310-stud lane: on the shorter lane 4 left only ~3 walkers). Walking speed only: one new
 -- walker every SPAWN_INTERVAL as before, so the number of creatures on offer per minute is unchanged.
 ParadeConfig.SPAWN_INTERVAL = 9 -- seconds between new parade workers (lane time / max)

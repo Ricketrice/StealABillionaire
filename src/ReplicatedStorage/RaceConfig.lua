@@ -13,7 +13,7 @@ local WorkerCatalogue = require(script.Parent:WaitForChild("WorkerCatalogue"))
 
 local RaceConfig = {}
 
-RaceConfig.ENABLED = true -- D46: live (Spell Run)
+RaceConfig.ENABLED = false -- D54 (owner, 2026-10-20): Spell Run removed (course parked in ServerStorage._ParkedSpellRun; was live since D46)
 RaceConfig.STUDIO_ATTRIBUTE = "StudioRace"
 RaceConfig.PUBLISHED = "RaceOn"
 -- 034: the race runs on the Spell Run course in Ember Academy (built by tools/build034/B4_SpellRun; the 031 circuit

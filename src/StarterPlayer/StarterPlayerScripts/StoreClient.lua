@@ -229,7 +229,7 @@ local function trailCard(def: any, order: number)
 	})
 	UITheme.text({
 		Name = "About",
-		Text = "Walk faster (half the boost while carrying). Races stay the same for everyone.",
+		Text = "Walk faster (half the boost while carrying).",
 		Role = "Body",
 		TextSize = 14,
 		Color = T.TextMuted,
