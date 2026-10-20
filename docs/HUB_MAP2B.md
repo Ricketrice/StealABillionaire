@@ -254,3 +254,33 @@ then §10's (Z2, Z1, Z0), then the older ones.
   No falls (lowest root y 3.0 on the path). 0 game-script errors (log). Not run: multi-client, test suites.
 - **Known:** the parade walkers still start at the spine's north end (now the start of the Zone 3 path), unchanged. One short MoveTo
   snag inside the town near the east-wall gap (prop box, same as before the move).
+
+## 12. Spell Run off, Zone 3 on the west side, parade on the band (2026-10-20, D54; `tools/zone3/Z4_SideZone3.lua`, undo `Z4_Undo.lua`)
+Backups: `backups/pre_sidezone3_20261020.rbxl` (before), `backups/sidezone3_20261020.rbxl` (after). Undo order: `Z4_Undo.lua`, then
+§11's `Z3_Undo.lua`, then the older ones. Code: `RaceConfig.ENABLED = false`, `StoreClient` speed text ("Races stay the same" dropped),
+`ParadeConfig` comment. Studio attr `StudioRace` removed (Studio follows the config).
+- **Spell Run parked** (`ServerStorage._ParkedSpellRun`, attr `ParkedFrom`): `EmberAcademy.SpellRun`, `Balustrade` (the island rail),
+  `Ember036EndRail`, `Summit031`, `Islands.BillionaireHillsIsland`, `SpellRunCourse034` (race template). `_ParkedSpellRun.Plaza`: the
+  old plaza island (`Islands.PlazaIsland`, `WorldBounds.PlazaRing*`) and what stood on it (`SkyCity.Hub.Vault/Arena/GateLines`,
+  `Venues.Arena`, `BillionairePlaza` CentreSeal/BypassRing/ArenaEdge, 10 trees, 2 hedge caps, 2 rocks) + `PlazaIslandFallGuard`.
+  `BillionairePlaza.ArenaFloor` stays (ZoneProgress waits for it), hidden + no collide (attrs `PreZ4*`). The Zone 3 wall gap to
+  the Spell Run: `Zone3Map.Guards.Guard_East_Gap` (invisible, like the rest of that wall line). The race UI (`Race031`) still builds
+  but every panel stays hidden while `RaceOn` is unset.
+- **Spine ends at the junction:** `Spine` z 530..630, `SpineRock` z 532..628 (attrs `PreZ4Size/CFrame`), `Zone3Side.Guards.
+  GUARD_Spine_JunctionEnd` (z 529-530, x ±10.5). Parked (`_Parked2b.Zone3Side`): §11's north path + rock + guards, `GUARD_Spine_E_B/W_B`,
+  the band's west end guard (replaced by `GUARD_BandEnd_W_N/S`, open z 635..655).
+- **Side used: west.** The box west of the hub (x -480..-250, z 520..780) was empty; east has Sunken's palace (to x 298) + hub clouds.
+  Branch (`Zone3Side.RedPath`): from the band's west end x -245.5 at z 645: `West3_Flat` to x -257.5 (top 0), `West3_Ramp` to x -301.5
+  (top 13.5), 20 wide (z 635..655), rock under both, 4 edge guards (z 634.5 / 655.5). Zone 3 group (as §11) moved once more: quarter
+  turn (inward -Z -> -X), gate paving edge at the ramp top (transform `HubMap2b.Zone3Move4`, tag `MovedZ4`). Now: barrier (-314, 18.7, 645)
+  inward -X; town x -440..-318, z 569..723; ZoneBoundary (-380, 23.6, 694); GuardianPost (-380, 13.6, 676.5). Keep (x >= -205) 100+ studs away.
+- **Parade lane** (`SkyCity.Ground.ParadeLane.Lane`): x -92.5..92.5 along the band (z 645), 185 x 0.5 x 16; walkers appear at x -88.5
+  and leave at x 86.5 (~175 studs, ~67 s at 2.6). `WALK_SPEED`, `SPAWN_INTERVAL`, `MAX_ON_LANE` unchanged.
+- **Play check (solo, in-editor, StudioMemoryStore, test walk speed 24-30):** RaceOn unset; no Spell Run text in the PlayerGui or the
+  world (Race031 panels all hidden). Spawn -> band -> spine -> junction -> Keep island (free, walked in); -> Sunken gate: stopped at x 102.9
+  (0 coins); junction north end: stopped at z 530.8; band -> west branch -> Zone 3 gate: stopped at x -312.9. `/devcash 600000` (dev tools
+  then off): Zone 3 refused before Sunken ("open in order"), Sunken bought + walked in, Zone 3 bought + walked into the lot (90,000 left).
+  Zone 3: 8 wanderers (7 inside after one catch); catch -> Wake -> Attack (hp 100 -> 80) -> Chase (max 8.0 studs outside, the cap) ->
+  Return when the carrier was 47 out -> Post. Parade: 7-8 walkers in every 4-s sample over 32 s, x -72..70, z 642..646. Branch floor scan
+  0 holes, edge guards 0 gaps. No falls (lowest root y 2.9 on the paths). 0 game-script errors (log). Not run: multi-client, test suites
+  (`DevTest_SpellRun034` / `race031` now test a parked feature).
