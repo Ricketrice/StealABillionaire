@@ -223,3 +223,34 @@ with `UNDO = true`, `Z1_Undo.lua`, `Z0_PadSize.lua` with `UNDO = true` (prelude 
   walking at the closed gaps stops at the guards. 8 wanderers spawned, all in the lot. Catch -> Vault Wizard attacked (hp 33 -> 14),
   chased, max 6.7 studs outside the zone, went back to its post with the carrier 33 out; earlier a KO at 0 hp. 0 script errors (log).
   Test walk speeds 24-30. Not run: multi-client, test suites.
+
+## 11. Zone 3 access from the junction (2026-10-20, D53; `tools/zone3/Z3_Access.lua`, undo `Z3_Undo.lua`)
+Backups: `backups/pre_zone3access_20261020.rbxl` (before), `backups/zone3access_20261020.rbxl` (after). Undo order: `Z3_Undo.lua`,
+then §10's (Z2, Z1, Z0), then the older ones.
+- **Which arm:** the junction (z 540) has west -> Keep, east -> Sunken, south -> bases; the dead end is the spine's north stub
+  (z 540 -> 465). Zone 3 was east past Sunken, so the **whole Zone 3 group moved** (option 2): one rigid move, quarter turn (zone
+  inward +X -> -Z), lowered 10.5 (gate paving top 24 -> 13.5). Transform on `HubMap2b` attr `Zone3Move`; moved items: attr
+  `PreZ3CFrame` + tag `MovedZ3`; turned attrs (`Inward` on the gate barrier, `Axis` on the spell books): `PreZ3<name>`.
+- **Moved:** `World.EmberAcademy` (Zone3Map, SpellRun, Balustrade, Summit031, Ember036EndRail), `FutureZones.Zone6_BillionaireHills`
+  (gate + 500,000 price plate, FastTravelAnchor, BossReserve, FutureNPCArea), `Zones.BillionaireHills` (ZoneBoundary, Spawn1-8,
+  GuardianPost), `Islands.BillionaireHillsIsland`, `Lane.T3_EmberAcademy`, `VisualFix2b.RedPath.Ember_GateFloor` + `GUARD_Ember_Gate_N/S`,
+  `BridgeGuards.BillionaireHillsBridgeGuard±1`, lane rocks/clouds east of x 300, ServerStorage `SpellRunCourse034` (race template),
+  `_ParkedEmber`, `_ParkedNecro` (so they fit if restored). Now: gate barrier (0, 18.7, 396.5) inward (0, 0, -1); town x -77..75,
+  z 272..391; lot centre (-49, 330); Spell Run pad (56, 16.5, 255); course x 37..131, z 82..261.
+- **New (`Workspace.HubMap2b.Zone3Access`):** `RedPath.North_Flat` (z 465 -> 453, top 0) + `North_Ramp` (z 453 -> 409, top 0 -> 13.5),
+  20 wide like the spine, rock under both (`North_FlatRock`, `North_RampRock`); `Guards`: 4 edge guards (x ±10.5, 6 tall, ramp ones
+  tilted) joining the spine guards and the gate paving guards; `SunkenBackDoorBlock` (invisible, x 268.7-271.2, z 534-546, y 13-33;
+  the door panel stays, so it reads as a closed door); `PlazaIslandFallGuard` (invisible wall at z 73, x 98-148: the Spell Run's
+  Landing2 now ends ~12 studs from the old PlazaIsland coast, 27 studs higher; a fast jump would land on it instead of in the FallZone).
+- **Parked** (`ServerStorage._Parked2b.Zone3Access`, attr `ParkedFrom`): `Ember_Ramp` + `GUARD_Ember_Ramp_N/S` (old Sunken back door ->
+  Zone 3 route), the lane rock under that ramp, `GUARD_Spine_End`.
+- **Code:** none. `ZoneProgress` lane gates already read `Inward`; race, spawns, guardian, teleports read moved parts.
+- **Play check (solo, in-editor, StudioMemoryStore, test walk speed 24-30):** spawn -> spine -> junction -> north arm -> ramp: stopped
+  at z 397.6 by the gate (barrier 396.5), plate "500,000 COINS", buying with 0 refused ("Unlock Sunken Kingdom first"); `/devcash 600000`
+  (dev tools then off) -> Sunken + Zone 3 bought (90,000 left) -> through the gate into the lot. 8/8 wanderers inside the ZoneBoundary.
+  Catch -> Vault Wizard Wake -> Attack -> Chase (max 5.4 studs outside the zone) -> Return when the carrier was 47 out -> Post; a KO
+  earlier (respawn at base). Lot -> east wall gap -> Spell Run pad (1.2 off); live RaceCourse copy on the course. Sunken courtyard ->
+  palace -> back door: stopped at x 267.9. Floor ray scan spine end -> map plaza: 0 holes; edge guard scan z 466 -> 388: 0 gaps.
+  No falls (lowest root y 3.0 on the path). 0 game-script errors (log). Not run: multi-client, test suites.
+- **Known:** the parade walkers still start at the spine's north end (now the start of the Zone 3 path), unchanged. One short MoveTo
+  snag inside the town near the east-wall gap (prop box, same as before the move).
