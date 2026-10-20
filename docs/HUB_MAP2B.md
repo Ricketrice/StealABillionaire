@@ -284,3 +284,33 @@ Backups: `backups/pre_sidezone3_20261020.rbxl` (before), `backups/sidezone3_2026
   Return when the carrier was 47 out -> Post. Parade: 7-8 walkers in every 4-s sample over 32 s, x -72..70, z 642..646. Branch floor scan
   0 holes, edge guards 0 gaps. No falls (lowest root y 2.9 on the paths). 0 game-script errors (log). Not run: multi-client, test suites
   (`DevTest_SpellRun034` / `race031` now test a parked feature).
+
+## 13. Main road, Zone 3 on its right (2026-10-20, D55; `tools/zone3/Z5_MainRoad.lua`, undo `Z5_Undo.lua`)
+Backups: `backups/pre_mainroad_20261020.rbxl` (before), `backups/mainroad_20261020.rbxl` (after). Undo order: `Z5_Undo.lua`, then
+§12's `Z4_Undo.lua`, then the older ones. Code: none. **§12's Zone 3 place and west branch are superseded; its Spell Run / parade parts stand.**
+- **Top-down (north = -Z, world studs):** bases + red band z 605..660 -> spine x ±10 north to the junction (z 530..550; west arm ->
+  Keep x -200..-59, east arm -> Sunken gate x 104, Sunken x 108..274 z 504..576) -> **main road** x ±10, top 0, z 530 -> 140, end guard
+  at z 140. **Zone 3 branch** at z 400 on the right (east): flat x 10..22, ramp x 22..66 to 13.5, 20 wide (z 390..410); gate barrier
+  (78.5, 18.7, 400), inward +X; town x 84..203, z 323..475 (gate group to x 276); ZoneBoundary (144.5, 23.6, 351), GuardianPost
+  (144.5, 13.6, 368.5), FastTravelAnchor (154.6, 16.3, 393). Zone 3 is 28 studs north of Sunken. **Empty for the next zone:** right side
+  of the road z 140..~320 (the road's left side north of Keep is empty too).
+- **New (`Workspace.HubMap2b.MainRoad`):** `RedPath.Road` + `RoadRock` (joins `SpineRock`), `East3_Flat/Ramp` + rocks; `Guards`:
+  `GUARD_Road_W`, `GUARD_Road_E_South/North` (opening z 390..410), `GUARD_Road_End`, `GUARD_East3_Flat/Ramp/Seam_N/S` (6 tall,
+  invisible; the seam pieces fill a low wedge where flat and ramp guards meet). `Zone3Side.Guards.GUARD_BandEnd_W` (CreatedZ5): the band's
+  west end closed again.
+- **Moved (one rigid move, half turn, inward -X -> +X, gate paving edge at the ramp top):** the same Zone 3 group as §12 (Zone3Map,
+  gate + 500,000 plate, ZoneBoundary, Spawn1-8, GuardianPost, FastTravelAnchor, BossReserve, FutureNPCArea, T3 tile, gate paving +
+  guards, bridge guards, the lane rocks/clouds that travel with it) plus the parked `_ParkedEmber`, `_ParkedNecro` and
+  `_ParkedSpellRun` Spell Run pieces (not `.Plaza`), so they still fit if restored. Transform `HubMap2b.Zone3Move5`; attr `PreZ5CFrame`, tag `MovedZ5`.
+- **Parked:** `_Parked2b.Zone3West` (11): `West3_Flat/Ramp/FlatRock/RampRock`, `GUARD_West3_*`, `GUARD_BandEnd_W_N/S`,
+  `GUARD_Spine_JunctionEnd`. `_Parked2b.MainRoad`: 2 lane clouds under the new Zone 3 spot.
+- **Edit checks:** road floor ray scan z 141..529: 0 holes (all top 0); branch profile 0 -> 13.5 smooth, gate paving 13.5-13.7;
+  edge guard ray scan road + branch (3 heights): 0 gaps after the seam pieces.
+- **Play check (solo, in-editor, StudioMemoryStore, test walk speed 28, dev tools off except for `/devcash`):** spawn -> band -> spine
+  -> junction -> road -> branch -> stopped at x 77.4 by the Zone 3 gate (barrier 78.5); plate "ZONE 3 · EMBER ACADEMY / LOCKED /
+  500,000 COINS"; buying with 0 refused ("Unlock Sunken Kingdom first"). Road end: stopped at z 140.8; road edges hold (x ±9.3). Keep
+  island (-140, 16.5, 540) reached (free); Sunken gate stopped at x 102.9. `/devcash 600000`: Zone 3 refused again before Sunken, Sunken
+  bought, Zone 3 bought (90,000 left), walked through the Zone 3 gate into the town (139, 16.6, 371) and through the Sunken gate
+  (125.7, 14.8, 540). Zone 3: 8/8 wanderers inside the ZoneBoundary, guardian at its post (145, 20, 368). Parade: 7-8 walkers in every
+  4-s sample, x -85..84, z 642..648 (unchanged). No falls (lowest root y 2.94 on the paths). Server + client LogService: 0 errors
+  (1 StudioMemoryStore warning, UIBlox CoreGui warnings). Not run: multi-client, test suites, guardian chase (unchanged code).
